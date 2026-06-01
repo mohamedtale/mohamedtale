@@ -624,10 +624,37 @@ body::before{
 
 /* ══ طباعة ══ */
 @media print{
-  body>*:not(#printArea){display:none!important}
-  #printArea{display:flex!important;width:100%!important;padding:6mm 10mm!important;margin:0!important}
-  .no-print,.no-print-actions,.review-banner{display:none!important}
+  /* إخفاء كل شيء */
+  body>*{display:none!important}
+  /* إظهار منطقة الطباعة فقط */
+  #printArea{
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+    padding:6mm 10mm!important;
+    margin:0!important;
+    position:static!important;
+    visibility:visible!important;
+  }
+  /* إظهار محتوى النسخة */
+  #printCopy1,#printCopy2{
+    display:flex!important;
+    flex-direction:column!important;
+    visibility:visible!important;
+  }
+  /* إخفاء عناصر الشاشة */
+  .no-print,
+  .no-print-actions,
+  .review-banner,
+  .sig-manager{
+    display:none!important;
+  }
+  /* الخلفية المتحركة تحجب الطباعة */
+  body::before,body::after{display:none!important}
+  /* فاصل صفحة النسخة الثانية */
   #printCopy2{page-break-before:always}
+  /* ألوان صحيحة عند الطباعة */
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 
 /* ══ موبايل ══ */
