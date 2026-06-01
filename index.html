@@ -486,7 +486,64 @@ body::before{
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 }
 
-/* توقيعات */
+/* ── مدير التوقيعات (وضع المراجعة) ── */
+.sig-manager{
+  background:#faf8f4;border:1.5px dashed var(--gold);
+  border-radius:14px;padding:14px 18px;margin-bottom:10px;
+}
+.sig-manager-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.sig-manager-title{
+  font-weight:900;font-size:.83rem;color:var(--muted);
+  display:flex;align-items:center;gap:8px;
+}
+.sig-count-badge{
+  background:rgba(201,151,63,.14);color:var(--gold-dk);
+  font-size:.68rem;font-weight:900;padding:2px 9px;border-radius:12px;
+}
+.sig-add-btn{
+  display:flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,var(--gold-lt),var(--gold-dk));
+  color:#fff;border:none;border-radius:10px;
+  padding:8px 16px;font-family:'Cairo',sans-serif;font-weight:900;font-size:.8rem;
+  cursor:pointer;transition:opacity .18s,transform .15s;
+  box-shadow:0 3px 10px rgba(201,151,63,.3);
+}
+.sig-add-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+.sig-add-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.sig-mgr-list{display:flex;flex-direction:column;gap:7px}
+.sig-mgr-item{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1.5px solid var(--border);border-radius:10px;
+  padding:8px 12px;transition:border-color .15s;
+}
+.sig-mgr-item:focus-within{border-color:var(--gold)}
+.sig-mgr-num{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--gold-glow);color:var(--gold-dk);
+  font-size:.7rem;font-weight:900;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.sig-mgr-input{
+  flex:1;border:none;background:transparent;
+  font-family:'Cairo',sans-serif;font-size:.88rem;font-weight:700;
+  color:var(--text);outline:none;min-width:0;
+}
+.sig-mgr-del{
+  width:26px;height:26px;border-radius:7px;border:none;
+  background:#fef2f2;color:#b91c1c;font-size:.82rem;
+  cursor:pointer;flex-shrink:0;transition:background .15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.sig-mgr-del:hover{background:#fee2e2}
+.sig-mgr-hint{
+  font-size:.72rem;color:var(--muted);margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--border);
+  text-align:center;
+}
+
+/* توقيعات (النموذج المطبوع) */
 .sig-grid{display:grid;border:1.5px solid #0b1320;border-top:none}
 .sig-cell{
   padding:14px 10px 10px;text-align:center;min-height:110px;
@@ -494,9 +551,17 @@ body::before{
   border-right:1.5px solid #0b1320;
 }
 .sig-cell:last-child{border-right:none}
-.sig-role{font-weight:900;font-size:13px;color:#0b1320;line-height:1.4}
-.sig-name-field{font-size:11px;color:#555;border-top:1px dashed #999;margin:0 8px;padding-top:6px;min-height:32px}
+.sig-role{font-weight:900;font-size:12px;color:#0b1320;line-height:1.5;min-height:30px}
+.sig-name-field{font-size:11px;color:#555;border-top:1px dashed #999;margin:0 6px;padding-top:6px;min-height:34px}
 .sig-status{font-size:10px;font-weight:700;color:#888;margin-top:4px}
+
+/* نوع الإجازة في النموذج */
+.pr-type-cell{
+  background:#0b1320;color:#c9973f;
+  font-weight:900;font-size:14px;text-align:center;
+  letter-spacing:.5px;padding:9px 12px !important;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+}
 
 /* ملاحظة ختامية */
 .footer-note{
@@ -863,12 +928,13 @@ body::before{
       <span class="print-title-year" id="pr_year"></span>
     </div>
 
+    <!-- ── جدول بيانات الموظف ── -->
     <table class="tbl">
       <tr>
-        <td class="lbl" style="width:22%">اسم الموظف الرباعي</td>
-        <td class="val-bold" id="pr_name" contenteditable="true" style="width:28%"></td>
-        <td class="lbl" style="width:22%">الرقم الوظيفي</td>
-        <td id="pr_id" contenteditable="true" style="width:28%;font-weight:700;text-align:center"></td>
+        <td class="lbl" style="width:20%">اسم الموظف الرباعي</td>
+        <td class="val-bold" id="pr_name" contenteditable="true" style="width:30%"></td>
+        <td class="lbl" style="width:20%">الرقم الوظيفي</td>
+        <td id="pr_id" contenteditable="true" style="width:30%;font-weight:900;text-align:center;font-size:14px"></td>
       </tr>
       <tr>
         <td class="lbl">المسمى الوظيفي</td>
@@ -887,23 +953,31 @@ body::before{
       </tr>
     </table>
 
+    <!-- ── جدول تفاصيل الإجازة ── -->
     <table class="tbl" style="border-top:none">
+      <!-- نوع الإجازة بارز -->
       <tr>
-        <td class="lbl" style="width:22%">تاريخ البداية</td>
-        <td id="pr_start" contenteditable="true" style="width:28%;text-align:center;font-weight:700"></td>
-        <td class="lbl" style="width:22%">تاريخ النهاية</td>
-        <td id="pr_end" contenteditable="true" style="width:28%;text-align:center;font-weight:700"></td>
+        <td class="lbl" style="width:20%">نوع الإجازة</td>
+        <td id="pr_type" class="pr-type-cell" colspan="3"></td>
       </tr>
+      <!-- التواريخ متوازية -->
       <tr>
-        <td class="lbl">عنوان الإقامة</td>
-        <td id="pr_addr" contenteditable="true"></td>
+        <td class="lbl" style="width:20%">تاريخ البداية</td>
+        <td id="pr_start" contenteditable="true" style="width:30%;text-align:center;font-weight:700"></td>
+        <td class="lbl" style="width:20%">تاريخ النهاية</td>
+        <td id="pr_end" contenteditable="true" style="width:30%;text-align:center;font-weight:700"></td>
+      </tr>
+      <!-- المدة وتاريخ العودة متوازيان -->
+      <tr>
         <td class="lbl">المدة المطلوبة</td>
-        <td id="pr_days" contenteditable="true" style="font-weight:900;text-align:center"></td>
-      </tr>
-      <tr>
+        <td id="pr_days" contenteditable="true" style="font-weight:900;text-align:center;font-size:14px"></td>
         <td class="lbl">تاريخ المباشرة</td>
-        <td colspan="3" id="pr_return" contenteditable="true"
-          style="text-align:center;font-weight:900;font-size:14px"></td>
+        <td id="pr_return" contenteditable="true" style="text-align:center;font-weight:900;font-size:13px"></td>
+      </tr>
+      <!-- العنوان كامل العرض -->
+      <tr>
+        <td class="lbl">عنوان الإقامة خلال الإجازة</td>
+        <td id="pr_addr" contenteditable="true" colspan="3"></td>
       </tr>
     </table>
 
@@ -924,6 +998,22 @@ body::before{
 
     <div id="pr_medNote" style="display:none" class="medical-note">
       📋 مرفق تقرير طبي — يجب التحقق من صلاحيته لدى الجهة المختصة
+    </div>
+
+    <!-- ── لوحة مدير التوقيعات (تظهر في المراجعة فقط) ── -->
+    <div class="sig-manager no-print" id="sigManager">
+      <div class="sig-manager-header">
+        <span class="sig-manager-title">
+          ✍️ إدارة حقول التوقيع
+          <span class="sig-count-badge" id="sigCountBadge">0</span>
+        </span>
+        <button class="sig-add-btn" id="sigAddBtn" onclick="addSignature()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          إضافة توقيع
+        </button>
+      </div>
+      <div class="sig-mgr-list" id="sigManagerList"></div>
+      <div class="sig-mgr-hint">💡 انقر على اسم الدور لتعديله · الحد الأقصى 6 توقيعات</div>
     </div>
 
     <div id="pr_sigGrid" class="sig-grid"></div>
@@ -1395,11 +1485,12 @@ function buildPrint(d, returnDt) {
   document.getElementById('pr_job').textContent     = d.jobTitle;
   document.getElementById('pr_dept').textContent    = d.dept    || '—';
   document.getElementById('pr_section').textContent = d.section || '—';
-  document.getElementById('pr_start').textContent   = d.start + ' ' + (toHijri(d.start) ? '(' + toHijri(d.start) + ')' : '');
-  document.getElementById('pr_end').textContent     = d.end   + ' ' + (toHijri(d.end)   ? '(' + toHijri(d.end)   + ')' : '');
+  document.getElementById('pr_type').textContent    = 'إجازة ' + type;
+  document.getElementById('pr_start').textContent   = d.start + (toHijri(d.start) ? '  (' + toHijri(d.start) + ')' : '');
+  document.getElementById('pr_end').textContent     = d.end   + (toHijri(d.end)   ? '  (' + toHijri(d.end)   + ')' : '');
   document.getElementById('pr_return').textContent  = returnDt;
   document.getElementById('pr_addr').textContent    = d.location;
-  document.getElementById('pr_days').textContent    = d.days + ' يوم (' + type + ')';
+  document.getElementById('pr_days').textContent    = d.days + ' يوم';
   document.getElementById('pr_orderDate').value     = new Date().toISOString().split('T')[0];
   document.getElementById('pr_entryPerson').textContent = d.entryPerson || '—';
   document.getElementById('pr_medNote').style.display   = type === 'مرضية' ? 'block' : 'none';
@@ -1430,25 +1521,75 @@ function buildPrint(d, returnDt) {
     `https://chart.googleapis.com/chart?chs=65x65&cht=qr&choe=UTF-8&chl=${qrData}`;
 }
 
+/* ════════════════════════════════
+   إدارة التوقيعات الديناميكية
+════════════════════════════════ */
+let _sigs = [];
+const SIG_MAX = 6;
+
 function buildSigs(d) {
   const isBoss = /مدير|رئيس/.test(d.jobTitle || '');
   const needGM = isBoss || d.days > 5 || d.leaveType === 'بدون مرتب';
-  const sigs = [
+  _sigs = [
     { role:'الموظف طالب الإجازة',   name: d.empName || '' },
     { role:'رئيس القسم المباشر',     name: '' },
     { role:'مدير الإدارة / المكتب', name: '' },
   ];
-  if (needGM) sigs.push({ role:'مدير عام الجهاز', name:'' });
+  if (needGM) _sigs.push({ role:'مدير عام الجهاز', name:'' });
+  renderSigManager();
+  renderSigGrid();
+}
+
+function renderSigManager() {
+  const list  = document.getElementById('sigManagerList');
+  const badge = document.getElementById('sigCountBadge');
+  const addBtn= document.getElementById('sigAddBtn');
+
+  badge.textContent   = _sigs.length;
+  addBtn.disabled     = _sigs.length >= SIG_MAX;
+
+  list.innerHTML = _sigs.map((s, i) => `
+    <div class="sig-mgr-item">
+      <span class="sig-mgr-num">${i + 1}</span>
+      <input class="sig-mgr-input"
+             value="${s.role.replace(/"/g,'&quot;')}"
+             placeholder="اسم الدور…"
+             oninput="_sigs[${i}].role = this.value; renderSigGrid()">
+      ${_sigs.length > 1
+        ? `<button class="sig-mgr-del" onclick="removeSig(${i})" title="حذف هذا التوقيع">✕</button>`
+        : '<span style="width:26px;display:block"></span>'}
+    </div>`).join('');
+}
+
+function renderSigGrid() {
   const grid = document.getElementById('pr_sigGrid');
-  grid.style.gridTemplateColumns = `repeat(${sigs.length},1fr)`;
-  grid.innerHTML = sigs.map((s, i) => `
-    <div class="sig-cell" style="${i < sigs.length-1 ? '' : 'border-right:none'}">
-      <span class="sig-role" contenteditable="true">${s.role}</span>
+  grid.style.gridTemplateColumns = `repeat(${_sigs.length},1fr)`;
+  grid.innerHTML = _sigs.map((s, i) => `
+    <div class="sig-cell" style="${i < _sigs.length-1 ? '' : 'border-right:none'}">
+      <span class="sig-role">${s.role || '—'}</span>
       <div>
-        <div class="sig-name-field" contenteditable="true">${s.name}</div>
+        <div class="sig-name-field" contenteditable="true">${s.name || ''}</div>
         <div class="sig-status">التوقيع والاعتماد</div>
       </div>
     </div>`).join('');
+}
+
+function addSignature() {
+  if (_sigs.length >= SIG_MAX) return;
+  _sigs.push({ role: 'توقيع إضافي', name: '' });
+  renderSigManager();
+  renderSigGrid();
+  /* تمرير لآخر عنصر وتحديد النص تلقائياً */
+  const inputs = document.querySelectorAll('.sig-mgr-input');
+  const last   = inputs[inputs.length - 1];
+  if (last) { last.focus(); last.select(); }
+}
+
+function removeSig(index) {
+  if (_sigs.length <= 1) return;
+  _sigs.splice(index, 1);
+  renderSigManager();
+  renderSigGrid();
 }
 
 /* ════════════════════════════════
