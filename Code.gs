@@ -62,7 +62,8 @@ const CONFIG = {
     MSG:          9,   // J — رسالة إضافية
     LEAVE_PDF:    10,  // K — PDF الإجازة
     MEDICAL_PDF:  11,  // L — PDF التقرير الطبي
-    ENTRY_PERSON: 12   // M — مُدخل البيانات
+    ENTRY_PERSON: 12,  // M — مُدخل البيانات
+    REMARKS:      13   // N — ملاحظات إضافية
   }
 };
 
@@ -178,7 +179,7 @@ function _findLastLeaveRow(empId) {
     if (lastRow < 2) return null;
 
     const LC   = CONFIG.LEAVES_COL;
-    const cols = Math.max(LC.ENTRY_PERSON + 1, 13);
+    const cols = Math.max(LC.REMARKS + 1, 14);
     const data = sheet.getRange(2, 1, lastRow - 1, cols).getValues();
     const id   = sanitize(empId);
 
@@ -345,7 +346,7 @@ function getRecentLeaves(empId) {
       if (lastRow < 2) return [];
 
       const LC   = CONFIG.LEAVES_COL;
-      const cols = LC.ENTRY_PERSON + 1;
+      const cols = LC.REMARKS + 1;
       const data = sheet.getRange(2, 1, lastRow - 1, cols).getValues();
       const id   = sanitize(empId);
       const results = [];
@@ -437,6 +438,9 @@ function saveLeaveRequest(data) {
       const sheetEmp = ss.getSheetByName(CONFIG.SHEET_EMPLOYEES);
       const sheetLev = ss.getSheetByName(CONFIG.SHEET_LEAVES);
 
+      if (!sheetEmp) throw new Error("ورقة الموظفين غير موجودة — تحقق من الاسم: \"" + CONFIG.SHEET_EMPLOYEES + "\"");
+      if (!sheetLev) throw new Error("ورقة الإجازات غير موجودة — تحقق من الاسم: \"" + CONFIG.SHEET_LEAVES + "\"");
+
       const emp = _findEmployee(data.empId);
       if (!emp) throw new Error("الموظف غير مسجل في المنظومة.");
 
@@ -455,6 +459,7 @@ function saveLeaveRequest(data) {
       let note           = sanitize(data.location || "داخل ليبيا");
       const reportPdfUrl = sanitize(data.reportPdfUrl  || "");
       const entryPerson  = sanitize(data.entryPerson   || "—");
+      const remarks      = sanitize(data.remarks       || "");
       const returnDt     = calculateReturnDate(data.end);
 
       // ─── وضع التعديل: استعادة الرصيد القديم أولاً ───
@@ -506,7 +511,7 @@ function saveLeaveRequest(data) {
         sheetEmp.getRange(rowIndex, balCol + 1).setValue(currentBal - daysToProcess);
       }
 
-      // ─── بناء الصف (13 عمود) ────────────────────────
+      // ─── بناء الصف (14 عمود) ────────────────────────
       const rowData = [
         sanitize(data.empName),  // A: اسم الموظف
         sanitize(data.empId),    // B: الرقم الوظيفي
@@ -520,7 +525,8 @@ function saveLeaveRequest(data) {
         "",                      // J: رسالة المباشرة
         "",                      // K: PDF الإجازة
         reportPdfUrl,            // L: PDF التقرير الطبي
-        entryPerson              // M: مُدخل البيانات
+        entryPerson,             // M: مُدخل البيانات
+        remarks                  // N: ملاحظات إضافية
       ];
 
       if (isEdit && leaveRowIndex) {
