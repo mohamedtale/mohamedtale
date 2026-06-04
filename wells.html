@@ -508,27 +508,59 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
           </div>
         </div>
 
+        <!-- Map toggle buttons -->
+        <div style="display:flex;gap:8px;margin-bottom:10px" class="no-print">
+          <button id="btnMapDynamic" onclick="switchMap('dynamic')"
+            style="padding:8px 16px;border:none;border-radius:9px;font-family:'Cairo';font-size:.82rem;font-weight:700;cursor:pointer;
+                   background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;
+                   box-shadow:0 3px 10px rgba(2,136,209,.3);display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-map-marker-alt"></i> الخريطة التفاعلية
+          </button>
+          <button id="btnMapGoogle" onclick="switchMap('google')"
+            style="padding:8px 16px;border:none;border-radius:9px;font-family:'Cairo';font-size:.82rem;font-weight:700;cursor:pointer;
+                   background:#f1f5f9;color:var(--text-lt);display:flex;align-items:center;gap:6px;">
+            <i class="fab fa-google"></i> خريطة Google My Maps
+          </button>
+        </div>
+
         <div class="map-wrap">
-          <div id="map"></div>
-          <div class="map-title-badge">🇱🇾 خريطة الآبار — ليبيا</div>
-          <div class="map-filters no-print">
-            <select id="mapFCity" onchange="applyMapFilters()">
-              <option value="">كل المدن</option>
-            </select>
-            <select id="mapFStatus" onchange="applyMapFilters()">
-              <option value="">كل الحالات</option>
-              <option value="جاهز">✅ جاهز</option>
-              <option value="قيد التنفيذ">🔧 قيد التنفيذ</option>
-              <option value="متوقف">⚠️ متوقف</option>
-              <option value="خارج الخدمة">❌ خارج الخدمة</option>
-            </select>
+          <!-- Dynamic Leaflet map -->
+          <div id="mapDynamicWrap" style="position:relative">
+            <div id="map"></div>
+            <div class="map-title-badge">🇱🇾 خريطة الآبار — ليبيا</div>
+            <div class="map-filters no-print">
+              <select id="mapFCity" onchange="applyMapFilters()">
+                <option value="">كل المدن</option>
+              </select>
+              <select id="mapFStatus" onchange="applyMapFilters()">
+                <option value="">كل الحالات</option>
+                <option value="جاهز">✅ جاهز</option>
+                <option value="قيد التنفيذ">🔧 قيد التنفيذ</option>
+                <option value="متوقف">⚠️ متوقف</option>
+                <option value="خارج الخدمة">❌ خارج الخدمة</option>
+              </select>
+            </div>
+            <div class="map-legend">
+              <div style="font-size:.68rem;font-weight:900;color:#475569;margin-bottom:5px">الحالات</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#28a745"></div>جاهز</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#ffc107"></div>قيد التنفيذ</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#dc3545"></div>متوقف</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#4a5568"></div>خارج الخدمة</div>
+            </div>
           </div>
-          <div class="map-legend">
-            <div style="font-size:.68rem;font-weight:900;color:#475569;margin-bottom:5px">الحالات</div>
-            <div class="leg-item"><div class="leg-dot" style="background:#28a745"></div>جاهز</div>
-            <div class="leg-item"><div class="leg-dot" style="background:#ffc107"></div>قيد التنفيذ</div>
-            <div class="leg-item"><div class="leg-dot" style="background:#dc3545"></div>متوقف</div>
-            <div class="leg-item"><div class="leg-dot" style="background:#4a5568"></div>خارج الخدمة</div>
+          <!-- Google My Maps iframe -->
+          <div id="mapGoogleWrap" style="display:none">
+            <iframe id="googleMapFrame"
+              src="https://www.google.com/maps/d/embed?mid=12N_azPXuRum4ve50N5_2O9KE5rzlzSY&ehbc=2E312F&noprof=1"
+              style="width:100%;height:480px;border:none;display:block"
+              allowfullscreen loading="lazy">
+            </iframe>
+            <div style="position:absolute;top:12px;left:12px;z-index:10;
+                        background:var(--navy);color:var(--water-lt);padding:7px 14px;
+                        border-radius:8px;font-size:.78rem;font-weight:700;
+                        box-shadow:0 4px 12px rgba(0,0,0,.2);">
+              🗺️ Google My Maps — خريطة الجهاز التنفيذي
+            </div>
           </div>
         </div>
       </div>
@@ -1575,6 +1607,27 @@ function showTab(name, btn) {
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
   setTimeout(() => _map && _map.invalidateSize(), 320);
+}
+
+function switchMap(type) {
+  const dynWrap = document.getElementById('mapDynamicWrap');
+  const gglWrap = document.getElementById('mapGoogleWrap');
+  const btnDyn  = document.getElementById('btnMapDynamic');
+  const btnGgl  = document.getElementById('btnMapGoogle');
+  const activeStyle  = 'padding:8px 16px;border:none;border-radius:9px;font-family:\'Cairo\';font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;box-shadow:0 3px 10px rgba(2,136,209,.3);display:flex;align-items:center;gap:6px;';
+  const inactiveStyle = 'padding:8px 16px;border:none;border-radius:9px;font-family:\'Cairo\';font-size:.82rem;font-weight:700;cursor:pointer;background:#f1f5f9;color:var(--text-lt);display:flex;align-items:center;gap:6px;';
+  if (type === 'dynamic') {
+    dynWrap.style.display = '';
+    gglWrap.style.display = 'none';
+    btnDyn.style.cssText  = activeStyle;
+    btnGgl.style.cssText  = inactiveStyle;
+    setTimeout(() => _map && _map.invalidateSize(), 100);
+  } else {
+    dynWrap.style.display = 'none';
+    gglWrap.style.display = 'block';
+    btnDyn.style.cssText  = inactiveStyle;
+    btnGgl.style.cssText  = activeStyle;
+  }
 }
 
 function openModal(id)  { document.getElementById(id).classList.add('show'); }
