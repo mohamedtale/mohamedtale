@@ -721,14 +721,8 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
           <input type="text" id="wf_wellId" placeholder="مثال: W-LY-001">
         </div>
         <div class="fg">
-          <label>المدينة *</label>
-          <select id="wf_city">
-            <option value="">اختر المدينة</option>
-          </select>
-        </div>
-        <div class="fg full">
-          <label>المنطقة / الحي</label>
-          <input type="text" id="wf_region" placeholder="المنطقة أو الحي التفصيلي">
+          <label>المنطقة / المدينة *</label>
+          <input type="text" id="wf_cityRegion" placeholder="مثال: طرابلس — سوق الجمعة">
         </div>
 
         <div class="form-sep">📍 الموقع الجغرافي</div>
@@ -743,17 +737,17 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
         </div>
         <div class="hint-box full">
           <i class="fas fa-info-circle" style="color:var(--water);margin-left:5px"></i>
-          <b>كيف أحصل على الإحداثيات؟</b> افتح Google Maps ← انقر بزر الفأرة الأيمن على الموقع ← اضغط على الإحداثيات لنسخها
+          <b>كيف أحصل على الإحداثيات؟</b> افتح Google Maps ← انقر بزر الفأرة الأيمن على الموقع ← اضغط على الإحداثيات
         </div>
 
         <div class="form-sep">⚙️ بيانات العمل الفني</div>
 
         <div class="fg">
-          <label>نوع العمل *</label>
+          <label>نوع العمل المستهدف *</label>
           <select id="wf_workType">
             <option value="">اختر نوع العمل</option>
             <option value="حفر جديد">حفر جديد</option>
-            <option value="صيانة بئر قائم">صيانة بئر قائم</option>
+            <option value="صيانة">صيانة بئر قائم</option>
           </select>
         </div>
         <div class="fg">
@@ -767,11 +761,11 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
           </select>
         </div>
         <div class="fg">
-          <label>العمق الحالي (م)</label>
+          <label>العمق الحالي (متر)</label>
           <input type="number" id="wf_curDepth" placeholder="0" min="0">
         </div>
         <div class="fg">
-          <label>العمق المستهدف (م)</label>
+          <label>العمق المستهدف (متر)</label>
           <input type="number" id="wf_tgtDepth" placeholder="0" min="0">
         </div>
         <div class="fg">
@@ -779,20 +773,23 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
           <input type="number" id="wf_prod" placeholder="0" min="0">
         </div>
         <div class="fg">
-          <label>نوع المضخة ومواصفاتها</label>
-          <input type="text" id="wf_pump" placeholder="مواصفات المضخة الفنية">
+          <label>نوع وقوة المضخة</label>
+          <input type="text" id="wf_pump" placeholder="مثال: طاردة 15HP">
         </div>
         <div class="fg">
           <label>الشركة المنفذة / المقاول</label>
           <input type="text" id="wf_contractor" placeholder="اسم الشركة">
         </div>
         <div class="fg">
-          <label>تاريخ بدء العمل</label>
-          <input type="date" id="wf_start">
-        </div>
-        <div class="fg">
-          <label>تاريخ الانتهاء المتوقع</label>
-          <input type="date" id="wf_end">
+          <label>لون الأيقونة المستهدف</label>
+          <select id="wf_iconColor">
+            <option value="">اختر اللون</option>
+            <option value="أخضر">🟢 أخضر</option>
+            <option value="أصفر">🟡 أصفر</option>
+            <option value="أحمر">🔴 أحمر</option>
+            <option value="رمادي">⚫ رمادي</option>
+            <option value="أزرق">🔵 أزرق</option>
+          </select>
         </div>
 
         <div class="form-sep">📊 نسبة الإنجاز</div>
@@ -804,13 +801,6 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
               oninput="document.getElementById('pctLabel').textContent=this.value+'%';document.getElementById('pctNum').textContent=this.value+'%'">
             <div class="slider-num" id="pctNum">0%</div>
           </div>
-        </div>
-
-        <div class="form-sep">📝 ملاحظات</div>
-
-        <div class="fg full">
-          <label>ملاحظات إضافية</label>
-          <textarea id="wf_notes" placeholder="أي ملاحظات أو تعليقات تقنية…"></textarea>
         </div>
 
       </div>
@@ -915,13 +905,6 @@ tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:mid
 /* ════════════════════════════════
    CONSTANTS
 ════════════════════════════════ */
-const LIBYA_CITIES = [
-  'طرابلس','بنغازي','مصراتة','الزاوية','الخمس','سبها','غريان','ترهونة',
-  'سرت','زليتن','البيضاء','درنة','الجفرة','الكفرة','طبرق','نالوت',
-  'غدامس','جالو','براك الشاطئ','أوباري','يفرن','الرجبان','أجدابيا',
-  'البريقة','رأس لانوف','الجفارة','ورفلة','بني وليد','مرزق','صبراتة'
-];
-
 const STATUS_COLOR = {
   'جاهز':          '#28a745',
   'قيد التنفيذ':   '#ffc107',
@@ -952,21 +935,9 @@ let _activeDetailId = null;
    INIT
 ════════════════════════════════ */
 window.onload = () => {
-  populateCityDropdowns();
   initMap();
   document.getElementById('li_user').focus();
 };
-
-function populateCityDropdowns() {
-  ['wf_city','mapFCity','tblFCity'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    LIBYA_CITIES.forEach(c => {
-      const o = document.createElement('option');
-      o.value = c; o.textContent = c; el.appendChild(o);
-    });
-  });
-}
 
 /* ════════════════════════════════
    MAP — Leaflet + OpenStreetMap
@@ -1001,7 +972,7 @@ function buildPopupHtml(w) {
   const color = STATUS_COLOR[w.status] || '#4a5568';
   const pct   = parseInt(w.completion) || 0;
   return `<div>
-    <div class="wp-head">${w.wellId} — ${w.city}${w.region ? ' / '+w.region : ''}</div>
+    <div class="wp-head">${w.wellId} — ${w.cityRegion||'—'}</div>
     <div class="wp-body">
       <div class="wp-row"><span>الحالة</span><b style="color:${color}">${w.status||'—'}</b></div>
       <div class="wp-row"><span>نوع العمل</span><b>${w.workType||'—'}</b></div>
@@ -1130,7 +1101,7 @@ function refreshAll() {
 }
 
 function syncFilterDropdowns(wells) {
-  const cities = [...new Set(wells.map(w => w.city).filter(Boolean))].sort();
+  const cities = [...new Set(wells.map(w => w.cityRegion).filter(Boolean))].sort();
   ['mapFCity','tblFCity'].forEach(id => {
     const sel = document.getElementById(id);
     const cur = sel.value;
@@ -1175,10 +1146,7 @@ function renderWellsTable(data) {
           ${w.wellId}
         </button>
       </td>
-      <td>
-        <div style="font-size:.84rem;font-weight:600">${w.city||'—'}</div>
-        ${w.region?`<div style="font-size:.72rem;color:var(--text-lt)">${w.region}</div>`:''}
-      </td>
+      <td style="font-size:.84rem;font-weight:600">${w.cityRegion||'—'}</td>
       <td><span class="badge bg-blue">${w.workType||'—'}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
@@ -1208,9 +1176,9 @@ function filterWells() {
   const status = document.getElementById('tblFStatus').value;
   const city   = document.getElementById('tblFCity').value;
   const f = _wells.filter(w =>
-    (!q      || (w.wellId+w.city+(w.region||'')+(w.contractor||'')).toLowerCase().includes(q)) &&
-    (!status || w.status === status) &&
-    (!city   || w.city   === city)
+    (!q      || (w.wellId+(w.cityRegion||'')+(w.contractor||'')).toLowerCase().includes(q)) &&
+    (!status || w.status     === status) &&
+    (!city   || w.cityRegion === city)
   );
   renderWellsTable(f);
 }
@@ -1233,8 +1201,8 @@ function openWellModal(wellId = null) {
 }
 
 function clearWellForm() {
-  ['wf_wellId','wf_city','wf_region','wf_lat','wf_lng','wf_workType','wf_status',
-   'wf_curDepth','wf_tgtDepth','wf_prod','wf_pump','wf_contractor','wf_start','wf_end','wf_notes']
+  ['wf_wellId','wf_cityRegion','wf_lat','wf_lng','wf_workType','wf_status',
+   'wf_curDepth','wf_tgtDepth','wf_prod','wf_pump','wf_contractor','wf_iconColor']
   .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('wf_pct').value = 0;
   document.getElementById('pctLabel').textContent = '0%';
@@ -1242,32 +1210,28 @@ function clearWellForm() {
 }
 
 function fillWellForm(w) {
-  document.getElementById('wf_wellId').value     = w.wellId       || '';
-  document.getElementById('wf_city').value       = w.city         || '';
-  document.getElementById('wf_region').value     = w.region       || '';
-  document.getElementById('wf_lat').value        = w.lat          || '';
-  document.getElementById('wf_lng').value        = w.lng          || '';
-  document.getElementById('wf_workType').value   = w.workType     || '';
-  document.getElementById('wf_status').value     = w.status       || '';
-  document.getElementById('wf_curDepth').value   = w.currentDepth || '';
-  document.getElementById('wf_tgtDepth').value   = w.targetDepth  || '';
-  document.getElementById('wf_prod').value       = w.productivity || '';
-  document.getElementById('wf_pump').value       = w.pumpType     || '';
-  document.getElementById('wf_contractor').value = w.contractor   || '';
-  document.getElementById('wf_start').value      = w.startDate    || '';
-  document.getElementById('wf_end').value        = w.endDate      || '';
-  document.getElementById('wf_notes').value      = w.notes        || '';
+  document.getElementById('wf_wellId').value      = w.wellId       || '';
+  document.getElementById('wf_cityRegion').value  = w.cityRegion   || '';
+  document.getElementById('wf_lat').value         = w.lat          || '';
+  document.getElementById('wf_lng').value         = w.lng          || '';
+  document.getElementById('wf_workType').value    = w.workType     || '';
+  document.getElementById('wf_status').value      = w.status       || '';
+  document.getElementById('wf_curDepth').value    = w.currentDepth || '';
+  document.getElementById('wf_tgtDepth').value    = w.targetDepth  || '';
+  document.getElementById('wf_prod').value        = w.productivity || '';
+  document.getElementById('wf_pump').value        = w.pumpType     || '';
+  document.getElementById('wf_contractor').value  = w.contractor   || '';
+  document.getElementById('wf_iconColor').value   = w.iconColor    || '';
   const pct = parseInt(w.completion) || 0;
-  document.getElementById('wf_pct').value             = pct;
-  document.getElementById('pctLabel').textContent     = pct + '%';
-  document.getElementById('pctNum').textContent       = pct + '%';
+  document.getElementById('wf_pct').value         = pct;
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('pctNum').textContent   = pct + '%';
 }
 
 function submitWell() {
   const data = {
     wellId:       document.getElementById('wf_wellId').value.trim(),
-    city:         document.getElementById('wf_city').value,
-    region:       document.getElementById('wf_region').value.trim(),
+    cityRegion:   document.getElementById('wf_cityRegion').value.trim(),
     lat:          document.getElementById('wf_lat').value,
     lng:          document.getElementById('wf_lng').value,
     workType:     document.getElementById('wf_workType').value,
@@ -1277,16 +1241,15 @@ function submitWell() {
     productivity: document.getElementById('wf_prod').value,
     pumpType:     document.getElementById('wf_pump').value.trim(),
     contractor:   document.getElementById('wf_contractor').value.trim(),
-    startDate:    document.getElementById('wf_start').value,
-    endDate:      document.getElementById('wf_end').value,
+    iconColor:    document.getElementById('wf_iconColor').value,
     completion:   document.getElementById('wf_pct').value,
-    notes:        document.getElementById('wf_notes').value.trim(),
     isEdit:       !!_editWellId,
-    originalId:   _editWellId || ''
+    originalId:   _editWellId || '',
+    user:         _session ? _session.username : '—'
   };
-  if (!data.wellId) { showToast('رقم البئر مطلوب', 'error'); return; }
-  if (!data.city)   { showToast('يرجى اختيار المدينة', 'error'); return; }
-  if (!data.status) { showToast('يرجى اختيار الحالة التشغيلية', 'error'); return; }
+  if (!data.wellId)      { showToast('رقم البئر مطلوب', 'error'); return; }
+  if (!data.cityRegion)  { showToast('يرجى إدخال المنطقة / المدينة', 'error'); return; }
+  if (!data.status)      { showToast('يرجى اختيار الحالة التشغيلية', 'error'); return; }
 
   const btn = document.getElementById('wellSaveBtn');
   btn.innerHTML = '<span class="spin"></span> جاري الحفظ…';
@@ -1324,7 +1287,7 @@ function openWellDetail(wellId) {
   const pct   = parseInt(w.completion) || 0;
 
   document.getElementById('wd_id').textContent  = w.wellId;
-  document.getElementById('wd_loc').textContent = (w.city || '') + (w.region ? ' / ' + w.region : '');
+  document.getElementById('wd_loc').textContent = w.cityRegion || '—';
 
   document.getElementById('wdBody').innerHTML = `
     <div style="margin-bottom:14px">
@@ -1339,15 +1302,13 @@ function openWellDetail(wellId) {
     <div class="detail-grid">
       ${dCell('الحالة التشغيلية', `<span class="badge ${badge}">${w.status||'—'}</span>`)}
       ${dCell('نوع العمل', w.workType||'—')}
+      ${dCell('المنطقة / المدينة', w.cityRegion||'—')}
       ${dCell('العمق الحالي', (w.currentDepth||0)+' م')}
       ${dCell('العمق المستهدف', (w.targetDepth||0)+' م')}
       ${dCell('الإنتاجية المستهدفة', (w.productivity||0)+' م³/يوم')}
-      ${dCell('نوع المضخة', w.pumpType||'—')}
+      ${dCell('نوع وقوة المضخة', w.pumpType||'—')}
       ${dCell('الشركة المنفذة', w.contractor||'—')}
-      ${dCell('تاريخ البدء', w.startDate||'—')}
-      ${dCell('تاريخ الانتهاء', w.endDate||'—')}
-      ${dCell('آخر تحديث', w.lastUpdate||'—')}
-      ${dCell('المحدِّث', w.updatedBy||'—')}
+      ${dCell('لون الأيقونة', w.iconColor||'—')}
       ${w.lat&&w.lng ? dCell('الإحداثيات', w.lat+', '+w.lng) : ''}
     </div>
     ${w.notes ? `

@@ -4,108 +4,85 @@
  *  الجهاز التنفيذي لحفر وصيانة آبار المياه
  * ═══════════════════════════════════════════════════════════════
  *
- *  بنية Google Sheets المطلوبة:
- *  ─────────────────────────────
- *  ورقة "الآبار":
- *    A: رقم البئر | B: المدينة | C: المنطقة | D: خط العرض
- *    E: خط الطول | F: نوع العمل | G: العمق الحالي
- *    H: العمق المستهدف | I: الإنتاجية (م³/يوم) | J: الشركة
- *    K: نوع المضخة | L: نسبة الإنجاز | M: الحالة التشغيلية
- *    N: تاريخ البدء | O: تاريخ الانتهاء | P: ملاحظات
- *    Q: آخر تحديث | R: المحدِّث
+ *  بنية ورقة "الآبار" (13 عمود):
+ *    A: رقم البئر العام
+ *    B: المنطقة / المدينة
+ *    C: خط العرض (Latitude)
+ *    D: خط الطول (Longitude)
+ *    E: نوع العمل المستهدف
+ *    F: العمق الحالي (متر)
+ *    G: العمق المستهدف (متر)
+ *    H: الإنتاجية المستهدفة (م³/يوم)
+ *    I: الشركة المنفذة / المقاول
+ *    J: نوع وقوة المضخة
+ *    K: نسبة الإنجاز (%)
+ *    L: الحالة التشغيلية
+ *    M: لون الأيقونة المستهدف
  *
- *  ورقة "المستخدمين":
- *    A: اسم المستخدم | B: كلمة المرور | C: الصلاحية
- *    D: الاسم الكامل | E: تاريخ الإنشاء
- *
- *  ورقة "السجل":
- *    A: التاريخ والوقت | B: المستخدم | C: العملية
- *    D: رقم البئر | E: التفاصيل
+ *  بنية ورقة "المستخدمين":
+ *    A: اسم المستخدم | B: كلمة المرور | C: الصلاحية | D: الاسم الكامل
  * ═══════════════════════════════════════════════════════════════
  */
 
-// ─── الإعدادات المركزية ─────────────────────────────────────
+// ─── الإعدادات ───────────────────────────────────────────────
 const WELLS_CONFIG = {
-  SS_ID:           "1Qsv0BVZ4-kagqcf9FAFxFhlE1tSsrcXB6WJyVrZSL4g",
-  SHEET_WELLS:     "الآبار",
-  SHEET_USERS:     "المستخدمين",
-  SHEET_LOG:       "السجل",
-  TIMEZONE:        "GMT+2",
+  SS_ID:        "1Qsv0BVZ4-kagqcf9FAFxFhlE1tSsrcXB6WJyVrZSL4g",
+  SHEET_WELLS:  "الآبار",
+  SHEET_USERS:  "المستخدمين",
+  SHEET_LOG:    "السجل",
+  TIMEZONE:     "GMT+2",
 
-  // أعمدة ورقة الآبار (0-indexed)
+  // أعمدة ورقة الآبار (0-indexed) — تطابق الشيت الفعلي
   W: {
-    WELL_ID:       0,  // A
-    CITY:          1,  // B
-    REGION:        2,  // C
-    LAT:           3,  // D
-    LNG:           4,  // E
-    WORK_TYPE:     5,  // F
-    CURR_DEPTH:    6,  // G
-    TGT_DEPTH:     7,  // H
-    PRODUCTIVITY:  8,  // I
-    CONTRACTOR:    9,  // J
-    PUMP_TYPE:     10, // K
-    COMPLETION:    11, // L
-    STATUS:        12, // M
-    START_DATE:    13, // N
-    END_DATE:      14, // O
-    NOTES:         15, // P
-    LAST_UPDATE:   16, // Q
-    UPDATED_BY:    17  // R
+    WELL_ID:      0,   // A: رقم البئر العام
+    CITY_REGION:  1,   // B: المنطقة / المدينة
+    LAT:          2,   // C: خط العرض
+    LNG:          3,   // D: خط الطول
+    WORK_TYPE:    4,   // E: نوع العمل المستهدف
+    CURR_DEPTH:   5,   // F: العمق الحالي
+    TGT_DEPTH:    6,   // G: العمق المستهدف
+    PRODUCTIVITY: 7,   // H: الإنتاجية المستهدفة
+    CONTRACTOR:   8,   // I: الشركة المنفذة
+    PUMP_TYPE:    9,   // J: نوع وقوة المضخة
+    COMPLETION:   10,  // K: نسبة الإنجاز
+    STATUS:       11,  // L: الحالة التشغيلية
+    ICON_COLOR:   12   // M: لون الأيقونة المستهدف
   },
 
-  // أعمدة ورقة المستخدمين (0-indexed)
+  // أعمدة ورقة المستخدمين
   U: {
-    USERNAME:      0,  // A
-    PASSWORD:      1,  // B
-    ROLE:          2,  // C
-    FULL_NAME:     3,  // D
-    CREATED_AT:    4   // E
+    USERNAME:  0,  // A
+    PASSWORD:  1,  // B
+    ROLE:      2,  // C
+    FULL_NAME: 3   // D
   }
 };
 
-// ─── Singleton للـ Spreadsheet ──────────────────────────────
+// ─── Singleton ───────────────────────────────────────────────
 const _WSS = (() => {
   let inst = null;
   return {
-    get: () => {
-      if (!inst) inst = SpreadsheetApp.openById(WELLS_CONFIG.SS_ID);
-      return inst;
-    },
+    get: () => { if (!inst) inst = SpreadsheetApp.openById(WELLS_CONFIG.SS_ID); return inst; },
     reset: () => { inst = null; }
   };
 })();
 
-// ─── مساعدات عامة ───────────────────────────────────────────
-function wSanitize(val, type) {
-  if (val === null || val === undefined) return type === 'number' ? 0 : '';
-  if (type === 'number') return isNaN(Number(val)) ? 0 : Number(val);
-  return String(val).trim().replace(/[<>"'`]/g, '');
-}
+// ─── مساعدات ─────────────────────────────────────────────────
+function wNum(v)  { const n = Number(v); return isNaN(n) ? 0 : n; }
+function wStr(v)  { return v === null || v === undefined ? '' : String(v).trim(); }
+function wNow()   { return Utilities.formatDate(new Date(), WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'); }
+function wDate(d) { if (!d) return ''; if (d instanceof Date) return Utilities.formatDate(d, WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd'); return String(d); }
 
-function wFormatDate(d) {
-  if (!d) return '';
-  if (d instanceof Date) return Utilities.formatDate(d, WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd');
-  return String(d);
-}
-
-function wNow() {
-  return Utilities.formatDate(new Date(), WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm');
-}
-
-function wLogActivity(user, operation, wellId, details) {
+function wLog(user, op, id, detail) {
   try {
-    const ss    = _WSS.get();
-    let log     = ss.getSheetByName(WELLS_CONFIG.SHEET_LOG);
-    if (!log) {
-      log = ss.insertSheet(WELLS_CONFIG.SHEET_LOG);
-      log.appendRow(['التاريخ والوقت','المستخدم','العملية','رقم البئر','التفاصيل']);
-    }
-    log.appendRow([wNow(), wSanitize(user), wSanitize(operation), wSanitize(wellId), wSanitize(details)]);
-  } catch (_) {}
+    const ss = _WSS.get();
+    let s = ss.getSheetByName(WELLS_CONFIG.SHEET_LOG);
+    if (!s) { s = ss.insertSheet(WELLS_CONFIG.SHEET_LOG); s.appendRow(['الوقت','المستخدم','العملية','البئر','التفاصيل']); }
+    s.appendRow([wNow(), wStr(user), wStr(op), wStr(id), wStr(detail)]);
+  } catch(_) {}
 }
 
-// ─── تشغيل التطبيق ──────────────────────────────────────────
+// ─── doGet ───────────────────────────────────────────────────
 function doGet() {
   return HtmlService.createTemplateFromFile('Wells')
     .evaluate()
@@ -114,404 +91,303 @@ function doGet() {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-// ─── تسجيل الدخول ───────────────────────────────────────────
-/**
- * @param {string} username
- * @param {string} password
- * @returns {{ ok:boolean, role?:string, name?:string, error?:string }}
- */
+// ─── تسجيل الدخول ────────────────────────────────────────────
 function login(username, password) {
   try {
     const ss = _WSS.get();
-
-    // تحقق من الوصول للملف
-    if (!ss) return { ok: false, error: 'لا يمكن الوصول للملف — تحقق من الصلاحيات' };
-
     let sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
 
-    // إنشاء ورقة المستخدمين تلقائياً إذا لم توجد
+    // إنشاء ورقة المستخدمين تلقائياً
     if (!sheet) {
       sheet = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
-      sheet.appendRow(['اسم المستخدم','كلمة المرور','الصلاحية','الاسم الكامل','تاريخ الإنشاء']);
-      sheet.appendRow(['admin','admin123','مدير','المدير العام', wNow()]);
+      sheet.appendRow(['اسم المستخدم', 'كلمة المرور', 'الصلاحية', 'الاسم الكامل']);
+      sheet.appendRow(['admin', 'admin123', 'مدير', 'المدير العام']);
       SpreadsheetApp.flush();
     }
 
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) {
-      // إضافة admin افتراضي إذا كانت الورقة فارغة
-      sheet.appendRow(['admin','admin123','مدير','المدير العام', wNow()]);
+    // إضافة admin إذا كانت الورقة فارغة
+    if (sheet.getLastRow() < 2) {
+      sheet.appendRow(['admin', 'admin123', 'مدير', 'المدير العام']);
       SpreadsheetApp.flush();
     }
 
     const U    = WELLS_CONFIG.U;
-    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+    const last = sheet.getLastRow();
+    const rows = sheet.getRange(2, 1, last - 1, 4).getValues();
 
-    // مقارنة بدون حساسية للمسافات
-    const uTrim = String(username).trim();
-    const pTrim = String(password).trim();
+    const uIn = String(username).trim().toLowerCase();
+    const pIn = String(password).trim();
 
-    const user = rows.find(r =>
-      String(r[U.USERNAME]).trim() === uTrim &&
-      String(r[U.PASSWORD]).trim() === pTrim
+    const found = rows.find(r =>
+      String(r[U.USERNAME]).trim().toLowerCase() === uIn &&
+      String(r[U.PASSWORD]).trim() === pIn
     );
 
-    if (!user) {
-      Logger.log('Login failed for: ' + uTrim + ' | rows count: ' + rows.length);
+    if (!found) {
+      Logger.log('Login failed | user=' + uIn + ' | rows=' + rows.length);
       return { ok: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
     }
 
-    wLogActivity(uTrim, 'تسجيل دخول', '—', 'دخول ناجح');
+    wLog(uIn, 'دخول', '-', 'ناجح');
     return {
       ok:   true,
-      role: String(user[U.ROLE]).trim(),
-      name: String(user[U.FULL_NAME]).trim() || uTrim
+      role: String(found[U.ROLE]).trim()     || 'مشاهد',
+      name: String(found[U.FULL_NAME]).trim() || String(found[U.USERNAME]).trim()
     };
 
   } catch (e) {
-    Logger.log('Login error: ' + e.toString());
+    Logger.log('Login exception: ' + e);
     return { ok: false, error: 'خطأ: ' + e.message };
   }
 }
 
-// دالة اختبار سريعة — شغّلها من المحرر للتحقق
+// اختبار من المحرر مباشرة
 function testLogin() {
-  const res = login('admin', 'admin123');
-  Logger.log('Test login result: ' + JSON.stringify(res));
-  return res;
+  const r = login('admin', 'admin123');
+  Logger.log('نتيجة testLogin: ' + JSON.stringify(r));
 }
 
-// ─── جلب كل الآبار ──────────────────────────────────────────
-/**
- * @returns {Array<Object>} مصفوفة كائنات البيانات
- */
+// ─── جلب الآبار ──────────────────────────────────────────────
 function getWells() {
   try {
     const ss    = _WSS.get();
     const sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
-    if (!sheet) return [];
-
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return [];
+    if (!sheet || sheet.getLastRow() < 2) return [];
 
     const W    = WELLS_CONFIG.W;
-    const data = sheet.getRange(2, 1, lastRow - 1, 18).getValues();
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues();
 
     return data
-      .filter(r => wSanitize(r[W.WELL_ID]))   // تجاهل الصفوف الفارغة
+      .filter(r => wStr(r[W.WELL_ID]))
       .map(r => ({
-        wellId:       wSanitize(r[W.WELL_ID]),
-        city:         wSanitize(r[W.CITY]),
-        region:       wSanitize(r[W.REGION]),
-        lat:          wSanitize(r[W.LAT]),
-        lng:          wSanitize(r[W.LNG]),
-        workType:     wSanitize(r[W.WORK_TYPE]),
-        currentDepth: wSanitize(r[W.CURR_DEPTH],  'number'),
-        targetDepth:  wSanitize(r[W.TGT_DEPTH],   'number'),
-        productivity: wSanitize(r[W.PRODUCTIVITY], 'number'),
-        contractor:   wSanitize(r[W.CONTRACTOR]),
-        pumpType:     wSanitize(r[W.PUMP_TYPE]),
-        completion:   wSanitize(r[W.COMPLETION],   'number'),
-        status:       wSanitize(r[W.STATUS]),
-        startDate:    wFormatDate(r[W.START_DATE]),
-        endDate:      wFormatDate(r[W.END_DATE]),
-        notes:        wSanitize(r[W.NOTES]),
-        lastUpdate:   wSanitize(r[W.LAST_UPDATE]),
-        updatedBy:    wSanitize(r[W.UPDATED_BY])
+        wellId:       wStr(r[W.WELL_ID]),
+        cityRegion:   wStr(r[W.CITY_REGION]),
+        lat:          wStr(r[W.LAT]),
+        lng:          wStr(r[W.LNG]),
+        workType:     wStr(r[W.WORK_TYPE]),
+        currentDepth: wNum(r[W.CURR_DEPTH]),
+        targetDepth:  wNum(r[W.TGT_DEPTH]),
+        productivity: wNum(r[W.PRODUCTIVITY]),
+        contractor:   wStr(r[W.CONTRACTOR]),
+        pumpType:     wStr(r[W.PUMP_TYPE]),
+        completion:   wNum(r[W.COMPLETION]),
+        status:       wStr(r[W.STATUS]),
+        iconColor:    wStr(r[W.ICON_COLOR])
       }));
   } catch (e) {
-    Logger.log('getWells error: ' + e);
+    Logger.log('getWells: ' + e);
     return [];
   }
 }
 
-// ─── حفظ أو تعديل بئر ───────────────────────────────────────
-/**
- * @param {Object} data  بيانات البئر من الواجهة
- * @returns {{ ok:boolean, error?:string }}
- */
+// ─── حفظ / تعديل بئر ─────────────────────────────────────────
 function saveWell(data) {
   const lock = LockService.getScriptLock();
   try {
-    if (!lock.tryLock(20000)) return { ok: false, error: 'النظام مشغول، حاول مجدداً' };
+    if (!lock.tryLock(20000)) return { ok: false, error: 'النظام مشغول' };
 
-    const ss    = _WSS.get();
-    let sheet   = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
-
-    // إنشاء الورقة تلقائياً إذا لم توجد مع إضافة الترويسة
+    const ss  = _WSS.get();
+    let sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
     if (!sheet) {
       sheet = ss.insertSheet(WELLS_CONFIG.SHEET_WELLS);
       sheet.appendRow([
-        'رقم البئر','المدينة','المنطقة','خط العرض','خط الطول',
-        'نوع العمل','العمق الحالي (م)','العمق المستهدف (م)',
-        'الإنتاجية (م³/يوم)','الشركة المنفذة','نوع المضخة',
-        'نسبة الإنجاز (%)','الحالة التشغيلية',
-        'تاريخ البدء','تاريخ الانتهاء','ملاحظات',
-        'آخر تحديث','المحدِّث'
+        'رقم البئر العام', 'المنطقة / المدينة',
+        'خط العرض (Latitude)', 'خط الطول (Longitude)',
+        'نوع العمل المستهدف', 'العمق الحالي (متر)', 'العمق المستهدف (متر)',
+        'الإنتاجية المستهدفة (م³/يوم)', 'الشركة المنفذة / المقاول',
+        'نوع وقوة المضخة', 'نسبة الإنجاز (%)',
+        'الحالة التشغيلية', 'لون الأيقونة المستهدف'
       ]);
     }
 
-    const W       = WELLS_CONFIG.W;
-    const wellId  = wSanitize(data.wellId);
-    const isEdit  = data.isEdit === true || data.isEdit === 'true';
-    const origId  = wSanitize(data.originalId || wellId);
-    const now     = wNow();
+    const wellId = wStr(data.wellId);
+    const isEdit = data.isEdit === true || data.isEdit === 'true';
+    const origId = wStr(data.originalId || wellId);
 
-    const rowData = [
+    const row = [
       wellId,
-      wSanitize(data.city),
-      wSanitize(data.region),
-      wSanitize(data.lat),
-      wSanitize(data.lng),
-      wSanitize(data.workType),
-      wSanitize(data.currentDepth, 'number'),
-      wSanitize(data.targetDepth,  'number'),
-      wSanitize(data.productivity, 'number'),
-      wSanitize(data.contractor),
-      wSanitize(data.pumpType),
-      wSanitize(data.completion,   'number'),
-      wSanitize(data.status),
-      wSanitize(data.startDate),
-      wSanitize(data.endDate),
-      wSanitize(data.notes),
-      now,
-      wSanitize(data.updatedBy || '—')
+      wStr(data.cityRegion),
+      wStr(data.lat),
+      wStr(data.lng),
+      wStr(data.workType),
+      wNum(data.currentDepth),
+      wNum(data.targetDepth),
+      wNum(data.productivity),
+      wStr(data.contractor),
+      wStr(data.pumpType),
+      wNum(data.completion),
+      wStr(data.status),
+      wStr(data.iconColor)
     ];
 
     if (isEdit) {
-      const lastRow = sheet.getLastRow();
-      if (lastRow < 2) return { ok: false, error: 'لا توجد بيانات للتعديل' };
-      const values  = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-      const rowIdx  = values.findIndex(r => wSanitize(r[0]) === origId);
+      const vals   = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+      const rowIdx = vals.findIndex(r => wStr(r[0]) === origId);
       if (rowIdx === -1) return { ok: false, error: 'رقم البئر غير موجود: ' + origId };
-      sheet.getRange(rowIdx + 2, 1, 1, rowData.length).setValues([rowData]);
-      wLogActivity(data.updatedBy || '—', 'تعديل بئر', wellId, 'تحديث البيانات');
+      sheet.getRange(rowIdx + 2, 1, 1, row.length).setValues([row]);
+      wLog(wStr(data.user), 'تعديل', wellId, 'تحديث');
     } else {
-      // التحقق من عدم تكرار رقم البئر
-      const lastRow = sheet.getLastRow();
-      if (lastRow >= 2) {
-        const existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-        if (existing.some(r => wSanitize(r[0]) === wellId)) {
+      const last = sheet.getLastRow();
+      if (last >= 2) {
+        const ex = sheet.getRange(2, 1, last - 1, 1).getValues();
+        if (ex.some(r => wStr(r[0]) === wellId))
           return { ok: false, error: 'رقم البئر موجود مسبقاً: ' + wellId };
-        }
       }
-      sheet.appendRow(rowData);
-      wLogActivity(data.updatedBy || '—', 'إضافة بئر', wellId, 'بئر جديد');
+      sheet.appendRow(row);
+      wLog(wStr(data.user), 'إضافة', wellId, 'جديد');
     }
 
     SpreadsheetApp.flush();
     return { ok: true };
-
   } catch (e) {
-    Logger.log('saveWell error: ' + e);
-    return { ok: false, error: e.toString() };
+    return { ok: false, error: e.message };
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
 
-// ─── حذف بئر ────────────────────────────────────────────────
-/**
- * @param {string} wellId  رقم البئر
- * @returns {{ ok:boolean, error?:string }}
- */
+// ─── حذف بئر ─────────────────────────────────────────────────
 function deleteWell(wellId) {
   const lock = LockService.getScriptLock();
   try {
     if (!lock.tryLock(15000)) return { ok: false, error: 'النظام مشغول' };
-
     const ss    = _WSS.get();
     const sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
-    if (!sheet) return { ok: false, error: 'ورقة الآبار غير موجودة' };
-
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { ok: false, error: 'لا توجد بيانات' };
-
-    const id      = wSanitize(wellId);
-    const values  = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    const rowIdx  = values.findIndex(r => wSanitize(r[0]) === id);
-    if (rowIdx === -1) return { ok: false, error: 'رقم البئر غير موجود' };
-
+    if (!sheet) return { ok: false, error: 'الورقة غير موجودة' };
+    const id     = wStr(wellId);
+    const vals   = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+    const rowIdx = vals.findIndex(r => wStr(r[0]) === id);
+    if (rowIdx === -1) return { ok: false, error: 'البئر غير موجود' };
     sheet.deleteRow(rowIdx + 2);
     SpreadsheetApp.flush();
-    wLogActivity('—', 'حذف بئر', wellId, 'تم الحذف');
+    wLog('-', 'حذف', wellId, 'تم');
     return { ok: true };
-
   } catch (e) {
-    return { ok: false, error: e.toString() };
+    return { ok: false, error: e.message };
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
 
-// ─── إدارة المستخدمين ────────────────────────────────────────
-/**
- * جلب كل المستخدمين (للمدير فقط)
- * @returns {Array<{username, role, fullName}>}
- */
+// ─── المستخدمون ──────────────────────────────────────────────
 function getUsers() {
   try {
     const ss    = _WSS.get();
     const sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
-    if (!sheet) return [];
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return [];
+    if (!sheet || sheet.getLastRow() < 2) return [];
     const U    = WELLS_CONFIG.U;
-    const data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
-    return data
-      .filter(r => wSanitize(r[U.USERNAME]))
-      .map(r => ({
-        username: wSanitize(r[U.USERNAME]),
-        role:     wSanitize(r[U.ROLE]),
-        fullName: wSanitize(r[U.FULL_NAME])
-      }));
-  } catch (e) {
-    return [];
-  }
+    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues();
+    return rows.filter(r => wStr(r[U.USERNAME])).map(r => ({
+      username: wStr(r[U.USERNAME]),
+      role:     wStr(r[U.ROLE]),
+      fullName: wStr(r[U.FULL_NAME])
+    }));
+  } catch (e) { return []; }
 }
 
-/**
- * حفظ أو تعديل مستخدم
- * @param {Object} data
- * @returns {{ ok:boolean, error?:string }}
- */
 function saveUser(data) {
   const lock = LockService.getScriptLock();
   try {
     if (!lock.tryLock(15000)) return { ok: false, error: 'النظام مشغول' };
-
-    const ss    = _WSS.get();
-    let sheet   = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
+    const ss  = _WSS.get();
+    let sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
     if (!sheet) {
       sheet = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
-      sheet.appendRow(['اسم المستخدم','كلمة المرور','الصلاحية','الاسم الكامل','تاريخ الإنشاء']);
+      sheet.appendRow(['اسم المستخدم', 'كلمة المرور', 'الصلاحية', 'الاسم الكامل']);
     }
-
     const U        = WELLS_CONFIG.U;
-    const username = wSanitize(data.username);
+    const username = wStr(data.username);
     const isEdit   = data.isEdit === true || data.isEdit === 'true';
-    const origUser = wSanitize(data.originalUsername || username);
-
-    const rowData = [
-      username,
-      String(data.password || ''),
-      wSanitize(data.role),
-      wSanitize(data.fullName),
-      isEdit ? '' : wNow()
-    ];
+    const origUser = wStr(data.originalUsername || username);
+    const row      = [username, String(data.password || ''), wStr(data.role), wStr(data.fullName)];
 
     if (isEdit) {
-      const lastRow = sheet.getLastRow();
-      if (lastRow < 2) return { ok: false, error: 'المستخدم غير موجود' };
-      const values  = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-      const rowIdx  = values.findIndex(r => wSanitize(r[0]) === origUser);
+      const vals   = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+      const rowIdx = vals.findIndex(r => wStr(r[0]) === origUser);
       if (rowIdx === -1) return { ok: false, error: 'المستخدم غير موجود' };
-      // لا نغيّر تاريخ الإنشاء عند التعديل
-      const existing = sheet.getRange(rowIdx + 2, 1, 1, 5).getValues()[0];
-      rowData[U.CREATED_AT] = existing[U.CREATED_AT];
-      sheet.getRange(rowIdx + 2, 1, 1, 5).setValues([rowData]);
+      sheet.getRange(rowIdx + 2, 1, 1, 4).setValues([row]);
     } else {
-      // التحقق من عدم تكرار اسم المستخدم
-      const lastRow = sheet.getLastRow();
-      if (lastRow >= 2) {
-        const existing = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-        if (existing.some(r => wSanitize(r[0]) === username)) {
+      const last = sheet.getLastRow();
+      if (last >= 2) {
+        const ex = sheet.getRange(2, 1, last - 1, 1).getValues();
+        if (ex.some(r => wStr(r[0]) === username))
           return { ok: false, error: 'اسم المستخدم موجود مسبقاً' };
-        }
       }
-      sheet.appendRow(rowData);
+      sheet.appendRow(row);
     }
-
     SpreadsheetApp.flush();
     return { ok: true };
-
   } catch (e) {
-    return { ok: false, error: e.toString() };
+    return { ok: false, error: e.message };
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
 
-/**
- * حذف مستخدم
- * @param {string} username
- * @returns {{ ok:boolean, error?:string }}
- */
 function deleteUser(username) {
   const lock = LockService.getScriptLock();
   try {
     if (!lock.tryLock(15000)) return { ok: false, error: 'النظام مشغول' };
-
     const ss    = _WSS.get();
     const sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
     if (!sheet) return { ok: false, error: 'ورقة المستخدمين غير موجودة' };
-
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { ok: false, error: 'لا يوجد مستخدمون' };
-
-    const id     = wSanitize(username);
-    const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-    const rowIdx = values.findIndex(r => wSanitize(r[0]) === id);
+    const id     = wStr(username);
+    const vals   = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+    const rowIdx = vals.findIndex(r => wStr(r[0]) === id);
     if (rowIdx === -1) return { ok: false, error: 'المستخدم غير موجود' };
-
     sheet.deleteRow(rowIdx + 2);
     SpreadsheetApp.flush();
     return { ok: true };
-
   } catch (e) {
-    return { ok: false, error: e.toString() };
+    return { ok: false, error: e.message };
   } finally {
     if (lock.hasLock()) lock.releaseLock();
   }
 }
 
-// ─── إنشاء هيكل الشيت من الصفر ─────────────────────────────
+// ─── إعداد الشيت من الصفر ────────────────────────────────────
 /**
- * شغّل هذه الدالة مرة واحدة من المحرر لإنشاء الأوراق وإضافة بيانات تجريبية.
+ * شغّلها مرة واحدة من المحرر لإنشاء الأوراق.
  */
 function setupSpreadsheet() {
   const ss = _WSS.get();
 
-  // ── ورقة الآبار ──
-  let wellsSheet = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
-  if (!wellsSheet) wellsSheet = ss.insertSheet(WELLS_CONFIG.SHEET_WELLS);
-  wellsSheet.clearContents();
-  wellsSheet.appendRow([
-    'رقم البئر','المدينة','المنطقة','خط العرض','خط الطول',
-    'نوع العمل','العمق الحالي (م)','العمق المستهدف (م)',
-    'الإنتاجية (م³/يوم)','الشركة المنفذة','نوع المضخة',
-    'نسبة الإنجاز (%)','الحالة التشغيلية',
-    'تاريخ البدء','تاريخ الانتهاء','ملاحظات',
-    'آخر تحديث','المحدِّث'
+  // ورقة الآبار
+  let ws = ss.getSheetByName(WELLS_CONFIG.SHEET_WELLS);
+  if (!ws) ws = ss.insertSheet(WELLS_CONFIG.SHEET_WELLS);
+  ws.clearContents();
+  ws.appendRow([
+    'رقم البئر العام', 'المنطقة / المدينة',
+    'خط العرض (Latitude)', 'خط الطول (Longitude)',
+    'نوع العمل المستهدف', 'العمق الحالي (متر)', 'العمق المستهدف (متر)',
+    'الإنتاجية المستهدفة (م³/يوم)', 'الشركة المنفذة / المقاول',
+    'نوع وقوة المضخة', 'نسبة الإنجاز (%)',
+    'الحالة التشغيلية', 'لون الأيقونة المستهدف'
   ]);
   // بيانات تجريبية
-  const samples = [
-    ['W-LY-001','طرابلس','منطقة سوق الجمعة','32.8872','13.1913','حفر جديد',180,250,500,'شركة الأمل','طاردة مياه 15HP',75,'قيد التنفيذ','2025-01-10','2026-03-01','الحفر جارٍ بصورة منتظمة',wNow(),'المهندس علي'],
-    ['W-LY-002','بنغازي','سبخة الدولة','32.1150','20.0695','صيانة بئر قائم',320,320,800,'شركة الخليج','طاردة 25HP',100,'جاهز','2024-06-01','2024-12-01','تمت الصيانة وجاهز للضخ',wNow(),'المهندس محمد'],
-    ['W-LY-003','سبها','الجنوب الغربي','27.0377','14.4290','حفر جديد',0,350,600,'شركة الجنوب','—',0,'متوقف','2025-03-01','','توقف بسبب نقص الوقود',wNow(),'المهندس عمر'],
-    ['W-LY-004','الجفرة','هون','29.1167','15.9500','حفر جديد',200,300,450,'شركة الوسط','طاردة 20HP',65,'قيد التنفيذ','2025-02-15','2026-02-15','',wNow(),'المهندس خالد'],
-    ['W-LY-005','مصراتة','القصبات','32.3754','15.0925','صيانة بئر قائم',0,0,0,'—','—',0,'خارج الخدمة','','','البئر جاف — يحتاج إعادة تقييم',wNow(),'المهندس سالم'],
-  ];
-  samples.forEach(r => wellsSheet.appendRow(r));
+  ws.appendRow(['W-LY-001','طرابلس — سوق الجمعة','32.8872','13.1913','حفر جديد',180,250,500,'شركة الأمل','15HP طاردة',75,'قيد التنفيذ','أصفر']);
+  ws.appendRow(['W-LY-002','بنغازي — الصابري','32.1150','20.0695','صيانة',320,320,800,'شركة الخليج','25HP طاردة',100,'جاهز','أخضر']);
+  ws.appendRow(['W-LY-003','سبها — الجنوب','27.0377','14.4290','حفر جديد',0,350,600,'شركة الجنوب','—',0,'متوقف','أحمر']);
+  ws.appendRow(['W-LY-004','الجفرة — هون','29.1167','15.9500','حفر جديد',200,300,450,'شركة الوسط','20HP طاردة',65,'قيد التنفيذ','أصفر']);
+  ws.appendRow(['W-LY-005','مصراتة — القصبات','32.3754','15.0925','صيانة',0,0,0,'—','—',0,'خارج الخدمة','رمادي']);
 
-  // ── ورقة المستخدمين ──
-  let usersSheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
-  if (!usersSheet) usersSheet = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
-  usersSheet.clearContents();
-  usersSheet.appendRow(['اسم المستخدم','كلمة المرور','الصلاحية','الاسم الكامل','تاريخ الإنشاء']);
-  usersSheet.appendRow(['admin',     'admin123',  'مدير',    'المدير العام',           wNow()]);
-  usersSheet.appendRow(['engineer1', 'eng2026',   'مهندس',   'المهندس أحمد المنتصر', wNow()]);
-  usersSheet.appendRow(['viewer1',   'view2026',  'مشاهد',   'المراقب الميداني',       wNow()]);
+  // ورقة المستخدمين
+  let us = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
+  if (!us) us = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
+  us.clearContents();
+  us.appendRow(['اسم المستخدم', 'كلمة المرور', 'الصلاحية', 'الاسم الكامل']);
+  us.appendRow(['admin',     'admin123', 'مدير',   'المدير العام']);
+  us.appendRow(['engineer1', 'eng2026',  'مهندس',  'المهندس أحمد']);
+  us.appendRow(['viewer1',   'view2026', 'مشاهد',  'المراقب الميداني']);
 
-  // ── ورقة السجل ──
-  let logSheet = ss.getSheetByName(WELLS_CONFIG.SHEET_LOG);
-  if (!logSheet) logSheet = ss.insertSheet(WELLS_CONFIG.SHEET_LOG);
-  logSheet.clearContents();
-  logSheet.appendRow(['التاريخ والوقت','المستخدم','العملية','رقم البئر','التفاصيل']);
+  // ورقة السجل
+  let lg = ss.getSheetByName(WELLS_CONFIG.SHEET_LOG);
+  if (!lg) lg = ss.insertSheet(WELLS_CONFIG.SHEET_LOG);
+  lg.clearContents();
+  lg.appendRow(['الوقت','المستخدم','العملية','البئر','التفاصيل']);
 
-  Logger.log('✅ تم إنشاء هيكل الـ Spreadsheet بنجاح مع بيانات تجريبية');
-  Logger.log('🔐 بيانات الدخول التجريبية:');
-  Logger.log('   admin / admin123 → مدير');
-  Logger.log('   engineer1 / eng2026 → مهندس');
-  Logger.log('   viewer1 / view2026 → مشاهد');
+  Logger.log('✅ تم الإعداد بنجاح');
+  Logger.log('admin / admin123 → مدير');
+  Logger.log('engineer1 / eng2026 → مهندس');
+  Logger.log('viewer1 / view2026 → مشاهد');
 }
