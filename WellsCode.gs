@@ -26,7 +26,7 @@
 
 // ─── الإعدادات المركزية ─────────────────────────────────────
 const WELLS_CONFIG = {
-  SS_ID:           "ضع_معرف_الـ_Spreadsheet_هنا",  // ← غيّر هذا
+  SS_ID:           "1Qsv0BVZ4-kagqcf9FAFxFhlE1tSsrcXB6WJyVrZSL4g",
   SHEET_WELLS:     "الآبار",
   SHEET_USERS:     "المستخدمين",
   SHEET_LOG:       "السجل",
