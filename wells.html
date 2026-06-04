@@ -1007,8 +1007,8 @@ function applyMapFilters() {
   const city   = document.getElementById('mapFCity').value;
   const status = document.getElementById('mapFStatus').value;
   renderMapMarkers(_wells.filter(w =>
-    (!city   || w.city   === city) &&
-    (!status || w.status === status)
+    (!city   || w.cityRegion === city) &&
+    (!status || w.status     === status)
   ));
 }
 
@@ -1382,7 +1382,7 @@ function updateReports(wells) {
 
   // City
   const cityMap = {};
-  wells.forEach(w => { if(w.city) cityMap[w.city] = (cityMap[w.city]||0)+1; });
+  wells.forEach(w => { if(w.cityRegion) cityMap[w.cityRegion] = (cityMap[w.cityRegion]||0)+1; });
   const topCities = Object.entries(cityMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const maxC = topCities[0]?.[1] || 1;
   document.getElementById('rptCity').innerHTML = topCities.map(([c,n]) =>
@@ -1392,9 +1392,9 @@ function updateReports(wells) {
   // Avg progress
   const cityProg = {};
   wells.forEach(w => {
-    if (!w.city) return;
-    if (!cityProg[w.city]) cityProg[w.city] = [];
-    cityProg[w.city].push(parseInt(w.completion)||0);
+    if (!w.cityRegion) return;
+    if (!cityProg[w.cityRegion]) cityProg[w.cityRegion] = [];
+    cityProg[w.cityRegion].push(parseInt(w.completion)||0);
   });
   const avgProg = Object.entries(cityProg)
     .map(([c,arr]) => [c, Math.round(arr.reduce((a,b)=>a+b,0)/arr.length)])
