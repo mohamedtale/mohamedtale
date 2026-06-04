@@ -935,7 +935,6 @@ let _activeDetailId = null;
    INIT
 ════════════════════════════════ */
 window.onload = () => {
-  initMap();
   document.getElementById('li_user').focus();
 };
 
@@ -989,12 +988,14 @@ function buildPopupHtml(w) {
 }
 
 function renderMapMarkers(wells) {
+  if (!_map) return;
   _markers.forEach(m => _map.removeLayer(m));
   _markers = [];
   wells.forEach(w => {
     const lat = parseFloat(w.lat);
     const lng = parseFloat(w.lng);
-    if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    if (lat === 0 && lng === 0) return;
     const m = L.marker([lat, lng], { icon: makeIcon(w.status) });
     m.bindPopup(buildPopupHtml(w), { maxWidth: 260, minWidth: 220 });
     m.on('click', () => openWellDetail(w.wellId));
@@ -1054,8 +1055,11 @@ function onLoginSuccess() {
   if (_session.role === 'مشاهد') {
     document.getElementById('btnAddWell').style.display = 'none';
   }
-  setTimeout(() => _map && _map.invalidateSize(), 300);
-  loadWells();
+  // نهيئ الخريطة بعد أن يصبح #app مرئياً — مهم جداً لـ Leaflet
+  setTimeout(() => {
+    initMap();
+    loadWells();
+  }, 50);
 }
 
 function doLogout() {
@@ -1068,7 +1072,7 @@ function doLogout() {
 /* ════════════════════════════════
    DATA LOADING
 ════════════════════════════════ */
-function loadWells() {
+function loadWells(callback) {
   google.script.run
     .withSuccessHandler(data => {
       _wells = Array.isArray(data) ? data : [];
@@ -1077,6 +1081,7 @@ function loadWells() {
       updateKPIs(_wells);
       updateReports(_wells);
       syncFilterDropdowns(_wells);
+      if (typeof callback === 'function') callback();
     })
     .withFailureHandler(e => showToast('فشل تحميل البيانات: ' + e.message, 'error'))
     .getWells();
@@ -1255,6 +1260,9 @@ function submitWell() {
   btn.innerHTML = '<span class="spin"></span> جاري الحفظ…';
   btn.disabled  = true;
 
+  const savedLat = parseFloat(data.lat);
+  const savedLng = parseFloat(data.lng);
+
   google.script.run
     .withSuccessHandler(res => {
       btn.innerHTML = '<i class="fas fa-save"></i> حفظ البئر';
@@ -1262,7 +1270,18 @@ function submitWell() {
       if (res.ok) {
         closeModal('wellModal');
         showToast(data.isEdit ? 'تم تحديث البئر بنجاح ✅' : 'تم إضافة البئر بنجاح ✅', 'success');
-        loadWells();
+        loadWells(() => {
+          // انتقل للخريطة وأظهر موقع البئر إن وُجدت إحداثيات
+          if (Number.isFinite(savedLat) && Number.isFinite(savedLng) && !(savedLat===0&&savedLng===0)) {
+            showTab('dashboard', document.querySelector('.nav-btn'));
+            setTimeout(() => {
+              if (_map) {
+                switchMap('dynamic');
+                _map.setView([savedLat, savedLng], 12);
+              }
+            }, 300);
+          }
+        });
       } else {
         showToast(res.error || 'حدث خطأ', 'error');
       }

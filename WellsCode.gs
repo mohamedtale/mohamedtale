@@ -70,6 +70,7 @@ const _WSS = (() => {
 // ─── مساعدات ─────────────────────────────────────────────────
 function wNum(v)  { const n = Number(v); return isNaN(n) ? 0 : n; }
 function wStr(v)  { return v === null || v === undefined ? '' : String(v).trim(); }
+function wCoord(v){ const n = parseFloat(v); return isNaN(n) ? '' : n; }
 function wNow()   { return Utilities.formatDate(new Date(), WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm'); }
 function wDate(d) { if (!d) return ''; if (d instanceof Date) return Utilities.formatDate(d, WELLS_CONFIG.TIMEZONE, 'yyyy-MM-dd'); return String(d); }
 
@@ -162,8 +163,8 @@ function getWells() {
       .map(r => ({
         wellId:       wStr(r[W.WELL_ID]),
         cityRegion:   wStr(r[W.CITY_REGION]),
-        lat:          wStr(r[W.LAT]),
-        lng:          wStr(r[W.LNG]),
+        lat:          wCoord(r[W.LAT]),
+        lng:          wCoord(r[W.LNG]),
         workType:     wStr(r[W.WORK_TYPE]),
         currentDepth: wNum(r[W.CURR_DEPTH]),
         targetDepth:  wNum(r[W.TGT_DEPTH]),
@@ -207,8 +208,8 @@ function saveWell(data) {
     const row = [
       wellId,
       wStr(data.cityRegion),
-      wStr(data.lat),
-      wStr(data.lng),
+      wCoord(data.lat),
+      wCoord(data.lng),
       wStr(data.workType),
       wNum(data.currentDepth),
       wNum(data.targetDepth),
@@ -365,11 +366,11 @@ function setupSpreadsheet() {
     'الحالة التشغيلية', 'لون الأيقونة المستهدف'
   ]);
   // بيانات تجريبية
-  ws.appendRow(['W-LY-001','طرابلس — سوق الجمعة','32.8872','13.1913','حفر جديد',180,250,500,'شركة الأمل','15HP طاردة',75,'قيد التنفيذ','أصفر']);
-  ws.appendRow(['W-LY-002','بنغازي — الصابري','32.1150','20.0695','صيانة',320,320,800,'شركة الخليج','25HP طاردة',100,'جاهز','أخضر']);
-  ws.appendRow(['W-LY-003','سبها — الجنوب','27.0377','14.4290','حفر جديد',0,350,600,'شركة الجنوب','—',0,'متوقف','أحمر']);
-  ws.appendRow(['W-LY-004','الجفرة — هون','29.1167','15.9500','حفر جديد',200,300,450,'شركة الوسط','20HP طاردة',65,'قيد التنفيذ','أصفر']);
-  ws.appendRow(['W-LY-005','مصراتة — القصبات','32.3754','15.0925','صيانة',0,0,0,'—','—',0,'خارج الخدمة','رمادي']);
+  ws.appendRow(['W-LY-001','طرابلس — سوق الجمعة',32.8872,13.1913,'حفر جديد',180,250,500,'شركة الأمل','15HP طاردة',75,'قيد التنفيذ','أصفر']);
+  ws.appendRow(['W-LY-002','بنغازي — الصابري',32.1150,20.0695,'صيانة',320,320,800,'شركة الخليج','25HP طاردة',100,'جاهز','أخضر']);
+  ws.appendRow(['W-LY-003','سبها — الجنوب',27.0377,14.4290,'حفر جديد',0,350,600,'شركة الجنوب','—',0,'متوقف','أحمر']);
+  ws.appendRow(['W-LY-004','الجفرة — هون',29.1167,15.9500,'حفر جديد',200,300,450,'شركة الوسط','20HP طاردة',65,'قيد التنفيذ','أصفر']);
+  ws.appendRow(['W-LY-005','مصراتة — القصبات',32.3754,15.0925,'صيانة',0,0,0,'—','—',0,'خارج الخدمة','رمادي']);
 
   // ورقة المستخدمين
   let us = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
