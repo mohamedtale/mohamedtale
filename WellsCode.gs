@@ -122,40 +122,63 @@ function doGet() {
  */
 function login(username, password) {
   try {
-    const ss    = _WSS.get();
-    const sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
+    const ss = _WSS.get();
+
+    // تحقق من الوصول للملف
+    if (!ss) return { ok: false, error: 'لا يمكن الوصول للملف — تحقق من الصلاحيات' };
+
+    let sheet = ss.getSheetByName(WELLS_CONFIG.SHEET_USERS);
+
+    // إنشاء ورقة المستخدمين تلقائياً إذا لم توجد
     if (!sheet) {
-      // إنشاء أول مستخدم admin تلقائياً إذا لم توجد الورقة
-      const newSheet = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
-      newSheet.appendRow(['اسم المستخدم','كلمة المرور','الصلاحية','الاسم الكامل','تاريخ الإنشاء']);
-      newSheet.appendRow(['admin','admin123','مدير','المدير العام', wNow()]);
-      if (username === 'admin' && password === 'admin123') {
-        return { ok: true, role: 'مدير', name: 'المدير العام' };
-      }
-      return { ok: false, error: 'بيانات غير صحيحة' };
+      sheet = ss.insertSheet(WELLS_CONFIG.SHEET_USERS);
+      sheet.appendRow(['اسم المستخدم','كلمة المرور','الصلاحية','الاسم الكامل','تاريخ الإنشاء']);
+      sheet.appendRow(['admin','admin123','مدير','المدير العام', wNow()]);
+      SpreadsheetApp.flush();
     }
 
     const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return { ok: false, error: 'لا يوجد مستخدمون مسجلون' };
+    if (lastRow < 2) {
+      // إضافة admin افتراضي إذا كانت الورقة فارغة
+      sheet.appendRow(['admin','admin123','مدير','المدير العام', wNow()]);
+      SpreadsheetApp.flush();
+    }
 
     const U    = WELLS_CONFIG.U;
-    const rows = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+
+    // مقارنة بدون حساسية للمسافات
+    const uTrim = String(username).trim();
+    const pTrim = String(password).trim();
+
     const user = rows.find(r =>
-      wSanitize(r[U.USERNAME]) === wSanitize(username) &&
-      String(r[U.PASSWORD])    === String(password)
+      String(r[U.USERNAME]).trim() === uTrim &&
+      String(r[U.PASSWORD]).trim() === pTrim
     );
 
-    if (!user) return { ok: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
+    if (!user) {
+      Logger.log('Login failed for: ' + uTrim + ' | rows count: ' + rows.length);
+      return { ok: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' };
+    }
 
-    wLogActivity(username, 'تسجيل دخول', '—', 'دخول ناجح');
+    wLogActivity(uTrim, 'تسجيل دخول', '—', 'دخول ناجح');
     return {
       ok:   true,
-      role: wSanitize(user[U.ROLE]),
-      name: wSanitize(user[U.FULL_NAME]) || wSanitize(user[U.USERNAME])
+      role: String(user[U.ROLE]).trim(),
+      name: String(user[U.FULL_NAME]).trim() || uTrim
     };
+
   } catch (e) {
-    return { ok: false, error: 'خطأ في الخادم: ' + e.toString() };
+    Logger.log('Login error: ' + e.toString());
+    return { ok: false, error: 'خطأ: ' + e.message };
   }
+}
+
+// دالة اختبار سريعة — شغّلها من المحرر للتحقق
+function testLogin() {
+  const res = login('admin', 'admin123');
+  Logger.log('Test login result: ' + JSON.stringify(res));
+  return res;
 }
 
 // ─── جلب كل الآبار ──────────────────────────────────────────
