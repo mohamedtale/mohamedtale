@@ -1525,10 +1525,28 @@ function showSettings() { document.getElementById('settingsModal').classList.add
 function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
 
 /* ── Filters init ── */
+const DOC_TYPES = ['بطاقة شخصية','جواز سفر','عقد عمل','مباشرة عمل','قرار تعيين','قرار نقل','قرار ترقية','مؤهل علمي','شهادة خبرة','دورة تدريبية','تقرير طبي','إجازة','إنذار','إخلاء طرف','رخصة قيادة','صورة شخصية','أخرى'];
+
 function populateFilters() {
-  const types = ['بطاقة شخصية','جواز سفر','عقد عمل','مباشرة عمل','قرار تعيين','قرار نقل','قرار ترقية','مؤهل علمي','شهادة خبرة','دورة تدريبية','تقرير طبي','إجازة','إنذار','إخلاء طرف','رخصة قيادة','صورة شخصية','أخرى'];
-  const sel = document.getElementById('filter-type');
-  types.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; sel.appendChild(o); });
+  // Populate static doc-type lists
+  ['filter-type', 'up-docType'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    DOC_TYPES.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; sel.appendChild(o); });
+  });
+
+  // Dynamically populate department filter from backend
+  google.script.run
+    .withSuccessHandler(opts => {
+      if (!opts) return;
+      const deptSel = document.getElementById('filter-dept');
+      if (deptSel && opts.departments) {
+        opts.departments.forEach(d => {
+          const o = document.createElement('option'); o.value = o.textContent = d; deptSel.appendChild(o);
+        });
+      }
+    })
+    .getFilterOptions();
 }
 
 /* ── Toast ── */
