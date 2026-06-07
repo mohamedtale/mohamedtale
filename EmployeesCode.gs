@@ -40,8 +40,20 @@ function doGet(e) {
 //  Helpers
 // ──────────────────────────────────────────────────
 function getSS() {
-  if (EMP_SS_ID) return SpreadsheetApp.openById(EMP_SS_ID);
-  return SpreadsheetApp.getActiveSpreadsheet();
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty('EMP_SS_ID');
+  if (id) {
+    try { return SpreadsheetApp.openById(id); } catch(e) { /* id outdated — recreate below */ }
+  }
+  // Try active spreadsheet (container-bound script)
+  try {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+  } catch(e) {}
+  // Standalone script — create a new spreadsheet and save its ID
+  const ss = SpreadsheetApp.create('أرشيف شؤون الموظفين');
+  props.setProperty('EMP_SS_ID', ss.getId());
+  return ss;
 }
 
 function getSheet(name) {
