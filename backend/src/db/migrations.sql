@@ -193,26 +193,26 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
 
--- Insert demo admin user (password: Admin@123)
+-- Insert demo admin user (password: admin123)
 INSERT INTO users (id, username, email, password_hash, full_name_ar, full_name_en, role, is_active)
 VALUES (
   uuid_generate_v4(),
   'admin',
   'admin@water.gov.ly',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFBtOT6OOt4lE.m',
+  '$2a$12$DV0pbTzmoizZ06gZO6P6eOnIVMsC5dMk5aSfcZD6vBDevLbqKzG/y',
   'مدير النظام',
   'System Administrator',
   'system_admin',
   true
 ) ON CONFLICT (username) DO NOTHING;
 
--- Insert demo manager
+-- Insert demo manager (password: manager123)
 INSERT INTO users (id, username, email, password_hash, full_name_ar, full_name_en, role, section, is_active)
 VALUES (
   uuid_generate_v4(),
   'manager',
   'manager@water.gov.ly',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFBtOT6OOt4lE.m',
+  '$2a$12$nLI3hC/RUtzXvRRtveK5XeFPf32LlO17QNAm5WO8r3fpnGlmsSauO',
   'مدير القسم',
   'Department Manager',
   'department_manager',
@@ -220,13 +220,13 @@ VALUES (
   true
 ) ON CONFLICT (username) DO NOTHING;
 
--- Insert demo employee
+-- Insert demo employee (password: employee123)
 INSERT INTO users (id, username, email, password_hash, full_name_ar, full_name_en, role, section, is_active)
 VALUES (
   uuid_generate_v4(),
   'employee',
   'employee@water.gov.ly',
-  '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFBtOT6OOt4lE.m',
+  '$2a$12$Y5UeMpb/iQQjsSpSHNCJ6ewsM7uzBFtq0yrpdi0Mk3bRTJkEehMxu',
   'موظف',
   'Employee',
   'employee',
