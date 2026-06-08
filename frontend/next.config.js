@@ -5,6 +5,11 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost'],
+    },
+  },
   images: {
     domains: ['localhost'],
   },

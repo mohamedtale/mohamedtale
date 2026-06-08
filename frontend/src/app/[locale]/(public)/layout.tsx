@@ -1,7 +1,15 @@
+import { setRequestLocale } from 'next-intl/server';
 import Navbar from '@/components/public/Navbar';
 import Footer from '@/components/public/Footer';
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({
+  children,
+  params: { locale },
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
+  setRequestLocale(locale);
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
