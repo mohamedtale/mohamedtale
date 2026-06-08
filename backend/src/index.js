@@ -11,6 +11,7 @@ const reportsRoutes = require('./routes/reports');
 const usersRoutes = require('./routes/users');
 const workflowsRoutes = require('./routes/workflows');
 const logsRoutes = require('./routes/logs');
+const { initUsers } = require('./db/init-users');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -70,11 +71,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error', message_ar: 'خطأ داخلي في الخادم' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`\n🚰 Water Wells Management API Server`);
   console.log(`✅ Running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health: http://localhost:${PORT}/health\n`);
+
+  // Ensure demo users have correct bcryptjs password hashes
+  try {
+    await initUsers();
+  } catch (err) {
+    console.error('Warning: Could not initialize demo users:', err.message);
+  }
 });
 
 module.exports = app;
