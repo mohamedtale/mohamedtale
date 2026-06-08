@@ -258,5 +258,120 @@
     "waterSoilDB": "Water & Soil Database",
     "wellRockDesign": "Well & Rock Design",
     "contracts": "Contracts & Notifications Management"
+  },
+  "public": {
+    "nav": {
+      "home": "Home",
+      "about": "About",
+      "projects": "Projects",
+      "achievements": "Achievements",
+      "news": "News",
+      "contact": "Contact",
+      "staffLogin": "Staff Login / دخول الموظفين"
+    },
+    "hero": {
+      "titleAr": "الجهاز التنفيذي لحفر وصيانة آبار المياه",
+      "titleEn": "Executive Authority for Drilling & Maintaining Water Wells",
+      "tagline": "Securing water for every Libyan citizen — over three decades of expertise across the nation",
+      "cta": {
+        "projects": "View Our Projects",
+        "contact": "Contact Us"
+      }
+    },
+    "stats": {
+      "title": "Our Achievements in Numbers",
+      "wellsDrilled": "Wells Drilled",
+      "projectsCompleted": "Projects Completed",
+      "governoratesCovered": "Governorates Covered",
+      "yearsExperience": "Years of Experience"
+    },
+    "projects": {
+      "title": "Featured Projects",
+      "subtitle": "We have implemented hundreds of projects across all of Libya",
+      "viewAll": "View All Projects",
+      "status": {
+        "completed": "Completed",
+        "ongoing": "Ongoing",
+        "planned": "Planned"
+      },
+      "wells": "wells",
+      "allProjects": "All Projects",
+      "filterAll": "All",
+      "filterCompleted": "Completed",
+      "filterOngoing": "Ongoing",
+      "noProjects": "No projects found"
+    },
+    "map": {
+      "title": "Water Well Locations",
+      "subtitle": "Interactive map of all drilled wells across Libya",
+      "wellName": "Well Name",
+      "status": "Status",
+      "region": "Region",
+      "depth": "Depth"
+    },
+    "news": {
+      "title": "News & Announcements",
+      "subtitle": "Latest news and updates from the Authority",
+      "viewAll": "View All News",
+      "readMore": "Read More",
+      "allNews": "All News",
+      "category": {
+        "news": "News",
+        "announcement": "Announcement",
+        "event": "Event"
+      }
+    },
+    "gallery": {
+      "title": "Photo Gallery",
+      "subtitle": "Snapshots from our field projects"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "We are here to answer your inquiries",
+      "address": "Tripoli, Libya",
+      "phone": "Phone",
+      "email": "Email",
+      "hours": "Working Hours",
+      "hoursValue": "Sunday – Thursday: 8:00 AM – 3:00 PM",
+      "form": {
+        "name": "Full Name",
+        "email": "Email Address",
+        "subject": "Subject",
+        "message": "Message",
+        "send": "Send Message",
+        "success": "Your message has been sent successfully"
+      }
+    },
+    "about": {
+      "title": "About the Authority",
+      "subtitle": "History and objectives of the Executive Authority for Drilling & Maintaining Water Wells",
+      "mission": "Mission",
+      "missionText": "To ensure the provision of groundwater for all Libyan citizens through efficient and environmentally sustainable drilling and maintenance of water wells.",
+      "vision": "Vision",
+      "visionText": "To be the leading authority in achieving water security for Libya using modern technologies and specialized national cadres.",
+      "values": "Values",
+      "history": "Historical Background",
+      "historyText": "The Executive Authority for Drilling and Maintaining Water Wells was established in the 1990s as the executive arm of the Ministry of Water Resources in Libya. Over more than three decades, the Authority has successfully drilled and maintained hundreds of wells across the country, contributing to water provision for millions of citizens in cities, rural areas, and remote regions.",
+      "structure": "Organizational Structure",
+      "departments": "Main Departments"
+    },
+    "achievements": {
+      "title": "Achievements & Statistics",
+      "subtitle": "A journey of accomplishments over decades",
+      "overview": "Overview",
+      "byRegion": "By Region",
+      "byYear": "By Year",
+      "wellsDrilled": "Total Wells Drilled",
+      "maintenanceOps": "Maintenance Operations",
+      "waterVolume": "Water Volume Extracted (m³/day)",
+      "regions": "Regions Served"
+    },
+    "footer": {
+      "description": "The Executive Authority for Drilling & Maintaining Water Wells — the executive arm of the Ministry of Water Resources in Libya.",
+      "quickLinks": "Quick Links",
+      "contactInfo": "Contact Information",
+      "address": "Tripoli, Libya",
+      "copyright": "© {year} Executive Authority for Drilling & Maintaining Water Wells. All rights reserved."
+    }
   }
 }
