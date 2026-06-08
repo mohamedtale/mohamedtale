@@ -78,11 +78,15 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🔗 Health: http://localhost:${PORT}/health\n`);
 
   // Ensure demo users have correct bcryptjs password hashes
-  try {
-    await initUsers();
-  } catch (err) {
-    console.error('Warning: Could not initialize demo users:', err.message);
-  }
+  // Wait 3s for DB to be fully ready
+  setTimeout(async () => {
+    try {
+      await initUsers();
+    } catch (err) {
+      console.error('❌ Could not initialize demo users:', err.message);
+      console.error(err);
+    }
+  }, 3000);
 });
 
 module.exports = app;
