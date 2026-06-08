@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Gear body -->
+  <path d="M60 15
+    L65 10 L70 15
+    L75 12 L77 18
+    L83 17 L82 23
+    L88 25 L85 30
+    L90 34 L85 37
+    L88 43 L82 44
+    L83 50 L77 49
+    L75 55 L70 52
+    L65 57 L60 52
+    L55 57 L50 52
+    L45 55 L43 49
+    L37 50 L38 44
+    L32 43 L35 37
+    L30 34 L35 30
+    L32 25 L38 23
+    L37 17 L43 18
+    L45 12 L50 15
+    Z"
+    fill="#1565C0" />
+  <!-- Gear center hole -->
+  <circle cx="60" cy="34" r="14" fill="white" />
+
+  <!-- Drilling rig tower -->
+  <!-- Legs -->
+  <line x1="52" y1="34" x2="48" y2="52" stroke="#1565C0" stroke-width="3" stroke-linecap="round"/>
+  <line x1="68" y1="34" x2="72" y2="52" stroke="#1565C0" stroke-width="3" stroke-linecap="round"/>
+  <!-- Cross braces -->
+  <line x1="50" y1="42" x2="67" y2="37" stroke="#1565C0" stroke-width="1.5"/>
+  <line x1="53" y1="48" x2="69" y2="44" stroke="#1565C0" stroke-width="1.5"/>
+  <!-- Top apex -->
+  <line x1="52" y1="34" x2="60" y2="22" stroke="#1565C0" stroke-width="3" stroke-linecap="round"/>
+  <line x1="68" y1="34" x2="60" y2="22" stroke="#1565C0" stroke-width="3" stroke-linecap="round"/>
+  <!-- Derrick mast -->
+  <line x1="60" y1="22" x2="60" y2="18" stroke="#1565C0" stroke-width="2" stroke-linecap="round"/>
+  <!-- Crown block -->
+  <rect x="57" y="17" width="6" height="2.5" rx="1" fill="#42A5F5"/>
+  <!-- Base platform -->
+  <rect x="46" y="51" width="28" height="3" rx="1.5" fill="#1565C0"/>
+  <!-- Drill string -->
+  <line x1="60" y1="54" x2="60" y2="60" stroke="#42A5F5" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Water drop (bottom left area) -->
+  <path d="M25 85 Q25 75 30 71 Q35 67 38 71 Q43 75 43 85 Q43 93 34 96 Q25 93 25 85 Z"
+    fill="#42A5F5" opacity="0.9"/>
+  <!-- Shine on drop -->
+  <ellipse cx="31" cy="77" rx="2.5" ry="4" fill="white" opacity="0.4" transform="rotate(-15 31 77)"/>
+
+  <!-- Water waves -->
+  <path d="M20 103 Q27 99 34 103 Q41 107 48 103" stroke="#1565C0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M24 110 Q32 106 40 110 Q48 114 56 110" stroke="#42A5F5" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Ground/base line for rig -->
+  <rect x="44" y="63" width="32" height="2" rx="1" fill="#42A5F5" opacity="0.6"/>
+</svg>
