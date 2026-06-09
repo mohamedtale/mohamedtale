@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة نظام شؤون الموظفين</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background:#0F172A; color:#E2E8F0; direction:rtl; }
+
+/* Sidebar */
+.sidebar {
+  position:fixed; right:0; top:0; bottom:0; width:230px;
+  background:#1E293B; border-left:1px solid #334155;
+  display:flex; flex-direction:column;
+}
+.logo {
+  padding:20px 16px; border-bottom:1px solid #334155;
+  background:#0F172A;
+}
+.logo h2 { color:#C5A059; font-size:13px; line-height:1.6; }
+.logo span { color:#64748B; font-size:11px; }
+.nav { flex:1; overflow-y:auto; padding:8px 0; }
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; cursor:pointer; font-size:13px;
+  color:#94A3B8; transition:.2s; border-right:3px solid transparent;
+}
+.nav-item:hover { background:#334155; color:#E2E8F0; }
+.nav-item.active { background:#1a3a5c; color:#C5A059; border-right-color:#C5A059; }
+.nav-item .icon { font-size:16px; width:20px; text-align:center; }
+.nav-section { padding:12px 16px 4px; font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:1px; }
+.badge { background:#EF4444; color:white; border-radius:10px; padding:1px 6px; font-size:10px; margin-right:auto; }
+.badge.gold { background:#C5A059; color:#0F172A; }
+
+/* Main */
+.main { margin-right:230px; min-height:100vh; }
+
+/* Header */
+.header {
+  background:#1E293B; padding:14px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid #334155; position:sticky; top:0; z-index:10;
+}
+.header h1 { font-size:16px; color:#F1F5F9; }
+.header-actions { display:flex; align-items:center; gap:12px; }
+.notif-btn {
+  width:36px; height:36px; border-radius:8px;
+  background:#334155; border:none; color:#94A3B8; cursor:pointer;
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.notif-btn .dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:#EF4444; border-radius:50%; }
+.user-chip {
+  display:flex; align-items:center; gap:8px;
+  background:#334155; border-radius:8px; padding:6px 12px;
+}
+.avatar { width:28px; height:28px; background:#C5A059; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#0F172A; font-weight:bold; font-size:12px; }
+
+/* Content */
+.content { padding:24px; }
+
+/* Stats Grid */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card {
+  background:#1E293B; border-radius:12px; padding:20px;
+  border:1px solid #334155; position:relative; overflow:hidden;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; right:0; width:4px; height:100%;
+}
+.stat-card.blue::before { background:#3B82F6; }
+.stat-card.green::before { background:#10B981; }
+.stat-card.yellow::before { background:#F59E0B; }
+.stat-card.red::before { background:#EF4444; }
+.stat-label { font-size:12px; color:#64748B; margin-bottom:8px; }
+.stat-value { font-size:28px; font-weight:bold; color:#F1F5F9; }
+.stat-sub { font-size:11px; color:#10B981; margin-top:4px; }
+.stat-icon { position:absolute; left:20px; top:50%; transform:translateY(-50%); font-size:32px; opacity:.15; }
+
+/* Alerts */
+.alerts { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.alert-card {
+  background:#1E293B; border-radius:12px; padding:16px;
+  border:1px solid #334155;
+}
+.alert-title { font-size:12px; color:#94A3B8; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.alert-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 0; border-bottom:1px solid #1E3A5F; font-size:12px;
+}
+.alert-item:last-child { border:none; }
+.tag { padding:2px 8px; border-radius:4px; font-size:10px; }
+.tag.green { background:#064E3B; color:#34D399; }
+.tag.yellow { background:#451A03; color:#FCD34D; }
+.tag.red { background:#450A0A; color:#FCA5A5; }
+.tag.blue { background:#1E3A5F; color:#93C5FD; }
+
+/* Table Section */
+.table-section {
+  background:#1E293B; border-radius:12px; border:1px solid #334155;
+  margin-bottom:24px;
+}
+.table-header {
+  padding:16px 20px; border-bottom:1px solid #334155;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.table-header h3 { font-size:14px; color:#F1F5F9; }
+.table-actions { display:flex; gap:8px; }
+.btn {
+  padding:7px 14px; border-radius:8px; border:none;
+  font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;
+}
+.btn-primary { background:#C5A059; color:#0F172A; font-weight:600; }
+.btn-outline { background:transparent; color:#94A3B8; border:1px solid #334155; }
+.btn-outline:hover { border-color:#C5A059; color:#C5A059; }
+.search-box {
+  background:#334155; border:1px solid #475569; border-radius:8px;
+  padding:7px 12px; color:#E2E8F0; font-size:12px; width:200px;
+  outline:none;
+}
+table { width:100%; border-collapse:collapse; }
+thead th {
+  padding:12px 16px; text-align:right;
+  background:#0F172A; font-size:12px; color:#64748B;
+  font-weight:600; border-bottom:1px solid #334155;
+}
+tbody tr { transition:.15s; }
+tbody tr:hover { background:#334155; }
+tbody td { padding:12px 16px; font-size:13px; border-bottom:1px solid #1E3A5F; }
+.emp-name { color:#F1F5F9; font-weight:500; }
+.emp-id { color:#64748B; font-size:11px; }
+.dept-chip { padding:3px 10px; background:#1E3A5F; color:#93C5FD; border-radius:20px; font-size:11px; }
+.status-chip { padding:3px 10px; border-radius:20px; font-size:11px; }
+.status-chip.active { background:#064E3B; color:#34D399; }
+.status-chip.contract { background:#1E3A5F; color:#93C5FD; }
+.action-btns { display:flex; gap:6px; }
+.icon-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
+.icon-btn.edit { background:#1E3A5F; color:#93C5FD; }
+.icon-btn.del { background:#450A0A; color:#FCA5A5; }
+.icon-btn.view { background:#064E3B; color:#34D399; }
+
+/* Charts row */
+.charts { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:24px; }
+.chart-card { background:#1E293B; border-radius:12px; border:1px solid #334155; padding:20px; }
+.chart-title { font-size:13px; color:#94A3B8; margin-bottom:16px; }
+.bar-chart { display:flex; align-items:flex-end; gap:8px; height:120px; }
+.bar { flex:1; border-radius:6px 6px 0 0; position:relative; min-width:24px; }
+.bar-label { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); font-size:9px; color:#64748B; white-space:nowrap; }
+.bar-val { position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:9px; color:#C5A059; }
+.pie-legend { margin-top:12px; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.donut { width:100px; height:100px; border-radius:50%; margin:0 auto 12px; 
+  background: conic-gradient(#3B82F6 0% 45%, #10B981 45% 70%, #F59E0B 70% 85%, #EF4444 85% 100%); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <h2>⚙️ نظام شؤون الموظفين</h2>
+    <span>الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">الرئيسية</div>
+    <div class="nav-item active"><span class="icon">🏠</span> لوحة التحكم</div>
+
+    <div class="nav-section">الموظفون</div>
+    <div class="nav-item"><span class="icon">👥</span> الموظفون</div>
+    <div class="nav-item"><span class="icon">📋</span> كشف العاملين</div>
+    <div class="nav-item"><span class="icon">⭐</span> الترقيات والعلاوات</div>
+
+    <div class="nav-section">الحركات</div>
+    <div class="nav-item"><span class="icon">🏖️</span> الإجازات <span class="badge">3</span></div>
+    <div class="nav-item"><span class="icon">🕐</span> الحضور والانصراف</div>
+    <div class="nav-item"><span class="icon">🚪</span> أذونات الخروج</div>
+    <div class="nav-item"><span class="icon">📤</span> التقاعد والفصل</div>
+
+    <div class="nav-section">الوثائق</div>
+    <div class="nav-item"><span class="icon">📁</span> أرشيف الوثائق <span class="badge gold">5</span></div>
+    <div class="nav-item"><span class="icon">✉️</span> المراسلات</div>
+
+    <div class="nav-section">التقارير</div>
+    <div class="nav-item"><span class="icon">📊</span> التقارير</div>
+    <div class="nav-item"><span class="icon">⚙️</span> الإعدادات</div>
+  </nav>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="header">
+    <h1>لوحة التحكم الرئيسية</h1>
+    <div class="header-actions">
+      <button class="notif-btn">🔔<span class="dot"></span></button>
+      <div class="user-chip">
+        <div class="avatar">م</div>
+        <div style="font-size:12px">
+          <div style="color:#F1F5F9">مدير النظام</div>
+          <div style="color:#64748B;font-size:10px">الإثنين 9 يونيو 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-card blue">
+        <div class="stat-label">إجمالي الموظفين</div>
+        <div class="stat-value">247</div>
+        <div class="stat-sub">↑ 3 موظفين جدد هذا الشهر</div>
+        <div class="stat-icon">👥</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">في الخدمة الآن</div>
+        <div class="stat-value">231</div>
+        <div class="stat-sub">93.5% من الكادر</div>
+        <div class="stat-icon">✅</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">في إجازة حالياً</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">3 طلبات معلقة</div>
+        <div class="stat-icon">🏖️</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">تنبيهات تحتاج مراجعة</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">5 وثائق تنتهي قريباً</div>
+        <div class="stat-icon">⚠️</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts">
+      <div class="chart-card">
+        <div class="chart-title">📊 توزيع الموظفين حسب الإدارة</div>
+        <div class="bar-chart">
+          <div class="bar" style="height:85%;background:#3B82F6"><span class="bar-val">52</span><span class="bar-label">الحفر</span></div>
+          <div class="bar" style="height:60%;background:#10B981"><span class="bar-val">38</span><span class="bar-label">الصيانة</span></div>
+          <div class="bar" style="height:45%;background:#F59E0B"><span class="bar-val">29</span><span class="bar-label">الإدارية</span></div>
+          <div class="bar" style="height:35%;background:#8B5CF6"><span class="bar-val">22</span><span class="bar-label">المالية</span></div>
+          <div class="bar" style="height:28%;background:#EF4444"><span class="bar-val">18</span><span class="bar-label">اللوجستي</span></div>
+          <div class="bar" style="height:22%;background:#64748B"><span class="bar-val">14</span><span class="bar-label">الأمن</span></div>
+        </div>
+      </div>
+      <div class="chart-card" style="text-align:center">
+        <div class="chart-title">🧑‍💼 نوع التعاقد</div>
+        <div class="donut"></div>
+        <div class="pie-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div> مستمر (45%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div> عقد (25%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> ندب (15%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div> إعارة (15%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Row -->
+    <div class="alerts">
+      <div class="alert-card">
+        <div class="alert-title">⭐ مرشحون للترقية</div>
+        <div class="alert-item"><span>أحمد محمد الورفلي</span><span class="tag green">درجة 7 → 8</span></div>
+        <div class="alert-item"><span>فاطمة علي المنتصر</span><span class="tag green">درجة 10 → 11</span></div>
+        <div class="alert-item"><span>محمد سالم الزوي</span><span class="tag yellow">ينتظر علاوة</span></div>
+      </div>
+      <div class="alert-card">
+        <div class="alert-title">🔔 اقتراب التقاعد (خلال سنة)</div>
+        <div class="alert-item"><span>عمر إبراهيم العجيل</span><span class="tag red">3 أشهر</span></div>
+        <div class="alert-item"><span>خديجة يوسف الفيتوري</span><span class="tag yellow">7 أشهر</span></div>
+        <div class="alert-item"><span>مصطفى حسن الهروني</span><span class="tag blue">11 شهر</span></div>
+      </div>
+      <div class="alert-card">
+        <div class="alert-title">📁 وثائق تنتهي قريباً</div>
+        <div class="alert-item"><span>جواز سفر - خالد الزيداني</span><span class="tag red">8 أيام</span></div>
+        <div class="alert-item"><span>عقد عمل - سعاد المبروك</span><span class="tag yellow">15 يوم</span></div>
+        <div class="alert-item"><span>رخصة قيادة - ناصر الغيث</span><span class="tag yellow">22 يوم</span></div>
+      </div>
+    </div>
+
+    <!-- Employees Table -->
+    <div class="table-section">
+      <div class="table-header">
+        <h3>👥 قائمة الموظفين</h3>
+        <div class="table-actions">
+          <input class="search-box" placeholder="🔍 بحث باسم أو رقم وظيفي...">
+          <button class="btn btn-outline">📥 استيراد Excel</button>
+          <button class="btn btn-primary">+ إضافة موظف</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>الموظف</th>
+            <th>الإدارة</th>
+            <th>المسمى الوظيفي</th>
+            <th>الدرجة</th>
+            <th>النوع</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="emp-name">أحمد محمد الورفلي</div><div class="emp-id">EMP-0042</div></td>
+            <td><span class="dept-chip">إدارة الحفر</span></td>
+            <td>مهندس حفر</td>
+            <td>درجة 7 / علاوة 3</td>
+            <td>إداري</td>
+            <td><span class="status-chip active">مستمر</span></td>
+            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="emp-name">فاطمة علي المنتصر</div><div class="emp-id">EMP-0078</div></td>
+            <td><span class="dept-chip">الشؤون الإدارية</span></td>
+            <td>مدير قسم</td>
+            <td>درجة 10 / علاوة 5 <span class="tag yellow">مربوط</span></td>
+            <td>إداري</td>
+            <td><span class="status-chip active">مستمر</span></td>
+            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="emp-name">خالد عبدالله الزيداني</div><div class="emp-id">EMP-0115</div></td>
+            <td><span class="dept-chip">الأمن</span></td>
+            <td>حارس أمن</td>
+            <td>درجة 4 / علاوة 2</td>
+            <td>غفارة</td>
+            <td><span class="status-chip contract">عقد</span></td>
+            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="emp-name">سعاد إبراهيم المبروك</div><div class="emp-id">EMP-0203</div></td>
+            <td><span class="dept-chip">المالية</span></td>
+            <td>محاسب</td>
+            <td>درجة 6 / علاوة 1</td>
+            <td>إداري</td>
+            <td><span class="status-chip active">مستمر</span></td>
+            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #334155;font-size:12px;color:#64748B">
+        <span>عرض 1-4 من 247 موظف</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline" style="padding:4px 10px">السابق</button>
+          <button class="btn btn-primary" style="padding:4px 10px">1</button>
+          <button class="btn btn-outline" style="padding:4px 10px">2</button>
+          <button class="btn btn-outline" style="padding:4px 10px">التالي</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
