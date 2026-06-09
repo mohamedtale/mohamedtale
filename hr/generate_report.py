@@ -1,126 +1,120 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import arabic_reshaper
+from bidi.algorithm import get_display
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.enums import TA_RIGHT, TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_RIGHT, TA_CENTER
 import os
 
-# Try to register Arabic font
 font_paths = [
     '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
     '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
     '/usr/share/fonts/truetype/freefont/FreeSans.ttf',
 ]
-
-font_registered = False
 for fp in font_paths:
     if os.path.exists(fp):
-        try:
-            pdfmetrics.registerFont(TTFont('Arabic', fp))
-            font_registered = True
-            break
-        except:
-            pass
+        pdfmetrics.registerFont(TTFont('ArabicFont', fp))
+        break
 
-FONT = 'Arabic' if font_registered else 'Helvetica'
+FONT = 'ArabicFont'
+
+def ar(text):
+    reshaped = arabic_reshaper.reshape(text)
+    return get_display(reshaped)
+
+GOLD  = colors.HexColor('#C5A059')
+NAVY  = colors.HexColor('#0F172A')
+NAVY2 = colors.HexColor('#1E293B')
+WHITE = colors.white
+LIGHT = colors.HexColor('#F1F5F9')
+GRAY  = colors.HexColor('#94A3B8')
 
 doc = SimpleDocTemplate(
     'SYSTEM_REPORT.pdf',
     pagesize=A4,
-    rightMargin=2*cm,
-    leftMargin=2*cm,
-    topMargin=2*cm,
-    bottomMargin=2*cm
+    rightMargin=1.8*cm, leftMargin=1.8*cm,
+    topMargin=1.8*cm,   bottomMargin=1.8*cm
 )
 
-GOLD = colors.HexColor('#C5A059')
-NAVY = colors.HexColor('#0F172A')
-NAVY2 = colors.HexColor('#1E293B')
-WHITE = colors.white
-LIGHT = colors.HexColor('#F8FAFC')
-GRAY = colors.HexColor('#94A3B8')
+def sty(size, color, align=TA_RIGHT, bold=False, space_before=6, space_after=4):
+    return ParagraphStyle('s', fontName=FONT, fontSize=size, textColor=color,
+        alignment=align, spaceBefore=space_before, spaceAfter=space_after, leading=size*1.6)
 
-styles = getSampleStyleSheet()
+title_sty    = sty(18, WHITE,  TA_CENTER, space_before=10, space_after=6)
+subtitle_sty = sty(12, GOLD,   TA_CENTER, space_before=4,  space_after=4)
+h1_sty       = sty(12, GOLD,   TA_RIGHT,  space_before=10, space_after=4)
+body_sty     = sty(9,  LIGHT,  TA_RIGHT,  space_before=2,  space_after=2)
+note_sty     = sty(8,  GRAY,   TA_RIGHT,  space_before=1,  space_after=1)
 
-title_style = ParagraphStyle('title', fontName=FONT, fontSize=20, textColor=WHITE,
-    alignment=TA_CENTER, spaceAfter=6, leading=28)
-subtitle_style = ParagraphStyle('subtitle', fontName=FONT, fontSize=13, textColor=GOLD,
-    alignment=TA_CENTER, spaceAfter=4, leading=18)
-h1_style = ParagraphStyle('h1', fontName=FONT, fontSize=14, textColor=GOLD,
-    alignment=TA_RIGHT, spaceBefore=14, spaceAfter=6, leading=20)
-h2_style = ParagraphStyle('h2', fontName=FONT, fontSize=12, textColor=WHITE,
-    alignment=TA_RIGHT, spaceBefore=10, spaceAfter=4, leading=16)
-body_style = ParagraphStyle('body', fontName=FONT, fontSize=10, textColor=LIGHT,
-    alignment=TA_RIGHT, spaceAfter=3, leading=16)
-note_style = ParagraphStyle('note', fontName=FONT, fontSize=9, textColor=GRAY,
-    alignment=TA_RIGHT, spaceAfter=3, leading=14)
+W = 17.4*cm
 
-def tbl(data, col_widths=None, header=True):
-    t = Table(data, colWidths=col_widths, hAlign='RIGHT')
-    style = [
-        ('FONTNAME', (0,0), (-1,-1), FONT),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-        ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ROWBACKGROUNDS', (0,0), (-1,-1), [NAVY2, NAVY]),
-        ('TEXTCOLOR', (0,0), (-1,-1), LIGHT),
-        ('GRID', (0,0), (-1,-1), 0.3, colors.HexColor('#334155')),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('RIGHTPADDING', (0,0), (-1,-1), 8),
-        ('LEFTPADDING', (0,0), (-1,-1), 8),
-    ]
-    if header:
-        style += [
-            ('BACKGROUND', (0,0), (-1,0), GOLD),
-            ('TEXTCOLOR', (0,0), (-1,0), NAVY),
-            ('FONTSIZE', (0,0), (-1,0), 10),
-        ]
-    t.setStyle(TableStyle(style))
-    return t
+def p(text, style):
+    return Paragraph(ar(text), style)
 
-def section_bg(text):
-    t = Table([[Paragraph(text, h1_style)]], colWidths=[17*cm])
+def section(title):
+    t = Table([[p(title, h1_sty)]], colWidths=[W])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), NAVY2),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('RIGHTPADDING', (0,0), (-1,-1), 10),
-        ('LEFTPADDING', (0,0), (-1,-1), 10),
-        ('LINEBELOW', (0,0), (-1,-1), 2, GOLD),
+        ('BACKGROUND',    (0,0),(-1,-1), NAVY2),
+        ('LINEBELOW',     (0,0),(-1,-1), 2, GOLD),
+        ('TOPPADDING',    (0,0),(-1,-1), 7),
+        ('BOTTOMPADDING', (0,0),(-1,-1), 7),
+        ('RIGHTPADDING',  (0,0),(-1,-1), 10),
+        ('LEFTPADDING',   (0,0),(-1,-1), 10),
     ]))
     return t
 
+def tbl(rows, widths=None):
+    if widths is None:
+        widths = [W]
+    data = [[p(str(c), body_sty) for c in row] for row in rows]
+    t = Table(data, colWidths=widths)
+    style = [
+        ('FONTNAME',      (0,0),(-1,-1), FONT),
+        ('ALIGN',         (0,0),(-1,-1), 'RIGHT'),
+        ('VALIGN',        (0,0),(-1,-1), 'MIDDLE'),
+        ('ROWBACKGROUNDS',(0,0),(-1,-1), [NAVY2, NAVY]),
+        ('TEXTCOLOR',     (0,0),(-1,-1), LIGHT),
+        ('GRID',          (0,0),(-1,-1), 0.3, colors.HexColor('#334155')),
+        ('TOPPADDING',    (0,0),(-1,-1), 5),
+        ('BOTTOMPADDING', (0,0),(-1,-1), 5),
+        ('RIGHTPADDING',  (0,0),(-1,-1), 8),
+        ('LEFTPADDING',   (0,0),(-1,-1), 8),
+        ('BACKGROUND',    (0,0),(-1,0),  GOLD),
+        ('TEXTCOLOR',     (0,0),(-1,0),  NAVY),
+    ]
+    t.setStyle(TableStyle(style))
+    return t
+
+def sp(h=0.25):
+    return Spacer(1, h*cm)
+
 story = []
 
-# ===== COVER =====
+# ── غلاف ──
 cover = Table([
-    [Paragraph('نظام إدارة شؤون الموظفين', title_style)],
-    [Paragraph('الجهاز التنفيذي لحفر وصيانة آبار المياه', subtitle_style)],
-    [Spacer(1, 0.3*cm)],
-    [Paragraph('تقرير تفصيلي شامل لمتطلبات النظام', note_style)],
-    [Paragraph('إعداد: قسم شؤون الموظفين', note_style)],
-], colWidths=[17*cm])
+    [p('نظام إدارة شؤون الموظفين', title_sty)],
+    [p('الجهاز التنفيذي لحفر وصيانة آبار المياه', subtitle_sty)],
+    [sp(0.2)],
+    [p('تقرير تفصيلي شامل لمتطلبات النظام', note_sty)],
+], colWidths=[W])
 cover.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,-1), NAVY),
-    ('TOPPADDING', (0,0), (-1,-1), 20),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 20),
-    ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    ('BACKGROUND', (0,0),(-1,-1), NAVY),
+    ('TOPPADDING', (0,0),(-1,-1), 18),
+    ('BOTTOMPADDING', (0,0),(-1,-1), 18),
 ]))
-story.append(cover)
-story.append(Spacer(1, 0.5*cm))
+story += [cover, sp(0.4)]
 
-# ===== MODULE 1 =====
-story.append(section_bg('1. بيانات الموظفين'))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('البيانات الإلزامية والاختيارية عند إضافة موظف جديد:', h2_style))
-story.append(tbl([
+# ── 1. بيانات الموظفين ──
+story += [section('1. بيانات الموظفين'), sp(0.15)]
+story += [p('الإدخال عبر 5 تبويبات أو استيراد جماعي من Excel', body_sty)]
+story += [tbl([
     ['النوع', 'الحقل'],
     ['إلزامي', 'الاسم الرباعي'],
     ['إلزامي', 'الرقم الوظيفي'],
@@ -133,228 +127,175 @@ story.append(tbl([
     ['إلزامي', 'الدرجة الوظيفية (3-16) ونوعها (عادي/مربوط)'],
     ['إلزامي', 'نوع الموظف (إداري / غفارة)'],
     ['إلزامي', 'نوع التعاقد ورصيد الإجازة السنوية'],
-    ['اختياري', 'فصيل الدم / الحالة الاجتماعية / الهاتف'],
-    ['اختياري', 'المؤهل الدراسي / الراتب / ملف PDF'],
-], [4*cm, 13*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('مميزات الإدخال: شريط تقدم - حفظ مؤقت - تحقق من التكرار - استيراد من Excel', note_style))
+    ['اختياري', 'فصيل الدم - الحالة الاجتماعية - الهاتف'],
+    ['اختياري', 'المؤهل الدراسي - الراتب - ملف PDF'],
+], [4*cm, 13*cm]), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 2 =====
-story.append(section_bg('2. نظام الإجازات'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 2. الإجازات ──
+story += [section('2. نظام الإجازات'), sp(0.15)]
+story += [tbl([
     ['قواعد خاصة', 'المدة', 'النوع'],
     ['', 'رصيد خاص بكل موظف', 'سنوية'],
-    ['بعد 60 يوم → تنبيه إحالة للجنة طبية', '60 يوم / سنة', 'مرضية'],
+    ['بعد 60 يوم تنبيه إحالة للجنة طبية', '60 يوم / سنة', 'مرضية'],
     ['', '12 يوم / سنة', 'طارئة'],
     ['', 'بدون قيود', 'أمومة'],
     ['مرة واحدة في العمر فقط', 'شهر واحد', 'حج'],
-    ['تُحفظ في الملف الشخصي', 'شهرين → سنة', 'بدون راتب'],
-], [6*cm, 5*cm, 6*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+    ['تحفظ في الملف الشخصي', 'شهرين الى سنة', 'بدون راتب'],
+], [6*cm, 4.5*cm, 6.9*cm])]
+story += [sp(0.1), tbl([
     ['قاعدة الخصم', 'نوع الموظف'],
-    ['لا يُخصم الجمعة والسبت + أيام العطل الرسمية', 'إداري'],
-    ['تُخصم جميع الأيام - اليوم الواحد = 3 أيام من الرصيد', 'غفارة'],
-], [10*cm, 7*cm]))
+    ['لا يخصم الجمعة والسبت وايام العطل الرسمية', 'إداري'],
+    ['تخصم جميع الايام - اليوم الواحد = 3 ايام من الرصيد', 'غفارة'],
+], [11*cm, 6*cm]), sp()]
 
-story.append(Spacer(1, 0.3*cm))
+# ── 3. الحضور والانصراف ──
+story += [section('3. الحضور والانصراف (ZKTeco)'), sp(0.15)]
+story += [p('استيراد ملف .dat مباشرة - اول بصمة = دخول - اخر بصمة = خروج', body_sty)]
+story += [p('اعدادات الدوام تدخل يدوياً: 08:30 دخول - 14:30 خروج (قابلة للتغيير)', body_sty)]
+story += [tbl([
+    ['اللون', 'الحالة'],
+    ['اخضر', 'حضور منتظم'],
+    ['اصفر', 'تاخر'],
+    ['برتقالي', 'خروج مبكر'],
+    ['احمر', 'غياب'],
+    ['ازرق', 'اجازة'],
+    ['رمادي', 'عطلة رسمية'],
+    ['بنفسجي', 'غفارة'],
+    ['ذهبي', 'معدل يدوياً (مع سجل التعديل)'],
+], [5*cm, 12*cm])]
+story += [sp(0.1), p('تنبيهات: غياب اكثر من 3 ايام متتالية / تاخر اكثر من 5 مرات في الشهر', note_sty), sp()]
 
-# ===== MODULE 3 =====
-story.append(section_bg('3. الحضور والانصراف (ZKTeco)'))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('استيراد ملف .dat مباشرة - أول بصمة = دخول - آخر بصمة = خروج', body_style))
-story.append(tbl([
-    ['اللون', 'الرمز', 'الحالة'],
-    ['أخضر', '✅', 'حضور منتظم'],
-    ['أصفر', '🕐', 'تأخر'],
-    ['برتقالي', '🚪', 'خروج مبكر'],
-    ['أحمر', '❌', 'غياب'],
-    ['أزرق', '🏖️', 'إجازة'],
-    ['رمادي', '⚪', 'عطلة رسمية'],
-    ['بنفسجي', '🌙', 'غفارة'],
-    ['ذهبي', '✏️', 'معدّل يدوياً'],
-], [4*cm, 3*cm, 10*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('تنبيهات: غياب أكثر من 3 أيام متتالية / تأخر أكثر من 5 مرات في الشهر', note_style))
+# ── 4 و 5 ──
+story += [section('4. التكاليف والفحص الطبي'), sp(0.15)]
+story += [p('التكليف: يجلب اسم الموظف تلقائياً ويظهر في شاشة الحضور تلقائياً', body_sty)]
+story += [p('الفحص الطبي: يخصم من رصيد المرضية تلقائياً - تنبيه عند الوصول لـ 60 يوم', body_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 4+5 =====
-story.append(section_bg('4. التكاليف والفحص الطبي'))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('التكليف: يجلب اسم الموظف تلقائياً - يظهر في شاشة الحضور تلقائياً', body_style))
-story.append(Paragraph('الفحص الطبي: يخصم من رصيد المرضية تلقائياً - تنبيه عند الوصول لـ 60 يوم', body_style))
-
-story.append(Spacer(1, 0.3*cm))
-story.append(section_bg('5. أذونات الخروج'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+story += [section('5. اذونات الخروج'), sp(0.15)]
+story += [tbl([
     ['القيمة', 'البيان'],
-    ['شخصي / عمل / طبي / طارئ', 'أنواع الإذن'],
-    ['2 إذن فقط في الشهر', 'الحد الأقصى لكل موظف'],
-    ['يحسب تلقائياً', 'مدة الإذن بالدقائق'],
-    ['لا يوجد', 'التأثير على الراتب أو الإجازة'],
-], [8*cm, 9*cm]))
+    ['شخصي / عمل / طبي / طارئ', 'انواع الاذن'],
+    ['2 اذن فقط في الشهر', 'الحد الاقصى لكل موظف'],
+    ['يحسب تلقائياً بالدقائق', 'مدة الاذن'],
+    ['لا يوجد', 'التاثير على الراتب او الاجازة'],
+], [8*cm, 9*cm]), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 6 =====
-story.append(section_bg('6. العلاوات والترقيات'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 6. العلاوات ──
+story += [section('6. العلاوات والترقيات'), sp(0.15)]
+story += [tbl([
     ['علاوات مطلوبة للترقية', 'الدرجة'],
-    ['4 علاوات', '3 إلى 9'],
+    ['4 علاوات', '3 الى 9'],
     ['5 علاوات', '10'],
-    ['4 علاوات', '11 إلى 16'],
-], [8*cm, 9*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('نظام المربوط: ليس لجميع الموظفين - يُختار عند إدخال بيانات الموظف', note_style))
-story.append(Paragraph('مثال: درجة 8 مربوط 4 → يحتاج 4 علاوات إضافية للترقية لدرجة 9', note_style))
+    ['4 علاوات', '11 الى 16'],
+], [8*cm, 9*cm])]
+story += [sp(0.1), p('نظام المربوط: ليس لجميع الموظفين - يختار عند ادخال بيانات الموظف', note_sty)]
+story += [p('مثال: درجة 8 مربوط 4 يحتاج 4 علاوات اضافية للترقية لدرجة 9', note_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 7 =====
-story.append(section_bg('7. التقاعد والفصل والنقل'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 7. التقاعد ──
+story += [section('7. التقاعد والفصل والنقل'), sp(0.15)]
+story += [tbl([
     ['النساء', 'الرجال', 'النوع'],
-    ['60 سنة', '65 سنة', 'تقاعد إجباري'],
+    ['60 سنة', '65 سنة', 'تقاعد اجباري'],
     ['من 55 سنة', 'من 55 سنة', 'تقاعد اختياري'],
-], [5*cm, 5*cm, 7*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
-    ['العلامة', 'سبب إنهاء الخدمة'],
-    ['🔵', 'تقاعد إجباري'],
-    ['🟢', 'تقاعد اختياري'],
-    ['🟡', 'انتهاء عقد'],
-    ['🔴', 'استقالة اعتبارية'],
-    ['🟠', 'استقالة اختيارية'],
-    ['⚪', 'انتهاء ندب'],
-    ['🔄', 'نقل لجهة أخرى'],
-], [3*cm, 14*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('النقل: وارد (يُضاف للنظام) / صادر (يُحذف + أرشيف) / داخلي (يتغير قسمه)', note_style))
+], [5*cm, 5*cm, 7*cm])]
+story += [sp(0.1), tbl([
+    ['سبب انهاء الخدمة'],
+    ['تقاعد اجباري'],
+    ['تقاعد اختياري'],
+    ['انتهاء عقد'],
+    ['استقالة اعتبارية'],
+    ['استقالة اختيارية'],
+    ['انتهاء ندب'],
+    ['نقل لجهة اخرى'],
+], [W])]
+story += [sp(0.1), p('النقل: وارد (يضاف للنظام) / صادر (يحذف + ارشيف) / داخلي (يتغير قسمه)', note_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
+# ── 8. المراسلات ──
+story += [section('8. نظام المراسلات'), sp(0.15)]
+story += [tbl([
+    ['انواع المراسلات'],
+    ['بريد وارد - بريد صادر - طلبات'],
+    ['قرارات داخلية وخارجية'],
+    ['رسائل مهمش عليها - تاشيرات - اجازات'],
+], [W])]
+story += [sp(0.1), p('نظام تدفق العمل: موظف يقدم طلب - مدير يهمش - قانوني يهمش - مدير يقرر - تنفيذ', body_sty)]
+story += [p('رقم الخطاب يدخل يدوياً من المحفوظات - خاص بشؤون الموظفين فقط', note_sty), sp()]
 
-# ===== MODULE 8 =====
-story.append(section_bg('8. نظام المراسلات'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
-    ['النوع'],
-    ['📥 بريد وارد'],
-    ['📤 بريد صادر'],
-    ['📋 طلبات'],
-    ['📜 قرارات داخلية وخارجية'],
-    ['✍️ رسائل مهمش عليها'],
-    ['🔖 تأشيرات'],
-    ['🏖️ إجازات'],
-], [17*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('نظام تدفق العمل: موظف يقدم طلب → مدير يهمش → قانوني يهمش → مدير يقرر → تنفيذ', body_style))
-story.append(Paragraph('رقم الخطاب يُدخل يدوياً من المحفوظات - خاص بشؤون الموظفين فقط', note_style))
+# ── 9. الارشيف ──
+story += [section('9. الارشيف'), sp(0.15)]
+story += [p('ارشيف الرسائل والوثائق: ربط مباشر بالماسح او رفع يدوي - بحث فوري', body_sty)]
+story += [p('ارشيف الموظفين القدامى: ملف كامل لكل منتهية خدمته مع علامة السبب', body_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 9 =====
-story.append(section_bg('9. الأرشيف'))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('أرشيف الرسائل والوثائق: ربط مباشر بالماسح أو رفع يدوي - بحث فوري', body_style))
-story.append(Paragraph('أرشيف الموظفين القدامى: ملف كامل لكل منتهية خدمته مع علامة السبب', body_style))
-
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 10 =====
-story.append(section_bg('10. كشف العاملين'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 10. كشف العاملين ──
+story += [section('10. كشف العاملين'), sp(0.15)]
+story += [tbl([
     ['حقول الكشف'],
     ['الاسم - الرقم الوظيفي - الرقم الوطني - المؤهل الدراسي'],
     ['تاريخ التعيين - تاريخ المباشرة - المسمى الوظيفي'],
-    ['الإدارة / القسم / المكتب - الدرجة والعلاوة الحالية'],
-], [17*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('قوالب متعددة لكل جهة - فلترة وترتيب مرن - معاينة قبل الطباعة', body_style))
-story.append(Paragraph('تصدير: طباعة / PDF / Excel / Word - حفظ الكشوفات السابقة تلقائياً', body_style))
+    ['الادارة / القسم / المكتب - الدرجة والعلاوة الحالية'],
+], [W])]
+story += [sp(0.1), p('قوالب متعددة لكل جهة - فلترة وترتيب مرن - معاينة قبل الطباعة', body_sty)]
+story += [p('تصدير: طباعة / PDF / Excel / Word - حفظ الكشوفات السابقة تلقائياً', body_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 11 =====
-story.append(section_bg('11. التقارير'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 11. التقارير ──
+story += [section('11. التقارير'), sp(0.15)]
+story += [tbl([
     ['التقرير', '#'],
     ['المرشحون للترقية', '1'],
     ['المقبلون على التقاعد', '2'],
     ['من تنتهي عقودهم قريباً', '3'],
-    ['الموظفون حسب الإدارة (متطور)', '4'],
-    ['رصيد الإجازات لكل موظف', '5'],
-    ['الموظفون في إجازة حالياً', '6'],
+    ['الموظفون حسب الادارة', '4'],
+    ['رصيد الاجازات لكل موظف', '5'],
+    ['الموظفون في اجازة حالياً', '6'],
     ['العلاوات المستحقة هذا الشهر', '7'],
     ['تاريخ العلاوات لكل موظف', '8'],
     ['التقرير الشهري للمدير', '9'],
     ['التقرير السنوي للوزارة', '10'],
-    ['التقرير الربع سنوي (الأهم والجوهر)', '11'],
-], [13*cm, 4*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('التقرير الربع سنوي يُرسل لـ: مدير الشؤون الإدارية / مدير المراجعة الداخلية / المدير العام', body_style))
-story.append(tbl([
+    ['التقرير الربع سنوي (الاهم والجوهر)', '11'],
+], [13*cm, 4*cm])]
+story += [sp(0.1), p('التقرير الربع سنوي يرسل لـ: مدير الشؤون الادارية / مدير المراجعة الداخلية / المدير العام', body_sty)]
+story += [tbl([
     ['محتوى القسم', 'القسم'],
-    ['إحصائيات الموظفين - توزيع - تغييرات - ذكور وإناث', 'الأول'],
-    ['الإجازات بأنواعها وأيامها', 'الثاني'],
+    ['احصائيات الموظفين - توزيع - تغييرات - ذكور وإناث', 'الاول'],
+    ['الاجازات بانواعها وايامها', 'الثاني'],
     ['العلاوات والترقيات', 'الثالث'],
-    ['التقاعد والفصل والنقل بأنواعها', 'الرابع'],
+    ['التقاعد والفصل والنقل بانواعها', 'الرابع'],
     ['المراسلات مع مقارنة بالربع السابق', 'الخامس'],
-], [12*cm, 5*cm]))
+], [12*cm, 5*cm]), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 12 =====
-story.append(section_bg('12. نظام الصلاحيات'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 12. الصلاحيات ──
+story += [section('12. نظام الصلاحيات'), sp(0.15)]
+story += [tbl([
     ['الصلاحيات', 'المسمى', 'المستوى'],
     ['كل شيء بدون قيود', 'مدير النظام', '1'],
-    ['كل شيء ما عدا إعدادات النظام', 'مدير القسم', '2'],
-    ['إضافة وتعديل بدون حذف', 'موظف أول', '3'],
-    ['إضافة فقط', 'موظف', '4'],
-    ['عرض بدون أي تعديل', 'قراءة فقط', '5'],
-], [7*cm, 5*cm, 5*cm]))
-story.append(Spacer(1, 0.2*cm))
-story.append(Paragraph('كل شاشة يمكن تفعيلها أو تعطيلها لكل موظف بشكل مستقل', body_style))
-story.append(Paragraph('سجل تدقيق كامل - قفل الحساب بعد 3 محاولات فاشلة', note_style))
+    ['كل شيء ما عدا اعدادات النظام', 'مدير القسم', '2'],
+    ['اضافة وتعديل بدون حذف', 'موظف اول', '3'],
+    ['اضافة فقط', 'موظف', '4'],
+    ['عرض بدون اي تعديل', 'قراءة فقط', '5'],
+], [8*cm, 5*cm, 4*cm])]
+story += [sp(0.1), p('كل شاشة يمكن تفعيلها او تعطيلها لكل موظف بشكل مستقل', body_sty)]
+story += [p('سجل تدقيق كامل - قفل الحساب بعد 3 محاولات فاشلة', note_sty), sp()]
 
-story.append(Spacer(1, 0.3*cm))
-
-# ===== MODULE 13 =====
-story.append(section_bg('13. لوحة التحكم الرئيسية'))
-story.append(Spacer(1, 0.2*cm))
-story.append(tbl([
+# ── 13. لوحة التحكم ──
+story += [section('13. لوحة التحكم الرئيسية'), sp(0.15)]
+story += [tbl([
     ['المحتوى'],
-    ['إجمالي الموظفين - في إجازة حالياً - طلبات معلقة - تنبيهات جديدة'],
+    ['اجمالي الموظفين - في اجازة حالياً - طلبات معلقة - تنبيهات جديدة'],
     ['تنبيهات: علاوات مستحقة / مرشحون للترقية / اقتراب التقاعد'],
-    ['الموظفون في إجازة ومن سيعودون هذا الأسبوع'],
-    ['رسوم بيانية: توزيع الموظفين / أنواع التعاقد / مقارنة الإجازات'],
-    ['تقويم شهري: عطل رسمية / إجازات / مواعيد استحقاق العلاوات'],
+    ['الموظفون في اجازة ومن سيعودون هذا الاسبوع'],
+    ['رسوم بيانية: توزيع الموظفين - انواع التعاقد - مقارنة الاجازات'],
+    ['تقويم شهري: عطل رسمية - اجازات - مواعيد استحقاق العلاوات'],
     ['آخر 10 نشاطات في النظام'],
-], [17*cm]))
+], [W]), sp(0.4)]
 
-story.append(Spacer(1, 0.5*cm))
-
-# ===== FOOTER =====
-footer = Table([[
-    Paragraph('نظام إدارة شؤون الموظفين | الجهاز التنفيذي لحفر وصيانة آبار المياه', note_style)
-]], colWidths=[17*cm])
+# ── تذييل ──
+footer = Table([[p('نظام ادارة شؤون الموظفين | الجهاز التنفيذي لحفر وصيانة آبار المياه', note_sty)]], colWidths=[W])
 footer.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,-1), NAVY2),
-    ('TOPPADDING', (0,0), (-1,-1), 8),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-    ('LINEABOVE', (0,0), (-1,0), 1.5, GOLD),
+    ('BACKGROUND',    (0,0),(-1,-1), NAVY2),
+    ('LINEABOVE',     (0,0),(-1,0),  1.5, GOLD),
+    ('TOPPADDING',    (0,0),(-1,-1), 8),
+    ('BOTTOMPADDING', (0,0),(-1,-1), 8),
 ]))
 story.append(footer)
 
 doc.build(story)
-print("✅ PDF generated: SYSTEM_REPORT.pdf")
+print("تم انشاء التقرير: SYSTEM_REPORT.pdf")
