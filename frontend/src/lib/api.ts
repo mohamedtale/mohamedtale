@@ -112,6 +112,18 @@ export const workflowsApi = {
     api.post(`/workflows/${id}/action`, { action, comment }),
 };
 
+// Import
+export const importApi = {
+  importWells: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/import/wells', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000, // 2 minutes for large files
+    });
+  },
+};
+
 // Logs
 export const logsApi = {
   getAll: (params?: Record<string, string | number>) =>

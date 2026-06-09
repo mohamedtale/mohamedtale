@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Modal } from '@/components/ui/modal';
 import { wellsApi } from '@/lib/api';
+import { ImportWellsModal } from '@/components/wells/ImportWellsModal';
 import { formatDate, formatNumber } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth';
 import { canAccess } from '@/lib/auth';
@@ -41,6 +42,7 @@ export default function WellsPage() {
   const [selectedWell, setSelectedWell] = useState<Well | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const loadWells = async () => {
     setLoading(true);
@@ -142,12 +144,18 @@ export default function WellsPage() {
               Excel
             </Button>
             {canAccess(user, 'section_head') && (
-              <Link href={`/${locale}/wells/new`}>
-                <Button>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                  {t('addWell')}
+              <>
+                <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                  استيراد Excel
                 </Button>
-              </Link>
+                <Link href={`/${locale}/wells/new`}>
+                  <Button>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    {t('addWell')}
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -299,6 +307,13 @@ export default function WellsPage() {
           </div>
         )}
       </Modal>
+
+      {/* Import modal */}
+      <ImportWellsModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onSuccess={loadWells}
+      />
 
       {/* Delete confirm modal */}
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="تأكيد الحذف" size="sm">

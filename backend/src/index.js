@@ -11,6 +11,7 @@ const reportsRoutes = require('./routes/reports');
 const usersRoutes = require('./routes/users');
 const workflowsRoutes = require('./routes/workflows');
 const logsRoutes = require('./routes/logs');
+const importRoutes = require('./routes/import');
 const { initUsers } = require('./db/init-users');
 
 const app = express();
@@ -59,6 +60,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/workflows', workflowsRoutes);
 app.use('/api/logs', logsRoutes);
+app.use('/api/import', importRoutes);
 
 // 404 handler
 app.use((req, res) => {
