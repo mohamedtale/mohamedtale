@@ -191,19 +191,17 @@ export default function PublicHomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {GALLERY_COLORS.map((gradient, i) => (
+            {[1,2,3,4,5,6,7,8,9,10,11,12].map((i) => (
               <div
                 key={i}
-                className={`relative rounded-2xl overflow-hidden h-48 bg-gradient-to-br ${gradient} flex items-center justify-center group cursor-pointer hover:scale-[1.02] transition-transform shadow-lg`}
+                className="relative rounded-2xl overflow-hidden h-56 group cursor-pointer hover:scale-[1.02] transition-transform shadow-lg bg-gray-200"
               >
-                {/* Rig icon placeholder */}
-                <svg className="w-16 h-16 text-white opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+                <img
+                  src={`/images/photo${i}.jpg`}
+                  alt={`صورة المشروع ${i}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
-                  <p className="text-white text-sm font-medium">{GALLERY_LABELS[i]}</p>
-                </div>
               </div>
             ))}
           </div>
