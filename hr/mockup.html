@@ -3,358 +3,434 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>معاينة نظام شؤون الموظفين</title>
+<title>نظام شؤون الموظفين - الجهاز التنفيذي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: 'Segoe UI', Tahoma, sans-serif; background:#0F172A; color:#E2E8F0; direction:rtl; }
+:root {
+  --primary:#0B4F6C; --primary2:#1A6E8E; --accent:#00A8CC;
+  --gold:#D4A843; --gold2:#F0C060;
+  --bg:#F0F4F8; --surface:#FFFFFF; --surface2:#F7FAFC;
+  --border:#DDE3ED; --text:#1A2D3D; --text2:#4A6278; --text3:#8AA0B4;
+  --green:#0D7A55; --green-bg:#E6F7F2;
+  --red:#C0392B; --red-bg:#FDECEA;
+  --yellow:#B7770D; --yellow-bg:#FEF6E4;
+  --blue-bg:#E8F4FD;
+  --shadow:0 2px 12px rgba(11,79,108,.10);
+  --shadow-lg:0 8px 32px rgba(11,79,108,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;}
 
-/* Sidebar */
-.sidebar {
-  position:fixed; right:0; top:0; bottom:0; width:230px;
-  background:#1E293B; border-left:1px solid #334155;
-  display:flex; flex-direction:column;
-}
-.logo {
-  padding:20px 16px; border-bottom:1px solid #334155;
-  background:#0F172A;
-}
-.logo h2 { color:#C5A059; font-size:13px; line-height:1.6; }
-.logo span { color:#64748B; font-size:11px; }
-.nav { flex:1; overflow-y:auto; padding:8px 0; }
-.nav-item {
-  display:flex; align-items:center; gap:10px;
-  padding:10px 16px; cursor:pointer; font-size:13px;
-  color:#94A3B8; transition:.2s; border-right:3px solid transparent;
-}
-.nav-item:hover { background:#334155; color:#E2E8F0; }
-.nav-item.active { background:#1a3a5c; color:#C5A059; border-right-color:#C5A059; }
-.nav-item .icon { font-size:16px; width:20px; text-align:center; }
-.nav-section { padding:12px 16px 4px; font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:1px; }
-.badge { background:#EF4444; color:white; border-radius:10px; padding:1px 6px; font-size:10px; margin-right:auto; }
-.badge.gold { background:#C5A059; color:#0F172A; }
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:256px;background:var(--primary);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(11,79,108,.25);z-index:100;}
+.sidebar-header{background:linear-gradient(135deg,#083B52 0%,#0B4F6C 100%);border-bottom:1px solid rgba(255,255,255,.08);}
+.org-logo{display:flex;align-items:center;gap:12px;padding:18px 20px 12px;}
+.logo-icon{width:44px;height:44px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 12px rgba(212,168,67,.4);}
+.org-name h2{font-size:11px;font-weight:700;color:#FFF;line-height:1.5;}
+.org-name span{font-size:9.5px;color:rgba(255,255,255,.55);display:block;}
+.sys-badge{margin:0 16px 16px;background:rgba(0,168,204,.15);border:1px solid rgba(0,168,204,.3);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;}
+.sys-badge .dot{width:7px;height:7px;background:#4ADE80;border-radius:50%;box-shadow:0 0 6px #4ADE80;flex-shrink:0;}
+.sys-badge span{font-size:10px;color:rgba(255,255,255,.7);}
+.nav{flex:1;overflow-y:auto;padding:8px 0 16px;}
+.nav::-webkit-scrollbar{width:3px;}
+.nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px;}
+.nav-section{padding:14px 20px 5px;font-size:9px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:500;color:rgba(255,255,255,.65);transition:.2s;border-right:3px solid transparent;margin:1px 0;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,168,204,.2),rgba(0,168,204,.05));color:#fff;border-right-color:var(--accent);}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;opacity:.85;}
+.nav-badge{margin-right:auto;padding:2px 7px;border-radius:20px;font-size:9.5px;font-weight:700;}
+.nav-badge.red{background:rgba(220,38,38,.9);color:#fff;}
+.nav-badge.gold{background:var(--gold);color:#fff;}
+.sidebar-footer{padding:14px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px;}
+.user-avatar{width:36px;height:36px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;}
+.user-info strong{display:block;font-size:12px;color:#fff;font-weight:600;}
+.user-info span{font-size:10px;color:rgba(255,255,255,.45);}
+.logout-btn{width:30px;height:30px;border:none;background:rgba(255,255,255,.07);border-radius:7px;color:rgba(255,255,255,.45);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.logout-btn:hover{background:rgba(220,38,38,.3);color:#fff;}
 
-/* Main */
-.main { margin-right:230px; min-height:100vh; }
+.main{margin-right:256px;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--surface);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04);position:sticky;top:0;z-index:50;}
+.breadcrumb{display:flex;align-items:center;gap:8px;}
+.breadcrumb h1{font-size:16px;font-weight:700;color:var(--primary);}
+.breadcrumb .sep{color:var(--text3);font-size:12px;}
+.breadcrumb .sub{font-size:12px;color:var(--text3);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-action{width:38px;height:38px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.2s;position:relative;}
+.icon-action:hover{border-color:var(--accent);color:var(--accent);}
+.notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#EF4444;border-radius:50%;border:1.5px solid #fff;}
+.date-chip{display:flex;align-items:center;gap:7px;background:var(--blue-bg);border:1px solid #BDD9EF;border-radius:9px;padding:6px 12px;font-size:11.5px;color:var(--primary);}
+.topbar-divider{width:1px;height:28px;background:var(--border);}
+.topbar-user{display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 12px;cursor:pointer;}
+.tu-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--primary),var(--primary2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.tu-name{font-size:12px;font-weight:600;color:var(--text);}
+.tu-role{font-size:10px;color:var(--text3);}
 
-/* Header */
-.header {
-  background:#1E293B; padding:14px 24px;
-  display:flex; align-items:center; justify-content:space-between;
-  border-bottom:1px solid #334155; position:sticky; top:0; z-index:10;
-}
-.header h1 { font-size:16px; color:#F1F5F9; }
-.header-actions { display:flex; align-items:center; gap:12px; }
-.notif-btn {
-  width:36px; height:36px; border-radius:8px;
-  background:#334155; border:none; color:#94A3B8; cursor:pointer;
-  font-size:16px; display:flex; align-items:center; justify-content:center;
-  position:relative;
-}
-.notif-btn .dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:#EF4444; border-radius:50%; }
-.user-chip {
-  display:flex; align-items:center; gap:8px;
-  background:#334155; border-radius:8px; padding:6px 12px;
-}
-.avatar { width:28px; height:28px; background:#C5A059; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#0F172A; font-weight:bold; font-size:12px; }
+.content{padding:28px;flex:1;}
+.page-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title h2{font-size:20px;font-weight:800;color:var(--primary);}
+.page-title p{font-size:12px;color:var(--text3);margin-top:2px;}
 
-/* Content */
-.content { padding:24px; }
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border-radius:14px;padding:20px 22px;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden;transition:.2s;}
+.stat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.stat-card::after{content:'';position:absolute;bottom:0;right:0;left:0;height:3px;border-radius:0 0 14px 14px;}
+.stat-card.c1::after{background:linear-gradient(90deg,var(--primary),var(--accent));}
+.stat-card.c2::after{background:linear-gradient(90deg,#0D7A55,#10B981);}
+.stat-card.c3::after{background:linear-gradient(90deg,#B7770D,#F59E0B);}
+.stat-card.c4::after{background:linear-gradient(90deg,#9F1239,#EF4444);}
+.stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.stat-icon-box{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.c1 .stat-icon-box{background:var(--blue-bg);}
+.c2 .stat-icon-box{background:var(--green-bg);}
+.c3 .stat-icon-box{background:var(--yellow-bg);}
+.c4 .stat-icon-box{background:var(--red-bg);}
+.stat-change{font-size:10.5px;padding:3px 8px;border-radius:20px;font-weight:600;}
+.stat-change.up{background:var(--green-bg);color:var(--green);}
+.stat-change.down{background:var(--red-bg);color:var(--red);}
+.stat-value{font-size:32px;font-weight:800;color:var(--primary);line-height:1;}
+.stat-label{font-size:12px;color:var(--text2);margin-top:5px;font-weight:500;}
 
-/* Stats Grid */
-.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
-.stat-card {
-  background:#1E293B; border-radius:12px; padding:20px;
-  border:1px solid #334155; position:relative; overflow:hidden;
-}
-.stat-card::before {
-  content:''; position:absolute; top:0; right:0; width:4px; height:100%;
-}
-.stat-card.blue::before { background:#3B82F6; }
-.stat-card.green::before { background:#10B981; }
-.stat-card.yellow::before { background:#F59E0B; }
-.stat-card.red::before { background:#EF4444; }
-.stat-label { font-size:12px; color:#64748B; margin-bottom:8px; }
-.stat-value { font-size:28px; font-weight:bold; color:#F1F5F9; }
-.stat-sub { font-size:11px; color:#10B981; margin-top:4px; }
-.stat-icon { position:absolute; left:20px; top:50%; transform:translateY(-50%); font-size:32px; opacity:.15; }
+.grid-7-5{display:grid;grid-template-columns:7fr 5fr;gap:18px;margin-bottom:24px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:24px;}
+.card{background:var(--surface);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:var(--primary);}
+.card-title .ct-icon{width:30px;height:30px;border-radius:8px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.card-action{font-size:11.5px;color:var(--accent);cursor:pointer;font-weight:600;}
+.card-body{padding:20px;}
 
-/* Alerts */
-.alerts { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
-.alert-card {
-  background:#1E293B; border-radius:12px; padding:16px;
-  border:1px solid #334155;
-}
-.alert-title { font-size:12px; color:#94A3B8; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-.alert-item {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:8px 0; border-bottom:1px solid #1E3A5F; font-size:12px;
-}
-.alert-item:last-child { border:none; }
-.tag { padding:2px 8px; border-radius:4px; font-size:10px; }
-.tag.green { background:#064E3B; color:#34D399; }
-.tag.yellow { background:#451A03; color:#FCD34D; }
-.tag.red { background:#450A0A; color:#FCA5A5; }
-.tag.blue { background:#1E3A5F; color:#93C5FD; }
+.alert-list{display:flex;flex-direction:column;gap:10px;}
+.alert-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:.15s;}
+.alert-item:hover{border-color:var(--accent);}
+.alert-avatar{width:36px;height:36px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.alert-avatar.promo{background:linear-gradient(135deg,#EEF2FF,#C7D2FE);}
+.alert-avatar.retire{background:linear-gradient(135deg,#FEF9C3,#FDE68A);}
+.alert-avatar.doc{background:linear-gradient(135deg,#FEE2E2,#FCA5A5);}
+.alert-text{flex:1;}
+.alert-name{font-size:12.5px;font-weight:600;color:var(--text);}
+.alert-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.tag.green{background:var(--green-bg);color:var(--green);}
+.tag.yellow{background:var(--yellow-bg);color:var(--yellow);}
+.tag.red{background:var(--red-bg);color:var(--red);}
+.tag.blue{background:var(--blue-bg);color:var(--primary2);}
 
-/* Table Section */
-.table-section {
-  background:#1E293B; border-radius:12px; border:1px solid #334155;
-  margin-bottom:24px;
-}
-.table-header {
-  padding:16px 20px; border-bottom:1px solid #334155;
-  display:flex; align-items:center; justify-content:space-between;
-}
-.table-header h3 { font-size:14px; color:#F1F5F9; }
-.table-actions { display:flex; gap:8px; }
-.btn {
-  padding:7px 14px; border-radius:8px; border:none;
-  font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;
-}
-.btn-primary { background:#C5A059; color:#0F172A; font-weight:600; }
-.btn-outline { background:transparent; color:#94A3B8; border:1px solid #334155; }
-.btn-outline:hover { border-color:#C5A059; color:#C5A059; }
-.search-box {
-  background:#334155; border:1px solid #475569; border-radius:8px;
-  padding:7px 12px; color:#E2E8F0; font-size:12px; width:200px;
-  outline:none;
-}
-table { width:100%; border-collapse:collapse; }
-thead th {
-  padding:12px 16px; text-align:right;
-  background:#0F172A; font-size:12px; color:#64748B;
-  font-weight:600; border-bottom:1px solid #334155;
-}
-tbody tr { transition:.15s; }
-tbody tr:hover { background:#334155; }
-tbody td { padding:12px 16px; font-size:13px; border-bottom:1px solid #1E3A5F; }
-.emp-name { color:#F1F5F9; font-weight:500; }
-.emp-id { color:#64748B; font-size:11px; }
-.dept-chip { padding:3px 10px; background:#1E3A5F; color:#93C5FD; border-radius:20px; font-size:11px; }
-.status-chip { padding:3px 10px; border-radius:20px; font-size:11px; }
-.status-chip.active { background:#064E3B; color:#34D399; }
-.status-chip.contract { background:#1E3A5F; color:#93C5FD; }
-.action-btns { display:flex; gap:6px; }
-.icon-btn { width:28px; height:28px; border-radius:6px; border:none; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; }
-.icon-btn.edit { background:#1E3A5F; color:#93C5FD; }
-.icon-btn.del { background:#450A0A; color:#FCA5A5; }
-.icon-btn.view { background:#064E3B; color:#34D399; }
+.chart-wrap{padding:20px;}
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px;margin-bottom:28px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-fill{width:100%;border-radius:7px 7px 0 0;transition:.3s;}
+.bar-lbl{font-size:9.5px;color:var(--text3);text-align:center;}
+.bar-num{font-size:10px;font-weight:700;color:var(--primary);}
 
-/* Charts row */
-.charts { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:24px; }
-.chart-card { background:#1E293B; border-radius:12px; border:1px solid #334155; padding:20px; }
-.chart-title { font-size:13px; color:#94A3B8; margin-bottom:16px; }
-.bar-chart { display:flex; align-items:flex-end; gap:8px; height:120px; }
-.bar { flex:1; border-radius:6px 6px 0 0; position:relative; min-width:24px; }
-.bar-label { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); font-size:9px; color:#64748B; white-space:nowrap; }
-.bar-val { position:absolute; top:-18px; left:50%; transform:translateX(-50%); font-size:9px; color:#C5A059; }
-.pie-legend { margin-top:12px; }
-.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:12px; }
-.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.donut { width:100px; height:100px; border-radius:50%; margin:0 auto 12px; 
-  background: conic-gradient(#3B82F6 0% 45%, #10B981 45% 70%, #F59E0B 70% 85%, #EF4444 85% 100%); }
+.donut-wrap{display:flex;align-items:center;gap:24px;padding:20px;}
+.donut-legend{flex:1;display:flex;flex-direction:column;gap:10px;}
+.dl-item{display:flex;align-items:center;justify-content:space-between;}
+.dl-left{display:flex;align-items:center;gap:8px;}
+.dl-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px;}
+.dl-bar{height:100%;border-radius:2px;}
+.dl-label{font-size:11.5px;color:var(--text2);font-weight:500;}
+.dl-pct{font-size:11.5px;font-weight:700;color:var(--text);}
+
+.tbl-section{background:var(--surface);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden;}
+.tbl-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.tbl-title{font-size:14px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:8px;}
+.tbl-actions{display:flex;gap:8px;align-items:center;}
+.search-wrap{position:relative;}
+.search-wrap input{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 34px 8px 14px;font-size:12px;font-family:'Cairo',sans-serif;color:var(--text);outline:none;width:210px;transition:.2s;}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,168,204,.12);}
+.search-wrap .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text3);}
+.btn{padding:8px 16px;border-radius:9px;border:none;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary2);}
+.btn-outline{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--surface2);}
+thead th{padding:11px 18px;text-align:right;font-size:11.5px;font-weight:700;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{transition:.15s;}
+tbody tr:hover{background:rgba(11,79,108,.03);}
+tbody td{padding:13px 18px;font-size:12.5px;border-bottom:1px solid var(--border);}
+tbody tr:last-child td{border-bottom:none;}
+.emp-cell{display:flex;align-items:center;gap:10px;}
+.emp-av{width:34px;height:34px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
+.emp-av.f{background:linear-gradient(135deg,#BE185D,#EC4899);}
+.emp-n{font-size:13px;font-weight:600;color:var(--text);}
+.emp-id{font-size:10.5px;color:var(--text3);}
+.dept-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--blue-bg);color:var(--primary2);border-radius:20px;font-size:11px;font-weight:600;}
+.status-tag{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-tag.active{background:var(--green-bg);color:var(--green);}
+.status-tag.contract{background:var(--blue-bg);color:var(--primary2);}
+.status-tag.seconded{background:var(--yellow-bg);color:var(--yellow);}
+.grade-num{font-weight:700;color:var(--primary);}
+.marbout-badge{display:inline-block;padding:2px 6px;background:#FEF9C3;color:#92400E;border-radius:4px;font-size:9.5px;font-weight:700;margin-right:4px;}
+.act-btns{display:flex;gap:5px;}
+.act-btn{width:29px;height:29px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.act-btn:hover{border-color:var(--accent);}
+.act-btn.del:hover{border-color:var(--red);background:var(--red-bg);}
+.tbl-footer{padding:12px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.tbl-info{font-size:11.5px;color:var(--text3);}
+.pagination{display:flex;gap:5px;}
+.page-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-family:'Cairo',sans-serif;cursor:pointer;color:var(--text2);transition:.15s;}
+.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700;}
+.page-btn:hover:not(.active){border-color:var(--primary);color:var(--primary);}
 </style>
 </head>
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
-  <div class="logo">
-    <h2>⚙️ نظام شؤون الموظفين</h2>
-    <span>الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+  <div class="sidebar-header">
+    <div class="org-logo">
+      <div class="logo-icon">💧</div>
+      <div class="org-name">
+        <h2>الجهاز التنفيذي لحفر<br>وصيانة آبار المياه</h2>
+        <span>نظام إدارة شؤون الموظفين</span>
+      </div>
+    </div>
+    <div class="sys-badge">
+      <div class="dot"></div>
+      <span>النظام يعمل بكفاءة — الإصدار 1.0</span>
+    </div>
   </div>
   <nav class="nav">
     <div class="nav-section">الرئيسية</div>
-    <div class="nav-item active"><span class="icon">🏠</span> لوحة التحكم</div>
-
-    <div class="nav-section">الموظفون</div>
-    <div class="nav-item"><span class="icon">👥</span> الموظفون</div>
-    <div class="nav-item"><span class="icon">📋</span> كشف العاملين</div>
-    <div class="nav-item"><span class="icon">⭐</span> الترقيات والعلاوات</div>
-
-    <div class="nav-section">الحركات</div>
-    <div class="nav-item"><span class="icon">🏖️</span> الإجازات <span class="badge">3</span></div>
-    <div class="nav-item"><span class="icon">🕐</span> الحضور والانصراف</div>
-    <div class="nav-item"><span class="icon">🚪</span> أذونات الخروج</div>
-    <div class="nav-item"><span class="icon">📤</span> التقاعد والفصل</div>
-
-    <div class="nav-section">الوثائق</div>
-    <div class="nav-item"><span class="icon">📁</span> أرشيف الوثائق <span class="badge gold">5</span></div>
-    <div class="nav-item"><span class="icon">✉️</span> المراسلات</div>
-
-    <div class="nav-section">التقارير</div>
-    <div class="nav-item"><span class="icon">📊</span> التقارير</div>
-    <div class="nav-item"><span class="icon">⚙️</span> الإعدادات</div>
+    <div class="nav-item active"><span class="ni">🏠</span> لوحة التحكم</div>
+    <div class="nav-section">الموارد البشرية</div>
+    <div class="nav-item"><span class="ni">👥</span> الموظفون</div>
+    <div class="nav-item"><span class="ni">📋</span> كشف العاملين</div>
+    <div class="nav-item"><span class="ni">⭐</span> الترقيات والعلاوات</div>
+    <div class="nav-item"><span class="ni">📤</span> التقاعد والفصل</div>
+    <div class="nav-section">الحركات اليومية</div>
+    <div class="nav-item"><span class="ni">🏖️</span> الإجازات <span class="nav-badge red">3</span></div>
+    <div class="nav-item"><span class="ni">🕐</span> الحضور والانصراف</div>
+    <div class="nav-item"><span class="ni">🚪</span> أذونات الخروج</div>
+    <div class="nav-section">الوثائق والأرشيف</div>
+    <div class="nav-item"><span class="ni">📁</span> أرشيف الوثائق <span class="nav-badge gold">5</span></div>
+    <div class="nav-item"><span class="ni">✉️</span> المراسلات</div>
+    <div class="nav-item"><span class="ni">🗄️</span> الأرشيف العام</div>
+    <div class="nav-section">التقارير والإعدادات</div>
+    <div class="nav-item"><span class="ni">📊</span> التقارير</div>
+    <div class="nav-item"><span class="ni">⚙️</span> إعدادات النظام</div>
   </nav>
+  <div class="sidebar-footer">
+    <div class="user-avatar">م</div>
+    <div class="user-info">
+      <strong>مدير النظام</strong>
+      <span>مستوى الوصول: كامل</span>
+    </div>
+    <button class="logout-btn">⏻</button>
+  </div>
 </div>
 
-<!-- Main -->
 <div class="main">
-  <div class="header">
-    <h1>لوحة التحكم الرئيسية</h1>
-    <div class="header-actions">
-      <button class="notif-btn">🔔<span class="dot"></span></button>
-      <div class="user-chip">
-        <div class="avatar">م</div>
-        <div style="font-size:12px">
-          <div style="color:#F1F5F9">مدير النظام</div>
-          <div style="color:#64748B;font-size:10px">الإثنين 9 يونيو 2026</div>
+  <div class="topbar">
+    <div class="breadcrumb">
+      <h1>لوحة التحكم</h1>
+      <span class="sep">›</span>
+      <span class="sub">نظرة عامة على النظام</span>
+    </div>
+    <div class="topbar-right">
+      <div class="date-chip">📅 الإثنين، 9 يونيو 2026</div>
+      <div class="topbar-divider"></div>
+      <div class="icon-action">🔔<span class="notif-dot"></span></div>
+      <div class="icon-action">🔍</div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-user">
+        <div class="tu-avatar">م</div>
+        <div>
+          <div class="tu-name">مدير النظام</div>
+          <div class="tu-role">إدارة شؤون الموظفين</div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="content">
+    <div class="page-title">
+      <div>
+        <h2>لوحة التحكم الرئيسية</h2>
+        <p>آخر تحديث منذ دقيقتين · السنة المالية 2026</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline">📥 تصدير تقرير</button>
+        <button class="btn btn-primary">＋ إضافة موظف</button>
+      </div>
+    </div>
 
-    <!-- Stats -->
     <div class="stats">
-      <div class="stat-card blue">
-        <div class="stat-label">إجمالي الموظفين</div>
-        <div class="stat-value">247</div>
-        <div class="stat-sub">↑ 3 موظفين جدد هذا الشهر</div>
-        <div class="stat-icon">👥</div>
+      <div class="stat-card c1">
+        <div class="stat-top"><div class="stat-icon-box">👥</div><span class="stat-change up">↑ 3 جديد</span></div>
+        <div class="stat-value">247</div><div class="stat-label">إجمالي الموظفين</div>
       </div>
-      <div class="stat-card green">
-        <div class="stat-label">في الخدمة الآن</div>
-        <div class="stat-value">231</div>
-        <div class="stat-sub">93.5% من الكادر</div>
-        <div class="stat-icon">✅</div>
+      <div class="stat-card c2">
+        <div class="stat-top"><div class="stat-icon-box">✅</div><span class="stat-change up">93.5%</span></div>
+        <div class="stat-value">231</div><div class="stat-label">في الخدمة الآن</div>
       </div>
-      <div class="stat-card yellow">
-        <div class="stat-label">في إجازة حالياً</div>
-        <div class="stat-value">12</div>
-        <div class="stat-sub">3 طلبات معلقة</div>
-        <div class="stat-icon">🏖️</div>
+      <div class="stat-card c3">
+        <div class="stat-top"><div class="stat-icon-box">🏖️</div><span class="stat-change down">3 معلق</span></div>
+        <div class="stat-value">12</div><div class="stat-label">في إجازة حالياً</div>
       </div>
-      <div class="stat-card red">
-        <div class="stat-label">تنبيهات تحتاج مراجعة</div>
-        <div class="stat-value">8</div>
-        <div class="stat-sub">5 وثائق تنتهي قريباً</div>
-        <div class="stat-icon">⚠️</div>
+      <div class="stat-card c4">
+        <div class="stat-top"><div class="stat-icon-box">⚠️</div><span class="stat-change down">تحتاج مراجعة</span></div>
+        <div class="stat-value">8</div><div class="stat-label">تنبيهات نشطة</div>
       </div>
     </div>
 
-    <!-- Charts -->
-    <div class="charts">
-      <div class="chart-card">
-        <div class="chart-title">📊 توزيع الموظفين حسب الإدارة</div>
-        <div class="bar-chart">
-          <div class="bar" style="height:85%;background:#3B82F6"><span class="bar-val">52</span><span class="bar-label">الحفر</span></div>
-          <div class="bar" style="height:60%;background:#10B981"><span class="bar-val">38</span><span class="bar-label">الصيانة</span></div>
-          <div class="bar" style="height:45%;background:#F59E0B"><span class="bar-val">29</span><span class="bar-label">الإدارية</span></div>
-          <div class="bar" style="height:35%;background:#8B5CF6"><span class="bar-val">22</span><span class="bar-label">المالية</span></div>
-          <div class="bar" style="height:28%;background:#EF4444"><span class="bar-val">18</span><span class="bar-label">اللوجستي</span></div>
-          <div class="bar" style="height:22%;background:#64748B"><span class="bar-val">14</span><span class="bar-label">الأمن</span></div>
+    <div class="grid-7-5">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="ct-icon">📊</div> توزيع الموظفين حسب الإدارة</div>
+          <span class="card-action">تقرير تفصيلي ←</span>
+        </div>
+        <div class="chart-wrap">
+          <div class="bars">
+            <div class="bar-col"><div class="bar-num">52</div><div class="bar-fill" style="height:85%;background:linear-gradient(180deg,#0B4F6C,#1A6E8E)"></div><div class="bar-lbl">الحفر</div></div>
+            <div class="bar-col"><div class="bar-num">38</div><div class="bar-fill" style="height:62%;background:linear-gradient(180deg,#0D7A55,#10B981)"></div><div class="bar-lbl">الصيانة</div></div>
+            <div class="bar-col"><div class="bar-num">29</div><div class="bar-fill" style="height:47%;background:linear-gradient(180deg,#1A6E8E,#00A8CC)"></div><div class="bar-lbl">الإدارية</div></div>
+            <div class="bar-col"><div class="bar-num">24</div><div class="bar-fill" style="height:39%;background:linear-gradient(180deg,#D4A843,#F0C060)"></div><div class="bar-lbl">المالية</div></div>
+            <div class="bar-col"><div class="bar-num">18</div><div class="bar-fill" style="height:29%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"></div><div class="bar-lbl">اللوجستي</div></div>
+            <div class="bar-col"><div class="bar-num">14</div><div class="bar-fill" style="height:23%;background:linear-gradient(180deg,#C0392B,#EF4444)"></div><div class="bar-lbl">الأمن</div></div>
+            <div class="bar-col"><div class="bar-num">72</div><div class="bar-fill" style="height:100%;background:linear-gradient(180deg,#475569,#64748B)"></div><div class="bar-lbl">أخرى</div></div>
+          </div>
         </div>
       </div>
-      <div class="chart-card" style="text-align:center">
-        <div class="chart-title">🧑‍💼 نوع التعاقد</div>
-        <div class="donut"></div>
-        <div class="pie-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div> مستمر (45%)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#10B981"></div> عقد (25%)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#F59E0B"></div> ندب (15%)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#EF4444"></div> إعارة (15%)</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="ct-icon">🧑‍💼</div> نوع التعاقد</div>
+        </div>
+        <div class="donut-wrap">
+          <svg width="100" height="100" viewBox="0 0 100 100" style="flex-shrink:0">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#DDE3ED" stroke-width="16"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#0B4F6C" stroke-width="16" stroke-dasharray="107.4 238.8" stroke-dashoffset="59.7" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#00A8CC" stroke-width="16" stroke-dasharray="59.7 238.8" stroke-dashoffset="-47.7" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#D4A843" stroke-width="16" stroke-dasharray="35.8 238.8" stroke-dashoffset="-107.4" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#10B981" stroke-width="16" stroke-dasharray="35.8 238.8" stroke-dashoffset="-143.2" transform="rotate(-90 50 50)"/>
+            <text x="50" y="54" text-anchor="middle" font-size="13" font-weight="bold" fill="#0B4F6C" font-family="Cairo">247</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="dl-item"><div class="dl-left"><div style="width:10px;height:10px;border-radius:3px;background:#0B4F6C"></div><span class="dl-label">مستمر</span></div><span class="dl-pct">45%</span></div>
+            <div class="dl-bar-bg"><div class="dl-bar" style="width:45%;background:#0B4F6C"></div></div>
+            <div class="dl-item"><div class="dl-left"><div style="width:10px;height:10px;border-radius:3px;background:#00A8CC"></div><span class="dl-label">عقد</span></div><span class="dl-pct">25%</span></div>
+            <div class="dl-bar-bg"><div class="dl-bar" style="width:25%;background:#00A8CC"></div></div>
+            <div class="dl-item"><div class="dl-left"><div style="width:10px;height:10px;border-radius:3px;background:#D4A843"></div><span class="dl-label">ندب</span></div><span class="dl-pct">15%</span></div>
+            <div class="dl-bar-bg"><div class="dl-bar" style="width:15%;background:#D4A843"></div></div>
+            <div class="dl-item"><div class="dl-left"><div style="width:10px;height:10px;border-radius:3px;background:#10B981"></div><span class="dl-label">إعارة</span></div><span class="dl-pct">15%</span></div>
+            <div class="dl-bar-bg"><div class="dl-bar" style="width:15%;background:#10B981"></div></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Alerts Row -->
-    <div class="alerts">
-      <div class="alert-card">
-        <div class="alert-title">⭐ مرشحون للترقية</div>
-        <div class="alert-item"><span>أحمد محمد الورفلي</span><span class="tag green">درجة 7 → 8</span></div>
-        <div class="alert-item"><span>فاطمة علي المنتصر</span><span class="tag green">درجة 10 → 11</span></div>
-        <div class="alert-item"><span>محمد سالم الزوي</span><span class="tag yellow">ينتظر علاوة</span></div>
+    <div class="grid3">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="ct-icon">⭐</div> مرشحون للترقية</div>
+          <span class="card-action">عرض الكل</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item"><div class="alert-avatar promo">👤</div><div class="alert-text"><div class="alert-name">أحمد محمد الورفلي</div><div class="alert-sub">درجة 7 · 4 علاوات مكتملة</div></div><span class="tag green">مؤهل</span></div>
+            <div class="alert-item"><div class="alert-avatar promo">👤</div><div class="alert-text"><div class="alert-name">فاطمة علي المنتصر</div><div class="alert-sub">درجة 10 · مربوط · 5 علاوات</div></div><span class="tag green">مؤهل</span></div>
+            <div class="alert-item"><div class="alert-avatar promo">👤</div><div class="alert-text"><div class="alert-name">محمد سالم الزوي</div><div class="alert-sub">درجة 6 · 3 علاوات من 4</div></div><span class="tag yellow">علاوة واحدة</span></div>
+          </div>
+        </div>
       </div>
-      <div class="alert-card">
-        <div class="alert-title">🔔 اقتراب التقاعد (خلال سنة)</div>
-        <div class="alert-item"><span>عمر إبراهيم العجيل</span><span class="tag red">3 أشهر</span></div>
-        <div class="alert-item"><span>خديجة يوسف الفيتوري</span><span class="tag yellow">7 أشهر</span></div>
-        <div class="alert-item"><span>مصطفى حسن الهروني</span><span class="tag blue">11 شهر</span></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="ct-icon">🕰️</div> اقتراب سن التقاعد</div>
+          <span class="card-action">عرض الكل</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item"><div class="alert-avatar retire">👴</div><div class="alert-text"><div class="alert-name">عمر إبراهيم العجيل</div><div class="alert-sub">64 سنة و 9 أشهر · ذكر</div></div><span class="tag red">3 أشهر</span></div>
+            <div class="alert-item"><div class="alert-avatar retire">👵</div><div class="alert-text"><div class="alert-name">خديجة يوسف الفيتوري</div><div class="alert-sub">59 سنة و 5 أشهر · أنثى</div></div><span class="tag yellow">7 أشهر</span></div>
+            <div class="alert-item"><div class="alert-avatar retire">👴</div><div class="alert-text"><div class="alert-name">مصطفى حسن الهروني</div><div class="alert-sub">64 سنة و 1 شهر · ذكر</div></div><span class="tag blue">11 شهر</span></div>
+          </div>
+        </div>
       </div>
-      <div class="alert-card">
-        <div class="alert-title">📁 وثائق تنتهي قريباً</div>
-        <div class="alert-item"><span>جواز سفر - خالد الزيداني</span><span class="tag red">8 أيام</span></div>
-        <div class="alert-item"><span>عقد عمل - سعاد المبروك</span><span class="tag yellow">15 يوم</span></div>
-        <div class="alert-item"><span>رخصة قيادة - ناصر الغيث</span><span class="tag yellow">22 يوم</span></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="ct-icon">📁</div> وثائق تنتهي قريباً</div>
+          <span class="card-action">عرض الكل</span>
+        </div>
+        <div class="card-body">
+          <div class="alert-list">
+            <div class="alert-item"><div class="alert-avatar doc">📄</div><div class="alert-text"><div class="alert-name">جواز سفر · خالد الزيداني</div><div class="alert-sub">تنتهي: 17 يونيو 2026</div></div><span class="tag red">8 أيام</span></div>
+            <div class="alert-item"><div class="alert-avatar doc">📄</div><div class="alert-text"><div class="alert-name">عقد عمل · سعاد المبروك</div><div class="alert-sub">تنتهي: 24 يونيو 2026</div></div><span class="tag yellow">15 يوم</span></div>
+            <div class="alert-item"><div class="alert-avatar doc">📄</div><div class="alert-text"><div class="alert-name">رخصة قيادة · ناصر الغيث</div><div class="alert-sub">تنتهي: 1 يوليو 2026</div></div><span class="tag yellow">22 يوم</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Employees Table -->
-    <div class="table-section">
-      <div class="table-header">
-        <h3>👥 قائمة الموظفين</h3>
-        <div class="table-actions">
-          <input class="search-box" placeholder="🔍 بحث باسم أو رقم وظيفي...">
-          <button class="btn btn-outline">📥 استيراد Excel</button>
-          <button class="btn btn-primary">+ إضافة موظف</button>
+    <div class="tbl-section">
+      <div class="tbl-header">
+        <div class="tbl-title">👥 قائمة الموظفين</div>
+        <div class="tbl-actions">
+          <div class="search-wrap"><input type="text" placeholder="بحث بالاسم أو الرقم الوظيفي..."><span class="si">🔍</span></div>
+          <button class="btn btn-outline">⬇ استيراد Excel</button>
+          <button class="btn btn-outline">📊 فلترة</button>
+          <button class="btn btn-primary">＋ إضافة موظف</button>
         </div>
       </div>
       <table>
         <thead>
           <tr>
-            <th>الموظف</th>
-            <th>الإدارة</th>
-            <th>المسمى الوظيفي</th>
-            <th>الدرجة</th>
-            <th>النوع</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
+            <th>الموظف</th><th>الإدارة</th><th>المسمى الوظيفي</th>
+            <th>الدرجة والعلاوة</th><th>النوع</th><th>الحالة</th><th>الإجراءات</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><div class="emp-name">أحمد محمد الورفلي</div><div class="emp-id">EMP-0042</div></td>
-            <td><span class="dept-chip">إدارة الحفر</span></td>
-            <td>مهندس حفر</td>
-            <td>درجة 7 / علاوة 3</td>
-            <td>إداري</td>
-            <td><span class="status-chip active">مستمر</span></td>
-            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+            <td><div class="emp-cell"><div class="emp-av">أ</div><div><div class="emp-n">أحمد محمد الورفلي</div><div class="emp-id">EMP-0042 · 01/03/1985</div></div></div></td>
+            <td><span class="dept-tag">⛏ إدارة الحفر</span></td>
+            <td style="color:var(--text2);font-size:12.5px">مهندس حفر أول</td>
+            <td><span class="grade-num">درجة 7</span> <span style="color:var(--text3);font-size:11px">/ علاوة 3</span></td>
+            <td><span class="tag blue">إداري</span></td>
+            <td><span class="status-tag active">● مستمر</span></td>
+            <td><div class="act-btns"><button class="act-btn">👁</button><button class="act-btn">✏️</button><button class="act-btn del">🗑</button></div></td>
           </tr>
           <tr>
-            <td><div class="emp-name">فاطمة علي المنتصر</div><div class="emp-id">EMP-0078</div></td>
-            <td><span class="dept-chip">الشؤون الإدارية</span></td>
-            <td>مدير قسم</td>
-            <td>درجة 10 / علاوة 5 <span class="tag yellow">مربوط</span></td>
-            <td>إداري</td>
-            <td><span class="status-chip active">مستمر</span></td>
-            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+            <td><div class="emp-cell"><div class="emp-av f">ف</div><div><div class="emp-n">فاطمة علي المنتصر</div><div class="emp-id">EMP-0078 · 15/07/1979</div></div></div></td>
+            <td><span class="dept-tag">🏢 الشؤون الإدارية</span></td>
+            <td style="color:var(--text2);font-size:12.5px">مدير قسم</td>
+            <td><span class="grade-num">درجة 10</span> <span style="color:var(--text3);font-size:11px">/ علاوة 5</span> <span class="marbout-badge">مربوط</span></td>
+            <td><span class="tag blue">إداري</span></td>
+            <td><span class="status-tag active">● مستمر</span></td>
+            <td><div class="act-btns"><button class="act-btn">👁</button><button class="act-btn">✏️</button><button class="act-btn del">🗑</button></div></td>
           </tr>
           <tr>
-            <td><div class="emp-name">خالد عبدالله الزيداني</div><div class="emp-id">EMP-0115</div></td>
-            <td><span class="dept-chip">الأمن</span></td>
-            <td>حارس أمن</td>
-            <td>درجة 4 / علاوة 2</td>
-            <td>غفارة</td>
-            <td><span class="status-chip contract">عقد</span></td>
-            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+            <td><div class="emp-cell"><div class="emp-av" style="background:linear-gradient(135deg,#065F46,#059669)">خ</div><div><div class="emp-n">خالد عبدالله الزيداني</div><div class="emp-id">EMP-0115 · 22/11/1990</div></div></div></td>
+            <td><span class="dept-tag">🔒 الأمن</span></td>
+            <td style="color:var(--text2);font-size:12.5px">حارس أمن</td>
+            <td><span class="grade-num">درجة 4</span> <span style="color:var(--text3);font-size:11px">/ علاوة 2</span></td>
+            <td><span class="tag yellow">غفارة</span></td>
+            <td><span class="status-tag contract">● عقد</span></td>
+            <td><div class="act-btns"><button class="act-btn">👁</button><button class="act-btn">✏️</button><button class="act-btn del">🗑</button></div></td>
           </tr>
           <tr>
-            <td><div class="emp-name">سعاد إبراهيم المبروك</div><div class="emp-id">EMP-0203</div></td>
-            <td><span class="dept-chip">المالية</span></td>
-            <td>محاسب</td>
-            <td>درجة 6 / علاوة 1</td>
-            <td>إداري</td>
-            <td><span class="status-chip active">مستمر</span></td>
-            <td><div class="action-btns"><button class="icon-btn view">👁</button><button class="icon-btn edit">✏️</button><button class="icon-btn del">🗑</button></div></td>
+            <td><div class="emp-cell"><div class="emp-av f" style="background:linear-gradient(135deg,#7C2D12,#EA580C)">س</div><div><div class="emp-n">سعاد إبراهيم المبروك</div><div class="emp-id">EMP-0203 · 08/05/1988</div></div></div></td>
+            <td><span class="dept-tag">💰 المالية</span></td>
+            <td style="color:var(--text2);font-size:12.5px">محاسب</td>
+            <td><span class="grade-num">درجة 6</span> <span style="color:var(--text3);font-size:11px">/ علاوة 1</span></td>
+            <td><span class="tag blue">إداري</span></td>
+            <td><span class="status-tag seconded">● ندب</span></td>
+            <td><div class="act-btns"><button class="act-btn">👁</button><button class="act-btn">✏️</button><button class="act-btn del">🗑</button></div></td>
           </tr>
         </tbody>
       </table>
-      <div style="padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #334155;font-size:12px;color:#64748B">
-        <span>عرض 1-4 من 247 موظف</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-outline" style="padding:4px 10px">السابق</button>
-          <button class="btn btn-primary" style="padding:4px 10px">1</button>
-          <button class="btn btn-outline" style="padding:4px 10px">2</button>
-          <button class="btn btn-outline" style="padding:4px 10px">التالي</button>
+      <div class="tbl-footer">
+        <span class="tbl-info">عرض 1–4 من إجمالي <strong>247</strong> موظف</span>
+        <div class="pagination">
+          <button class="page-btn">‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">›</button>
         </div>
       </div>
     </div>
 
   </div>
 </div>
-
 </body>
 </html>
