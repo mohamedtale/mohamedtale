@@ -33,8 +33,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo + Title */}
           <Link href={`/${locale}`} className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1">
-              <Image src="/logo.svg" alt="Logo" width={36} height={36} />
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1">
+              <Image src="/logo.png" alt="شعار الجهاز التنفيذي" width={44} height={44} />
             </div>
             <div className="hidden sm:block">
               <p className="text-white font-bold text-sm leading-tight">

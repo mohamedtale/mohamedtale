@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -97,10 +98,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-6 border-b border-ministry-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-ministry-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.686 2 6 4.686 6 8c0 5.25 6 14 6 14s6-8.75 6-14c0-3.314-2.686-6-6-6zm0 8c-1.105 0-2-.895-2-2s.895-2 2-2 2 .895 2 2-.895 2-2 2z"/>
-            </svg>
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 p-1">
+            <Image src="/logo.png" alt="شعار الجهاز" width={36} height={36} />
           </div>
           <div>
             <p className="font-bold text-sm leading-tight text-white">الجهاز التنفيذي</p>
