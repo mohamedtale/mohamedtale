@@ -296,6 +296,11 @@ body{font-family:'Cairo',sans-serif;background:#d0d8e0;direction:rtl;padding:24p
   <div class="sec-header">ملاحظات</div>
   <div class="notes-box" style="min-height:55px" contenteditable="true"></div>
 
+  <!-- AUTO NOTE -->
+  <div id="advanceNote" style="border:1.5px solid #bbb;border-right:4px solid var(--primary);border-radius:4px;padding:8px 12px;margin-bottom:14px;font-size:11px;font-weight:700;color:var(--primary);background:#f0f4f8;display:none;">
+    ملاحظة: يجـــب تقديـــم الإجـــازة قبـــل موعـــدها بثلاثة أيـــام.
+  </div>
+
   <div class="stamp-area">الختم<br>الرسمي</div>
 
   <div class="doc-footer">
@@ -360,6 +365,19 @@ function savePDF() {
   showToast('📄 يتم تصدير PDF...');
   setTimeout(() => window.print(), 300);
 }
+
+function checkAdvanceNote() {
+  // قراءة عدد الأيام من خلية النتيجة
+  const daysEl = document.querySelector('.result-box .r-val');
+  if (!daysEl) return;
+  const match = daysEl.textContent.match(/\d+/);
+  const days = match ? parseInt(match[0]) : 0;
+  const note = document.getElementById('advanceNote');
+  if (note) note.style.display = days > 3 ? 'block' : 'none';
+}
+// مراقبة التغييرات في خلية الأيام
+document.addEventListener('DOMSubtreeModified', checkAdvanceNote);
+window.addEventListener('load', checkAdvanceNote);
 
 function showToast(msg, warn=false) {
   let t = document.getElementById('toast');
