@@ -383,9 +383,13 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:28p
   <div class="sec"><div class="sec-line"></div><div class="sec-label">ملاحظات</div><div class="sec-line-l"></div></div>
   <div class="text-field" style="min-height:50px" contenteditable="true"></div>
 
-  <!-- تنبيه تجاوز الحد -->
+  <!-- تنبيه دائم -->
   <div class="advance-note" id="advanceNote" style="display:block">
-    تنبيه: &nbsp; الإجازة الطارئة لا تتجاوز <strong>3 أيام</strong> في السنة الواحدة.
+    ملاحظة: &nbsp; الإجازة الطارئة لا تتجاوز <strong>3 أيام</strong> في السنة الواحدة.
+  </div>
+  <!-- تنبيه تجاوز الحد -->
+  <div id="overLimitNote" style="display:none;border-right:4px solid #C0392B;border-radius:0 6px 6px 0;padding:9px 14px;background:#fee2e2;font-size:11px;font-weight:700;color:#7B241C;margin:4px 0;">
+    ⚠️ تحذير: &nbsp; عدد الأيام المطلوبة يتجاوز الحد الأقصى المسموح به <strong>(3 أيام)</strong>.
   </div>
 
   <!-- ختم وفوتر -->
@@ -443,7 +447,7 @@ function delSig(btn) {
 function checkNote() {
   const el = document.querySelector('.result-strip .rs-val');
   const n  = parseInt((el?.textContent||'').match(/\d+/)?.[0]||0);
-  document.getElementById('advanceNote').style.display = n > 3 ? 'block' : 'none';
+  document.getElementById('overLimitNote').style.display = n > 3 ? 'block' : 'none';
 }
 document.addEventListener('input', checkNote);
 window.addEventListener('load', checkNote);
