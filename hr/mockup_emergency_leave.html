@@ -322,7 +322,7 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:28p
     </div>
     <div class="field-row cols2">
       <div class="f-lbl">رصيد الإجازة الطارئة المتبقي</div>
-      <div class="f-val bold" contenteditable="true">3 أيام</div>
+      <div class="f-val bold" contenteditable="true">12 يوماً</div>
       <div class="f-lbl">رصيد الإجازة حتى سنة</div>
       <div class="f-val" contenteditable="true">2026</div>
     </div>
@@ -336,7 +336,7 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:28p
     </div>
     <div class="rs-item">
       <div class="rs-lbl">الحد الأقصى المسموح</div>
-      <div class="rs-val" style="color:#B7770D" contenteditable="true">3 أيام</div>
+      <div class="rs-val" style="color:#B7770D" contenteditable="true">12 يوماً</div>
     </div>
     <div class="rs-item">
       <div class="rs-lbl">الرصيد المتبقي بعدها</div>
@@ -380,11 +380,11 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:28p
 
   <!-- تنبيه دائم -->
   <div class="advance-note" id="advanceNote" style="display:block">
-    ملاحظة: &nbsp; الإجازة الطارئة لا تتجاوز <strong>3 أيام</strong> في السنة الواحدة.
+    ملاحظة: &nbsp; الإجازة الطارئة لا تتجاوز <strong>12 يوماً</strong> في السنة الواحدة.
   </div>
   <!-- تنبيه تجاوز الحد -->
   <div id="overLimitNote" style="display:none;border-right:4px solid #C0392B;border-radius:0 6px 6px 0;padding:9px 14px;background:#fee2e2;font-size:11px;font-weight:700;color:#7B241C;margin:4px 0;">
-    ⚠️ تحذير: &nbsp; عدد الأيام المطلوبة يتجاوز الحد الأقصى المسموح به <strong>(3 أيام)</strong>.
+    ⚠️ تحذير: &nbsp; عدد الأيام المطلوبة يتجاوز الحد الأقصى المسموح به <strong>(12 يوماً)</strong>.
   </div>
 
   <!-- ختم وفوتر -->
@@ -442,7 +442,7 @@ function delSig(btn) {
 function checkNote() {
   const el = document.querySelector('.result-strip .rs-val');
   const n  = parseInt((el?.textContent||'').match(/\d+/)?.[0]||0);
-  document.getElementById('overLimitNote').style.display = n > 3 ? 'block' : 'none';
+  document.getElementById('overLimitNote').style.display = n > 12 ? 'block' : 'none';
 }
 document.addEventListener('input', checkNote);
 window.addEventListener('load', checkNote);
