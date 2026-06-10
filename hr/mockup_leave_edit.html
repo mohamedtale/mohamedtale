@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج إجازة قابل للتعديل</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0B4F6C;--accent:#00A8CC;--gold:#D4A843;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#d0d8e0;direction:rtl;padding:24px;}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:#fff;border-radius:12px;padding:10px 16px;
+  margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:210mm;margin-left:auto;margin-right:auto;
+}
+.toolbar-label{font-size:11px;color:#888;margin-left:6px;font-weight:700;}
+.tbtn{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 14px;border-radius:8px;border:none;
+  font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;
+  cursor:pointer;transition:.15s;
+}
+.tbtn-primary{background:var(--primary);color:#fff;}
+.tbtn-primary:hover{background:#1A6E8E;}
+.tbtn-green{background:#E6F7F2;color:#0D7A55;border:1px solid #a7f3d0;}
+.tbtn-green:hover{background:#d1fae5;}
+.tbtn-red{background:#FDECEA;color:#C0392B;border:1px solid #fecaca;}
+.tbtn-red:hover{background:#fee2e2;}
+.tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
+.tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.toolbar-divider{width:1px;height:28px;background:#e2e8f0;margin:0 4px;}
+
+/* PAPER */
+.paper{
+  background:#fff;width:210mm;min-height:297mm;
+  margin:0 auto;padding:14mm 16mm;
+  box-shadow:0 4px 30px rgba(0,0,0,.25);
+  position:relative;
+}
+.paper::before{
+  content:'💧';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);font-size:180px;
+  opacity:.03;pointer-events:none;
+}
+
+/* EDIT MODE styles */
+.paper.edit-mode [contenteditable]{
+  outline:1.5px dashed #00A8CC;border-radius:3px;
+  background:rgba(0,168,204,.04);min-width:20px;display:inline-block;
+  cursor:text;
+}
+.paper.edit-mode [contenteditable]:focus{
+  outline:2px solid var(--accent);background:rgba(0,168,204,.08);
+}
+.edit-badge{
+  position:absolute;top:6px;left:6px;
+  background:var(--accent);color:#fff;
+  font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;
+  display:none;
+}
+.paper.edit-mode .edit-badge{display:block;}
+
+/* DOC HEADER */
+.doc-header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--primary);padding-bottom:12px;margin-bottom:16px;}
+.org-main{font-size:13px;font-weight:800;color:var(--primary);}
+.org-sub{font-size:10px;color:#555;margin-top:2px;}
+.logo-circle{width:68px;height:68px;border-radius:50%;border:3px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 4px;}
+.logo-center span{font-size:9px;color:#777;display:block;text-align:center;}
+.ref-box{border:1.5px solid var(--primary);border-radius:6px;padding:6px 10px;text-align:center;}
+.ref-label{font-size:9px;color:#777;}
+.ref-val{font-size:12px;font-weight:700;color:var(--primary);margin-top:2px;}
+
+/* TITLE */
+.doc-title{text-align:center;margin:14px 0;}
+.doc-title h1{font-size:16px;font-weight:800;color:var(--primary);display:inline-block;border-bottom:2px solid var(--gold);padding-bottom:4px;}
+
+/* SECTION */
+.sec-header{background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;margin:12px 0 0;border-radius:4px 4px 0 0;}
+
+/* INFO TABLE */
+.info-table{width:100%;border-collapse:collapse;margin-bottom:2px;}
+.info-table td{border:1.5px solid #bbb;padding:7px 10px;font-size:11.5px;vertical-align:middle;}
+.info-table .lbl{background:#f0f4f8;color:var(--primary);font-weight:700;width:22%;white-space:nowrap;}
+
+/* DET TABLE */
+.det-table{width:100%;border-collapse:collapse;margin-bottom:2px;}
+.det-table td{border:1.5px solid #bbb;padding:7px 10px;font-size:11.5px;}
+.det-table .lbl{background:#f0f4f8;font-weight:700;color:var(--primary);width:28%;}
+.det-table .big{font-size:13px;font-weight:700;color:var(--primary);}
+
+/* RESULT BOX */
+.result-box{border:2px solid var(--primary);border-radius:6px;padding:10px 14px;margin:12px 0;display:flex;gap:0;align-items:stretch;}
+.result-item{text-align:center;flex:1;padding:0 8px;}
+.r-label{font-size:9px;color:#777;}
+.r-val{font-size:14px;font-weight:800;color:var(--primary);margin-top:2px;}
+.result-divider{width:1px;background:#dde3ed;align-self:stretch;}
+
+/* NOTES */
+.notes-box{border:1.5px solid #bbb;border-radius:4px;padding:10px;min-height:50px;font-size:11px;color:#555;margin-bottom:14px;background:#fafafa;}
+
+/* APPROVAL */
+.approval-bar{display:flex;border:1.5px solid #bbb;border-radius:6px;overflow:hidden;margin-bottom:14px;}
+.ap-item{flex:1;padding:8px 10px;text-align:center;border-left:1px solid #bbb;}
+.ap-item:last-child{border-left:none;}
+.ap-label{font-size:9px;color:#777;margin-bottom:4px;}
+.ap-status{font-size:11px;font-weight:700;}
+.ap-status.approved{color:#0D7A55;}
+.ap-status.pending{color:#B7770D;}
+.ap-status.waiting{color:#aaa;}
+
+/* SIGNATURES */
+.sigs-area{margin-top:20px;}
+.sigs-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.sig-box{
+  flex:1;min-width:120px;
+  border:1.5px solid #bbb;border-radius:6px;padding:10px;text-align:center;
+  position:relative;
+}
+.sig-title{font-size:10px;font-weight:700;color:var(--primary);margin-bottom:28px;}
+.sig-line{border-top:1px solid #bbb;margin-top:8px;padding-top:5px;font-size:9.5px;color:#777;}
+.sig-del-btn{
+  display:none;
+  position:absolute;top:4px;left:4px;
+  width:18px;height:18px;border-radius:50%;
+  background:#FDECEA;border:none;color:#C0392B;
+  font-size:11px;cursor:pointer;align-items:center;justify-content:center;
+  line-height:1;
+}
+.paper.edit-mode .sig-del-btn{display:flex;}
+.add-sig-btn{
+  display:none;
+  width:100%;padding:8px;border:2px dashed #BDD9EF;
+  border-radius:8px;background:#f8fafc;color:#1A6E8E;
+  font-size:11.5px;font-family:'Cairo',sans-serif;font-weight:600;
+  cursor:pointer;margin-top:4px;transition:.15s;
+}
+.add-sig-btn:hover{background:#E8F4FD;border-color:var(--accent);}
+.paper.edit-mode .add-sig-btn{display:block;}
+
+/* STAMP */
+.stamp-area{position:absolute;left:16mm;bottom:40mm;width:60px;height:60px;border:2px dashed #bbb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#bbb;text-align:center;}
+
+/* FOOTER */
+.doc-footer{position:absolute;bottom:10mm;right:16mm;left:16mm;border-top:1px solid #ccc;padding-top:5px;display:flex;justify-content:space-between;font-size:8.5px;color:#999;}
+
+/* PRINT */
+@media print{
+  body{background:white;padding:0;}
+  .toolbar{display:none;}
+  .paper{box-shadow:none;margin:0;}
+  .paper.edit-mode [contenteditable]{outline:none;background:transparent;}
+  .sig-del-btn,.add-sig-btn,.edit-badge{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">🖊 أدوات:</span>
+  <button class="tbtn tbtn-primary" id="editBtn" onclick="toggleEdit()">✏️ تفعيل التعديل</button>
+  <div class="toolbar-divider"></div>
+  <span class="toolbar-label">التوقيعات:</span>
+  <button class="tbtn tbtn-green" onclick="addSig()">＋ إضافة توقيع</button>
+  <div class="toolbar-divider"></div>
+  <button class="tbtn tbtn-outline" onclick="window.print()">🖨️ طباعة</button>
+  <button class="tbtn tbtn-outline" onclick="savePDF()">📄 تصدير PDF</button>
+</div>
+
+<!-- PAPER -->
+<div class="paper" id="paper">
+  <div class="edit-badge">✏️ وضع التعديل</div>
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="org-main" contenteditable="false">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub" contenteditable="false">إدارة شؤون الموظفين</div>
+      <div class="org-sub" style="margin-top:4px;color:#888">تاريخ الطباعة: <span contenteditable="false">10 / 06 / 2026</span></div>
+    </div>
+    <div class="logo-center">
+      <div class="logo-circle">💧</div>
+      <span>الجهاز التنفيذي</span>
+    </div>
+    <div>
+      <div class="ref-box">
+        <div class="ref-label">رقم الطلب</div>
+        <div class="ref-val" contenteditable="false">LV-2026-0318</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="doc-title">
+    <h1 contenteditable="false">طلب إجازة</h1>
+  </div>
+
+  <!-- EMPLOYEE INFO -->
+  <div class="sec-header">بيانات الموظف</div>
+  <table class="info-table">
+    <tr>
+      <td class="lbl">الاسم الرباعي</td>
+      <td colspan="3" contenteditable="false">أحمد محمد سالم الورفلي</td>
+    </tr>
+    <tr>
+      <td class="lbl">الرقم الوظيفي</td>
+      <td contenteditable="false">EMP-0042</td>
+      <td class="lbl">الرقم الوطني</td>
+      <td contenteditable="false">119850312547</td>
+    </tr>
+    <tr>
+      <td class="lbl">المسمى الوظيفي</td>
+      <td contenteditable="false">مهندس حفر أول</td>
+      <td class="lbl">الإدارة / القسم</td>
+      <td contenteditable="false">إدارة الحفر</td>
+    </tr>
+    <tr>
+      <td class="lbl">الدرجة الوظيفية</td>
+      <td contenteditable="false">الدرجة السابعة</td>
+      <td class="lbl">نوع التعاقد</td>
+      <td contenteditable="false">مستمر</td>
+    </tr>
+  </table>
+
+  <!-- LEAVE DETAILS -->
+  <div class="sec-header">تفاصيل الإجازة</div>
+  <table class="det-table">
+    <tr>
+      <td class="lbl">نوع الإجازة</td>
+      <td class="big" contenteditable="false">سنوية</td>
+      <td class="lbl">رصيد الإجازة قبل الطلب</td>
+      <td class="big" contenteditable="false">22 يوم</td>
+    </tr>
+    <tr>
+      <td class="lbl">تاريخ البداية</td>
+      <td contenteditable="false">15 / 06 / 2026</td>
+      <td class="lbl">تاريخ النهاية</td>
+      <td contenteditable="false">22 / 06 / 2026</td>
+    </tr>
+  </table>
+
+  <!-- RESULT -->
+  <div class="result-box">
+    <div class="result-item">
+      <div class="r-label">عدد الأيام المطلوبة</div>
+      <div class="r-val" contenteditable="false">6 أيام</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">الأيام الفعلية (بعد العطل)</div>
+      <div class="r-val" style="color:#0D7A55" contenteditable="false">6 أيام</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">الرصيد المتبقي بعد الإجازة</div>
+      <div class="r-val" style="color:#C0392B" contenteditable="false">16 يوم</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">تاريخ العودة المتوقع</div>
+      <div class="r-val" style="font-size:11px" contenteditable="false">23 / 06 / 2026</div>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="sec-header">سبب الإجازة / ملاحظات</div>
+  <div class="notes-box" contenteditable="false">إجازة سنوية اعتيادية</div>
+
+  <!-- APPROVAL -->
+  <div class="sec-header">مسار الاعتماد</div>
+  <div class="approval-bar">
+    <div class="ap-item">
+      <div class="ap-label">تقديم الطلب</div>
+      <div class="ap-status approved">✅ مقدَّم</div>
+      <div style="font-size:9px;color:#aaa;margin-top:3px" contenteditable="false">10/06/2026</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">مدير القسم</div>
+      <div class="ap-status pending" contenteditable="false">⏳ قيد المراجعة</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">شؤون الموظفين</div>
+      <div class="ap-status waiting" contenteditable="false">— في الانتظار</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">القرار النهائي</div>
+      <div class="ap-status waiting" contenteditable="false">— في الانتظار</div>
+    </div>
+  </div>
+
+  <!-- SIGNATURES -->
+  <div class="sigs-area">
+    <div class="sec-header" style="margin-bottom:10px">التوقيعات</div>
+    <div class="sigs-grid" id="sigsGrid">
+      <div class="sig-box">
+        <button class="sig-del-btn" onclick="delSig(this)" title="حذف">✕</button>
+        <div class="sig-title" contenteditable="false">توقيع الموظف</div>
+        <div style="height:28px"></div>
+        <div class="sig-line" contenteditable="false">أحمد محمد الورفلي</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del-btn" onclick="delSig(this)" title="حذف">✕</button>
+        <div class="sig-title" contenteditable="false">اعتماد مدير القسم</div>
+        <div style="height:28px"></div>
+        <div class="sig-line" contenteditable="false">الاسم والتوقيع</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del-btn" onclick="delSig(this)" title="حذف">✕</button>
+        <div class="sig-title" contenteditable="false">اعتماد مدير شؤون الموظفين</div>
+        <div style="height:28px"></div>
+        <div class="sig-line" contenteditable="false">الاسم والتوقيع</div>
+      </div>
+    </div>
+    <button class="add-sig-btn" onclick="addSig()">＋ إضافة خانة توقيع جديدة</button>
+  </div>
+
+  <div class="stamp-area">الختم<br>الرسمي</div>
+
+  <div class="doc-footer">
+    <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+    <span>LV-2026-0318 · صفحة 1 من 1</span>
+  </div>
+</div>
+
+<script>
+let editMode = false;
+
+function toggleEdit() {
+  editMode = !editMode;
+  const paper = document.getElementById('paper');
+  const btn = document.getElementById('editBtn');
+  const editables = paper.querySelectorAll('[contenteditable]');
+
+  if (editMode) {
+    paper.classList.add('edit-mode');
+    editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+    btn.textContent = '💾 حفظ التعديلات';
+    btn.className = 'tbtn tbtn-green';
+  } else {
+    paper.classList.remove('edit-mode');
+    editables.forEach(el => el.setAttribute('contenteditable', 'false'));
+    btn.textContent = '✏️ تفعيل التعديل';
+    btn.className = 'tbtn tbtn-primary';
+    showToast('✅ تم حفظ التعديلات');
+  }
+}
+
+function addSig() {
+  const grid = document.getElementById('sigsGrid');
+  const div = document.createElement('div');
+  div.className = 'sig-box';
+  const isEdit = document.getElementById('paper').classList.contains('edit-mode');
+  div.innerHTML = `
+    <button class="sig-del-btn" onclick="delSig(this)" title="حذف">✕</button>
+    <div class="sig-title" contenteditable="${isEdit}">اسم الجهة</div>
+    <div style="height:28px"></div>
+    <div class="sig-line" contenteditable="${isEdit}">الاسم والتوقيع</div>
+  `;
+  grid.appendChild(div);
+  showToast('✅ تمت إضافة خانة توقيع');
+}
+
+function delSig(btn) {
+  if (document.getElementById('sigsGrid').children.length <= 1) {
+    showToast('⚠️ يجب أن تبقى خانة توقيع واحدة على الأقل', true);
+    return;
+  }
+  if (confirm('هل تريد حذف هذه الخانة؟')) {
+    btn.closest('.sig-box').remove();
+    showToast('🗑️ تم حذف خانة التوقيع');
+  }
+}
+
+function savePDF() {
+  showToast('📄 يتم تصدير PDF...');
+  setTimeout(() => window.print(), 300);
+}
+
+function showToast(msg, warn=false) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:9px 20px;border-radius:20px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;z-index:999;transition:.3s;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = warn ? '#FDECEA' : '#E6F7F2';
+  t.style.color = warn ? '#C0392B' : '#0D7A55';
+  t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 2500);
+}
+</script>
+</body>
+</html>
