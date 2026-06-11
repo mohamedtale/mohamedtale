@@ -52,6 +52,21 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20p
 .btn-cancel{background:#f1f5f9;color:#475569;border:1px solid #e0eaf0;padding:8px 16px;
   border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
 
+/* ── WIDTH PANEL ── */
+.width-row{display:flex;align-items:center;gap:10px;padding:6px 0;
+  border-bottom:1px solid #f0f4f7;}
+.width-row:last-child{border-bottom:none;}
+.width-lbl{font-size:11.5px;font-weight:700;color:var(--primary);min-width:130px;flex-shrink:0;}
+.width-slider{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent) var(--pct,50%),#e0eaf0 var(--pct,50%));
+  outline:none;cursor:pointer;}
+.width-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--primary);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.width-val{font-size:11px;font-weight:700;color:var(--primary);
+  min-width:38px;text-align:center;background:#EEF6FB;
+  border-radius:6px;padding:2px 6px;}
+
 /* ── PAPER landscape A4 ── */
 .paper{background:#fff;width:297mm;min-height:210mm;margin:0 auto;
   padding:12mm 14mm 18mm;box-shadow:0 6px 40px rgba(0,0,0,.22);
@@ -205,12 +220,26 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20p
   </div>
 </div>
 
+<!-- WIDTH PANEL -->
+<div class="panel-overlay" id="widthPanel">
+  <div class="panel-box" style="min-width:420px;max-width:600px;">
+    <h3>↔ التحكم في سمك الأعمدة</h3>
+    <div id="widthGrid" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;max-height:55vh;overflow-y:auto;padding-left:4px;"></div>
+    <div class="panel-actions">
+      <button class="btn-cancel" onclick="resetWidths()">↺ إعادة الضبط</button>
+      <button class="btn-cancel" onclick="closePanel('widthPanel')">إغلاق</button>
+      <button class="btn-apply" onclick="applyWidths()">✅ تطبيق</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOOLBAR -->
 <div class="toolbar">
   <span class="toolbar-label">🔍</span>
   <input class="finput" id="searchInput" type="text" placeholder="ابحث بالاسم أو الرقم الوظيفي..." oninput="renderTable()">
   <div class="tdiv"></div>
   <button class="tbtn tbtn-blue" onclick="openColsPanel()">👁 الأعمدة</button>
+  <button class="tbtn tbtn-blue" onclick="openWidthPanel()">↔ سمك الأعمدة</button>
   <button class="tbtn tbtn-outline" onclick="expandAll(true)">📂 فتح الكل</button>
   <button class="tbtn tbtn-outline" onclick="expandAll(false)">📁 طي الكل</button>
   <div class="tdiv"></div>
@@ -658,6 +687,74 @@ function applyColumns() {
 function closePanel(id) { document.getElementById(id).classList.remove('open'); }
 
 document.getElementById('colsPanel').addEventListener('click', function(e){ if(e.target===this) closePanel('colsPanel'); });
+
+/* ══════════════════════════════════════
+   التحكم في سمك الأعمدة
+══════════════════════════════════════ */
+// colWidths: key → px value (null = use default %)
+let colWidths = {};
+
+function openWidthPanel() {
+  const grid = document.getElementById('widthGrid');
+  grid.innerHTML = '';
+  ALL_COLS.forEach(col => {
+    if (hiddenCols.has(col.key)) return;
+    // احسب العرض الحالي بالبكسل
+    const th = document.querySelector(`#headerRow th[data-key="${col.key}"]`);
+    const currentPx = th ? Math.round(th.offsetWidth) : 80;
+    const stored = colWidths[col.key] || currentPx;
+    const min = 30, max = 250;
+    const pct = Math.round(((stored-min)/(max-min))*100);
+
+    const row = document.createElement('div');
+    row.className = 'width-row';
+    row.innerHTML = `
+      <span class="width-lbl">${col.label}</span>
+      <input type="range" class="width-slider" id="ws_${col.key}"
+        min="${min}" max="${max}" value="${stored}"
+        style="--pct:${pct}%"
+        oninput="updateWidthVal('${col.key}',this.value,${min},${max})">
+      <span class="width-val" id="wv_${col.key}">${stored}px</span>`;
+    grid.appendChild(row);
+  });
+  document.getElementById('widthPanel').classList.add('open');
+}
+
+function updateWidthVal(key, val, min, max) {
+  document.getElementById('wv_'+key).textContent = val+'px';
+  const pct = Math.round(((val-min)/(max-min))*100);
+  document.getElementById('ws_'+key).style.setProperty('--pct', pct+'%');
+}
+
+function applyWidths() {
+  ALL_COLS.forEach(col => {
+    const inp = document.getElementById('ws_'+col.key);
+    if (inp) colWidths[col.key] = parseInt(inp.value);
+  });
+  applyWidthsToTable();
+  closePanel('widthPanel');
+}
+
+function applyWidthsToTable() {
+  Object.entries(colWidths).forEach(([key, px]) => {
+    const th = document.querySelector(`#headerRow th[data-key="${key}"]`);
+    if (th) { th.style.width = px+'px'; th.style.minWidth = px+'px'; }
+  });
+}
+
+function resetWidths() {
+  colWidths = {};
+  ALL_COLS.forEach(col => {
+    const inp = document.getElementById('ws_'+col.key);
+    if (inp) {
+      const defPx = Math.round((parseFloat(col.w||'7%')/100)*1100);
+      inp.value = defPx;
+      updateWidthVal(col.key, defPx, 30, 250);
+    }
+  });
+}
+
+document.getElementById('widthPanel').addEventListener('click', function(e){ if(e.target===this) closePanel('widthPanel'); });
 
 /* ══════════════════════════════════════
    تشغيل أولي
