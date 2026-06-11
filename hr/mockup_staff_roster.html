@@ -87,64 +87,80 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20p
   position:relative;z-index:1;border-bottom:2.5px solid var(--gold);padding-bottom:3px;}
 
 /* ── TABLE ── */
-.roster-wrap{overflow-x:auto;position:relative;z-index:1;}
+.roster-wrap{overflow-x:auto;position:relative;z-index:1;
+  border:1.5px solid #c8d8e4;border-radius:10px;overflow:hidden;}
 #rosterTable{width:100%;border-collapse:collapse;font-size:9.5px;table-layout:fixed;}
 
 /* رأس الجدول */
 #rosterTable thead th{
-  background:var(--primary);color:#fff;font-weight:700;
-  padding:8px 4px;text-align:center;white-space:nowrap;
-  border-left:1px solid rgba(255,255,255,.15);
-  cursor:pointer;user-select:none;position:relative;}
+  background:linear-gradient(180deg,#0d5e7a,var(--primary));
+  color:#fff;font-weight:700;
+  padding:10px 6px;text-align:center;white-space:nowrap;
+  border-left:1px solid rgba(255,255,255,.12);
+  cursor:pointer;user-select:none;position:relative;
+  letter-spacing:.2px;font-size:9.5px;}
 #rosterTable thead th:last-child{border-left:none;}
-#rosterTable thead th:hover{background:#0d5f80;}
-#rosterTable thead th .sort-icon{font-size:9px;margin-right:3px;opacity:.5;}
-#rosterTable thead th.sort-asc .sort-icon::after{content:'▲';opacity:1;}
-#rosterTable thead th.sort-desc .sort-icon::after{content:'▼';opacity:1;}
+#rosterTable thead th:hover{background:linear-gradient(180deg,#1a7a9e,#0d5e7a);}
+#rosterTable thead th .sort-icon{font-size:8px;margin-right:2px;opacity:.45;}
+#rosterTable thead th.sort-asc .sort-icon::after{content:'▲';opacity:1;color:var(--gold);}
+#rosterTable thead th.sort-desc .sort-icon::after{content:'▼';opacity:1;color:var(--gold);}
 #rosterTable thead th .sort-icon::after{content:'⇅';}
-/* drag-over col */
-#rosterTable thead th.drag-over{background:#1a7a9e;border:2px dashed #fff;}
-/* drag source */
-#rosterTable thead th.dragging{opacity:.4;}
+#rosterTable thead th.drag-over{background:#1a7a9e;outline:2px dashed rgba(255,255,255,.6);}
+#rosterTable thead th.dragging{opacity:.35;}
 
 /* صفوف البيانات */
-#rosterTable tbody td{padding:7px 4px;text-align:center;
-  border-left:1px solid #dde8f0;border-bottom:1px solid #e8eef3;
-  font-size:9.5px;color:#1a2d3d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#rosterTable tbody td{
+  padding:9px 6px;text-align:center;
+  border-left:1px solid #e4edf3;
+  border-bottom:1px solid #edf2f6;
+  font-size:9.5px;color:#243447;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:background .1s;}
 #rosterTable tbody td:last-child{border-left:none;}
-#rosterTable tbody td.name-col{text-align:right;padding-right:6px;font-weight:600;}
-#rosterTable tbody tr:nth-child(even) td{background:#f5f9fc;}
-#rosterTable tbody tr:hover td{background:#e8f4fd;}
+#rosterTable tbody td.name-col{
+  text-align:right;padding-right:10px;font-weight:700;
+  font-size:10px;color:var(--primary);}
+#rosterTable tbody tr:nth-child(even) td{background:#f7fafc;}
+#rosterTable tbody tr:hover td{background:#eaf4fb!important;}
+
+/* خط أسفل كل مجموعة */
+#rosterTable tbody tr.last-in-group td{border-bottom:2px solid #c8d8e4!important;}
 
 /* ── صفوف المجموعات ── */
 .group-row td{padding:0!important;border:none!important;}
-.group-inner{display:flex;align-items:center;gap:8px;padding:7px 10px;font-weight:700;font-size:10px;}
-.drag-handle{cursor:grab;font-size:14px;opacity:.5;flex-shrink:0;}
-.drag-handle:hover{opacity:1;}
+.group-inner{display:flex;align-items:center;gap:8px;padding:8px 12px;font-weight:700;font-size:10px;
+  border-bottom:1.5px solid #d8e6ee;}
+.drag-handle{cursor:grab;font-size:15px;opacity:.35;flex-shrink:0;transition:.15s;}
+.drag-handle:hover{opacity:.8;}
 .group-row.dragging-row{opacity:.3;}
-.group-row.drag-target-row td{border-top:3px solid var(--accent)!important;}
-.toggle-btn{background:none;border:1px solid currentColor;border-radius:4px;
-  width:18px;height:18px;font-size:10px;cursor:pointer;
+.group-row.drag-target-row td{border-top:2.5px solid var(--accent)!important;}
+.toggle-btn{
+  background:none;border:1.5px solid currentColor;border-radius:5px;
+  width:19px;height:19px;font-size:11px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  font-family:'Cairo',sans-serif;font-weight:800;line-height:1;}
-.group-count{font-size:9px;opacity:.7;margin-right:4px;}
+  font-family:'Cairo',sans-serif;font-weight:800;line-height:1;transition:.15s;}
+.toggle-btn:hover{background:rgba(0,0,0,.07);}
+.group-count{
+  font-size:8.5px;font-weight:600;
+  background:rgba(11,79,108,.1);color:var(--primary);
+  padding:1px 7px;border-radius:10px;margin-right:2px;}
 
 /* ── مستوى المدير العام ── */
-.row-gm td{background:#f0f4f7!important;border-bottom:2px solid #b0c4d0!important;}
-.row-gm .group-inner{color:var(--primary);}
-.row-gm .toggle-btn{color:var(--primary);border-color:var(--primary);}
+.row-gm td{background:#eef4f8!important;}
+.row-gm .group-inner{color:var(--primary);font-size:11px;border-bottom:2px solid #b8cdd8!important;}
+.row-gm .toggle-btn{color:var(--primary);border-color:#a0bece;}
 /* ── مستوى المكاتب ── */
-.row-office td{background:#f5f7fa!important;border-bottom:1.5px solid #c5d5e0!important;}
-.row-office .group-inner{color:var(--primary);padding-right:20px;}
-.row-office .toggle-btn{color:var(--primary);border-color:var(--primary);}
+.row-office td{background:#f4f8fb!important;}
+.row-office .group-inner{color:var(--primary);padding-right:22px;}
+.row-office .toggle-btn{color:var(--primary);border-color:#a0bece;}
 /* ── مستوى الإدارات ── */
-.row-dept td{background:#f5f7fa!important;border-bottom:1.5px solid #c5d5e0!important;}
-.row-dept .group-inner{color:var(--primary);padding-right:20px;}
-.row-dept .toggle-btn{color:var(--primary);border-color:var(--primary);}
+.row-dept td{background:#f4f8fb!important;}
+.row-dept .group-inner{color:var(--primary);padding-right:22px;}
+.row-dept .toggle-btn{color:var(--primary);border-color:#a0bece;}
 /* ── مستوى الأقسام ── */
-.row-sec td{background:#fafbfc!important;border-bottom:1px solid #dde8f0!important;}
-.row-sec .group-inner{color:#445566;padding-right:36px;}
-.row-sec .toggle-btn{color:#445566;border-color:#8899aa;}
+.row-sec td{background:#f9fbfc!important;}
+.row-sec .group-inner{color:#556677;padding-right:40px;font-size:9.5px;}
+.row-sec .toggle-btn{color:#6688aa;border-color:#aabbcc;}
 
 /* البادج */
 .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:8.5px;font-weight:700;}
@@ -305,21 +321,21 @@ const orgData = {
    تعريف الأعمدة
 ══════════════════════════════════════ */
 const ALL_COLS = [
-  { key:'seq',          label:'م',                      locked:true  },
-  { key:'name',         label:'الاسم الرباعي',           locked:true  },
-  { key:'empId',        label:'الرقم الوظيفي',           locked:false },
-  { key:'natId',        label:'الرقم الوطني',            locked:false },
-  { key:'gender',       label:'الجنس',                   locked:false },
-  { key:'birthDate',    label:'تاريخ الميلاد',           locked:false },
-  { key:'age',          label:'العمر',                   locked:false },
-  { key:'edu',          label:'المؤهل العلمي',           locked:false },
-  { key:'title',        label:'المسمى الوظيفي',          locked:false },
-  { key:'contract',     label:'نوع التعاقد',             locked:false },
-  { key:'startDate',    label:'تاريخ المباشرة',          locked:false },
-  { key:'grade',        label:'الدرجة',                  locked:false },
-  { key:'allowDate',    label:'تاريخ استحقاق العلاوة',   locked:false },
-  { key:'leaveBalance', label:'رصيد الإجازة السنوية',    locked:false },
-  { key:'status',       label:'الحالة',                  locked:false },
+  { key:'seq',          label:'م',                      locked:true,  w:'3%'  },
+  { key:'name',         label:'الاسم الرباعي',           locked:true,  w:'15%' },
+  { key:'empId',        label:'الرقم الوظيفي',           locked:false, w:'7%'  },
+  { key:'natId',        label:'الرقم الوطني',            locked:false, w:'9%'  },
+  { key:'gender',       label:'الجنس',                   locked:false, w:'5%'  },
+  { key:'birthDate',    label:'تاريخ الميلاد',           locked:false, w:'7%'  },
+  { key:'age',          label:'العمر',                   locked:false, w:'4%'  },
+  { key:'edu',          label:'المؤهل العلمي',           locked:false, w:'9%'  },
+  { key:'title',        label:'المسمى الوظيفي',          locked:false, w:'11%' },
+  { key:'contract',     label:'نوع التعاقد',             locked:false, w:'7%'  },
+  { key:'startDate',    label:'تاريخ المباشرة',          locked:false, w:'7%'  },
+  { key:'grade',        label:'الدرجة',                  locked:false, w:'6%'  },
+  { key:'allowDate',    label:'استحقاق العلاوة',         locked:false, w:'7%'  },
+  { key:'leaveBalance', label:'رصيد الإجازة',            locked:false, w:'5%'  },
+  { key:'status',       label:'الحالة',                  locked:false, w:'5%'  },
 ];
 
 let colOrder   = ALL_COLS.map(c => c.key);
@@ -404,6 +420,7 @@ function buildHeader() {
     th.draggable = !col.locked;
     const dir = sortState.key===key ? (sortState.dir==='asc'?'sort-asc':'sort-desc') : '';
     th.className = dir;
+    th.style.width = col.w || 'auto';
     th.innerHTML = `<span class="sort-icon"></span>${col.label}`;
     // sort
     th.addEventListener('click', () => toggleSort(key));
