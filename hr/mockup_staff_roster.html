@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف الموظفين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0B4F6C;--accent:#00A8CC;--gold:#D4A843;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20px;}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:#fff;border-radius:12px;padding:10px 18px;
+  margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:297mm;margin-left:auto;margin-right:auto;
+}
+.toolbar-label{font-size:11px;color:#999;font-weight:700;padding-left:4px;}
+.tbtn{display:flex;align-items:center;gap:5px;padding:7px 15px;border-radius:8px;border:none;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
+.tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.tbtn-blue{background:#E8F4FD;color:#0B4F6C;border:1px solid #BDD9EF;}
+.tbtn-blue:hover{background:#dbeafe;}
+.tdiv{width:1px;height:26px;background:#e2e8f0;margin:0 2px;}
+.filter-input{
+  padding:6px 12px;border-radius:8px;border:1px solid #DDE3ED;
+  font-family:'Cairo',sans-serif;font-size:11.5px;color:#333;
+  outline:none;min-width:180px;
+}
+.filter-input:focus{border-color:var(--accent);}
+
+/* PAPER — landscape A4 */
+.paper{
+  background:#fff;
+  width:297mm;
+  min-height:210mm;
+  margin:0 auto;
+  padding:12mm 14mm 18mm;
+  box-shadow:0 6px 40px rgba(0,0,0,.22);
+  position:relative;overflow:hidden;
+}
+.paper::after{
+  content:'💧';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-15deg);
+  font-size:260px;opacity:.025;pointer-events:none;z-index:0;
+}
+
+/* HEADER */
+.doc-header{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:12px;
+  padding-bottom:12px;border-bottom:3px double var(--primary);margin-bottom:16px;
+}
+.org-name{font-size:13px;font-weight:800;color:var(--primary);line-height:1.5;}
+.org-sub{font-size:10px;color:#555;margin-top:2px;}
+.org-date{font-size:9px;color:#999;margin-top:5px;}
+.logo-ring{
+  width:64px;height:64px;border-radius:50%;border:3px solid var(--primary);
+  background:linear-gradient(135deg,#E8F4FD,#fff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin:0 auto 3px;box-shadow:0 2px 8px rgba(11,79,108,.15);
+}
+.logo-txt{font-size:8px;color:#888;text-align:center;}
+.ref-side{text-align:left;}
+.stats-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+.stat-badge{
+  background:linear-gradient(135deg,#E8F4FD,#f7fbff);
+  border:1.5px solid #BDD9EF;border-radius:8px;
+  padding:5px 12px;text-align:center;
+}
+.stat-lbl{font-size:8px;color:#888;}
+.stat-val{font-size:14px;font-weight:800;color:var(--primary);}
+
+/* TITLE */
+.doc-title{text-align:center;margin:10px 0 14px;position:relative;}
+.doc-title::before,.doc-title::after{
+  content:'';position:absolute;top:50%;width:22%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gold));
+}
+.doc-title::before{right:0;}
+.doc-title::after{left:0;transform:scaleX(-1);}
+.doc-title h1{
+  font-size:16px;font-weight:800;color:var(--primary);
+  display:inline-block;padding:0 16px;background:#fff;
+  position:relative;z-index:1;border-bottom:2.5px solid var(--gold);padding-bottom:3px;
+}
+
+/* TABLE */
+.roster-table{
+  width:100%;border-collapse:collapse;
+  font-size:10px;position:relative;z-index:1;
+}
+.roster-table thead th{
+  background:var(--primary);color:#fff;font-weight:700;
+  padding:9px 5px;text-align:center;
+  border-left:1px solid rgba(255,255,255,.15);
+  font-size:10px;white-space:nowrap;
+}
+.roster-table thead th:last-child{border-left:none;}
+.roster-table tbody tr{border-bottom:1px solid #e0eaf0;}
+.roster-table tbody tr:nth-child(even){background:#f4f9fc;}
+.roster-table tbody tr:hover{background:#e8f4fd;}
+.roster-table tbody td{
+  padding:8px 5px;text-align:center;
+  color:#1a2d3d;font-size:10.5px;
+  border-left:1px solid #dde8f0;
+}
+.roster-table tbody td:last-child{border-left:none;}
+.roster-table tbody td.name-col{text-align:right;padding-right:8px;font-weight:600;}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:9px;font-weight:700;
+}
+.badge-green{background:#d1fae5;color:#065f46;}
+.badge-blue{background:#dbeafe;color:#1e40af;}
+.badge-gold{background:#fef3c7;color:#92400e;}
+.badge-gray{background:#f1f5f9;color:#475569;}
+.badge-red{background:#fee2e2;color:#991b1b;}
+
+/* تحذير رصيد منخفض */
+.low-balance{color:#C0392B;font-weight:700;}
+/* استحقاق قريب */
+.due-soon{color:#D97706;font-weight:700;}
+
+/* FOOTER */
+.doc-bottom{
+  position:absolute;bottom:8mm;right:14mm;left:14mm;
+}
+.doc-footer-line{
+  border-top:1px solid #ddd;padding-top:5px;
+  display:flex;justify-content:space-between;font-size:8px;color:#aaa;
+}
+
+/* PRINT */
+@media print{
+  @page{size:A4 landscape;margin:10mm;}
+  body{background:white;padding:0;}
+  .toolbar{display:none;}
+  .paper{box-shadow:none;min-height:unset;width:100%;padding:0;}
+  .roster-table tbody tr:hover{background:inherit;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">🔍 بحث:</span>
+  <input class="filter-input" id="searchInput" type="text" placeholder="ابحث بالاسم أو الرقم الوظيفي..." oninput="filterTable()">
+  <div class="tdiv"></div>
+  <span class="toolbar-label">تصفية:</span>
+  <select class="filter-input" id="deptFilter" style="min-width:130px" onchange="filterTable()">
+    <option value="">كل الإدارات</option>
+    <option>إدارة الحفر</option>
+    <option>إدارة الصيانة</option>
+    <option>إدارة الموارد البشرية</option>
+    <option>إدارة المالية</option>
+    <option>إدارة المشاريع</option>
+  </select>
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-outline" onclick="window.print()">🖨️ طباعة</button>
+  <button class="tbtn tbtn-outline" onclick="window.print()">📄 تصدير PDF</button>
+</div>
+
+<!-- PAPER -->
+<div class="paper" id="paper">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="org-name">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub">إدارة شؤون الموظفين</div>
+      <div class="org-date">تاريخ الإصدار: 11 / 06 / 2026</div>
+    </div>
+    <div style="text-align:center">
+      <div class="logo-ring">💧</div>
+      <div class="logo-txt">الجهاز التنفيذي</div>
+    </div>
+    <div class="ref-side">
+      <div class="stats-row">
+        <div class="stat-badge">
+          <div class="stat-lbl">إجمالي الموظفين</div>
+          <div class="stat-val" id="totalCount">8</div>
+        </div>
+        <div class="stat-badge">
+          <div class="stat-lbl">المعروضون</div>
+          <div class="stat-val" id="shownCount">8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="doc-title">
+    <h1>كـشـف بـأسـمـاء الـمـوظـفـيـن</h1>
+  </div>
+
+  <!-- TABLE -->
+  <table class="roster-table" id="rosterTable">
+    <thead>
+      <tr>
+        <th style="width:3%">م</th>
+        <th style="width:14%">الاسم الرباعي</th>
+        <th style="width:7%">الرقم الوظيفي</th>
+        <th style="width:11%">المسمى الوظيفي</th>
+        <th style="width:10%">الإدارة / القسم</th>
+        <th style="width:8%">نوع التعاقد</th>
+        <th style="width:7%">تاريخ المباشرة</th>
+        <th style="width:6%">الدرجة</th>
+        <th style="width:9%">تاريخ استحقاق العلاوة</th>
+        <th style="width:7%">رصيد الإجازة</th>
+        <th style="width:8%">رصيد المرضية</th>
+        <th style="width:10%">الحالة</th>
+      </tr>
+    </thead>
+    <tbody id="rosterBody">
+      <tr data-dept="إدارة الحفر">
+        <td>1</td>
+        <td class="name-col">أحمد محمد سالم الورفلي</td>
+        <td>EMP-0042</td>
+        <td>مهندس حفر أول</td>
+        <td>إدارة الحفر</td>
+        <td><span class="badge badge-blue">تعيين</span></td>
+        <td>01 / 03 / 2018</td>
+        <td>الدرجة 7</td>
+        <td class="due-soon">01 / 03 / 2027</td>
+        <td>42 يوم</td>
+        <td>54 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة الصيانة">
+        <td>2</td>
+        <td class="name-col">خالد عمر محمود البشير</td>
+        <td>EMP-0018</td>
+        <td>فني صيانة</td>
+        <td>إدارة الصيانة</td>
+        <td><span class="badge badge-gold">عقد دائم</span></td>
+        <td>15 / 07 / 2015</td>
+        <td>الدرجة 5</td>
+        <td>01 / 08 / 2026</td>
+        <td class="low-balance">8 أيام</td>
+        <td>60 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة الموارد البشرية">
+        <td>3</td>
+        <td class="name-col">فاطمة علي حسن المنتصر</td>
+        <td>EMP-0031</td>
+        <td>أخصائي موارد بشرية</td>
+        <td>إدارة الموارد البشرية</td>
+        <td><span class="badge badge-blue">تعيين</span></td>
+        <td>02 / 01 / 2020</td>
+        <td>الدرجة 6</td>
+        <td>01 / 01 / 2027</td>
+        <td>30 يوم</td>
+        <td>48 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة المالية">
+        <td>4</td>
+        <td class="name-col">محمد إبراهيم سالم القذافي</td>
+        <td>EMP-0007</td>
+        <td>محاسب أول</td>
+        <td>إدارة المالية</td>
+        <td><span class="badge badge-blue">تعيين</span></td>
+        <td>10 / 09 / 2010</td>
+        <td>الدرجة 9</td>
+        <td class="due-soon">01 / 10 / 2026</td>
+        <td>60 يوم</td>
+        <td>60 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة الحفر">
+        <td>5</td>
+        <td class="name-col">عبدالرحمن يوسف الطاهر</td>
+        <td>EMP-0055</td>
+        <td>مشغّل حفّارة</td>
+        <td>إدارة الحفر</td>
+        <td><span class="badge badge-gray">عقد مؤقت</span></td>
+        <td>05 / 06 / 2023</td>
+        <td>الدرجة 4</td>
+        <td>01 / 07 / 2027</td>
+        <td class="low-balance">5 أيام</td>
+        <td>30 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة المشاريع">
+        <td>6</td>
+        <td class="name-col">سالم عبدالله بشير الفيتوري</td>
+        <td>EMP-0023</td>
+        <td>مدير مشروع</td>
+        <td>إدارة المشاريع</td>
+        <td><span class="badge badge-blue">تعيين</span></td>
+        <td>20 / 04 / 2012</td>
+        <td>الدرجة 10</td>
+        <td>01 / 05 / 2026</td>
+        <td>45 يوم</td>
+        <td>60 يوم</td>
+        <td><span class="badge badge-red">إجازة</span></td>
+      </tr>
+      <tr data-dept="إدارة الصيانة">
+        <td>7</td>
+        <td class="name-col">نورة محمد الهادي الزروق</td>
+        <td>EMP-0039</td>
+        <td>مهندسة مدنية</td>
+        <td>إدارة الصيانة</td>
+        <td><span class="badge badge-blue">تعيين</span></td>
+        <td>03 / 11 / 2019</td>
+        <td>الدرجة 7</td>
+        <td>01 / 12 / 2026</td>
+        <td>28 يوم</td>
+        <td>42 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+      <tr data-dept="إدارة المالية">
+        <td>8</td>
+        <td class="name-col">عمر خليفة مصطفى البرعصي</td>
+        <td>EMP-0011</td>
+        <td>أمين صندوق</td>
+        <td>إدارة المالية</td>
+        <td><span class="badge badge-gold">عقد دائم</span></td>
+        <td>08 / 02 / 2008</td>
+        <td>الدرجة 8</td>
+        <td>01 / 02 / 2027</td>
+        <td>55 يوم</td>
+        <td>60 يوم</td>
+        <td><span class="badge badge-green">نشط</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="doc-bottom">
+    <div class="doc-footer-line">
+      <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+      <span>🔴 رصيد منخفض (أقل من 10 أيام) &nbsp;|&nbsp; 🟡 استحقاق علاوة خلال 3 أشهر</span>
+      <span>صفحة 1 من 1</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function filterTable() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const dept   = document.getElementById('deptFilter').value;
+  const rows   = document.querySelectorAll('#rosterBody tr');
+  let shown = 0;
+
+  rows.forEach(row => {
+    const name   = row.querySelector('.name-col')?.textContent.toLowerCase() || '';
+    const empId  = row.cells[2]?.textContent.toLowerCase() || '';
+    const rowDept= row.getAttribute('data-dept') || '';
+
+    const matchSearch = !search || name.includes(search) || empId.includes(search);
+    const matchDept   = !dept   || rowDept === dept;
+
+    if (matchSearch && matchDept) {
+      row.style.display = '';
+      shown++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  document.getElementById('shownCount').textContent = shown;
+}
+
+// تحديث الأرقام التسلسلية بعد الفلترة
+window.addEventListener('load', () => {
+  document.getElementById('totalCount').textContent =
+    document.querySelectorAll('#rosterBody tr').length;
+});
+</script>
+</body>
+</html>
