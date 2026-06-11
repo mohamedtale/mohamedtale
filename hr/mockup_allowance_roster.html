@@ -25,13 +25,6 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:24p
 .tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
 .tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
 .tdiv{width:1px;height:26px;background:#e2e8f0;margin:0 2px;}
-.threshold-wrap{display:flex;align-items:center;gap:6px;
-  background:#EEF6FB;border:1px solid #BDD9EF;border-radius:8px;padding:5px 12px;}
-.threshold-wrap label{font-size:11px;color:var(--primary);font-weight:700;}
-.threshold-input{width:40px;padding:3px 6px;border:1.5px solid #BDD9EF;border-radius:6px;
-  font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:var(--primary);
-  text-align:center;outline:none;}
-.threshold-input:focus{border-color:var(--accent);}
 
 /* PAPER — landscape A4 */
 .paper{background:#fff;width:297mm;min-height:210mm;
@@ -163,11 +156,6 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:24p
 <div class="toolbar">
   <span class="toolbar-label">🖊 أدوات:</span>
   <button class="tbtn tbtn-green" id="editBtn" onclick="toggleEdit()">💾 إخفاء أدوات التعديل</button>
-  <div class="tdiv"></div>
-  <div class="threshold-wrap">
-    <label>عدد العلاوات للترشح للترقية:</label>
-    <input class="threshold-input" id="threshold" type="number" min="1" max="10" value="4" oninput="checkAllRows()">
-  </div>
   <div class="tdiv"></div>
   <button class="tbtn tbtn-blue" onclick="addRow()">＋ إضافة موظف</button>
   <button class="tbtn tbtn-blue" onclick="addSig()">＋ إضافة توقيع</button>
@@ -330,15 +318,20 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:24p
 <script>
 let editMode = true;
 
-/* ══ الحد الأقصى للعلاوات قبل الترشح للترقية ══ */
-function getThreshold() {
-  return parseInt(document.getElementById('threshold').value) || 4;
-}
-
 /* ══ استخراج رقم العلاوة من النص مثل "السادسة + 4" ══ */
 function extractAllowanceNum(text) {
   const m = text.match(/\+\s*(\d+)/);
   return m ? parseInt(m[1]) : -1;
+}
+
+/* ══ استخراج اسم الدرجة من النص ══ */
+function isTenthGrade(text) {
+  return /العاشرة/.test(text);
+}
+
+/* ══ حساب الحد حسب الدرجة ══ */
+function getThresholdForGrade(gradeText) {
+  return isTenthGrade(gradeText) ? 5 : 4;
 }
 
 /* ══ فحص صف واحد وتحديث خانة الملاحظات ══ */
@@ -347,13 +340,13 @@ function checkRow(tr) {
   const notesCell = tr.querySelector('.notes-col');
   if (!gradeCell || !notesCell) return;
 
-  const num = extractAllowanceNum(gradeCell.textContent);
-  const threshold = getThreshold();
+  const gradeText  = gradeCell.textContent;
+  const num        = extractAllowanceNum(gradeText);
+  const threshold  = getThresholdForGrade(gradeText);
 
   if (num >= threshold) {
     notesCell.innerHTML = `<span class="badge-promo">🏅 مرشح للترقية</span>`;
   } else {
-    // امسح فقط إذا كان المحتوى هو شارة الترشح
     if (notesCell.querySelector('.badge-promo')) {
       notesCell.innerHTML = '';
     }
