@@ -261,10 +261,7 @@ body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20p
       <div class="logo-txt">الجهاز التنفيذي</div>
     </div>
     <div>
-      <div class="stats-row">
-        <div class="stat-badge"><div class="stat-lbl">إجمالي الموظفين</div><div class="stat-val" id="statTotal">—</div></div>
-        <div class="stat-badge"><div class="stat-lbl">المعروضون</div><div class="stat-val" id="statShown">—</div></div>
-      </div>
+      <div class="org-date" style="text-align:left;">إدارة شؤون الموظفين</div>
     </div>
   </div>
 
@@ -601,8 +598,6 @@ function renderTable() {
     }
   });
 
-  document.getElementById('statTotal').textContent = totalEmployees();
-  document.getElementById('statShown').textContent = shown;
 }
 
 /* ══════════════════════════════════════
