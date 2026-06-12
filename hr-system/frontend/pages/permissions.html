@@ -1,0 +1,431 @@
+<div class="page-container" dir="rtl">
+
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-door-open me-2"></i>إذن الخروج</h2>
+    <button class="btn btn-primary" onclick="openAddPermModal()">
+      <i class="bi bi-plus-circle me-1"></i> إضافة إذن
+    </button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">الشهر</label>
+          <select class="form-select" id="perm-filter-month"></select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label fw-semibold">السنة</label>
+          <select class="form-select" id="perm-filter-year"></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">الموظف</label>
+          <select class="form-select" id="perm-filter-employee">
+            <option value="">-- جميع الموظفين --</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-primary w-100" onclick="loadAndRenderPermissions()">
+            <i class="bi bi-search me-1"></i> تطبيق الفلتر
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning Alert -->
+  <div id="perm-warning-alert" class="alert alert-warning alert-dismissible d-none" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span id="perm-warning-text"></span>
+    <button type="button" class="btn-close" onclick="document.getElementById('perm-warning-alert').classList.add('d-none')"></button>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered mb-0 align-middle">
+          <thead class="table-dark">
+            <tr class="text-center">
+              <th>#</th>
+              <th>الموظف</th>
+              <th>تاريخ الإذن</th>
+              <th>وقت الخروج</th>
+              <th>وقت العودة</th>
+              <th>المدة (دقيقة)</th>
+              <th>السبب</th>
+              <th>العدد هذا الشهر</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="perm-table-body">
+            <tr>
+              <td colspan="10" class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">جاري التحميل...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Permission Modal -->
+<div class="modal fade" id="permissionModal" tabindex="-1" aria-labelledby="permissionModalLabel" aria-hidden="true" dir="rtl">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="permissionModalLabel">
+          <i class="bi bi-door-open me-2"></i>إضافة إذن خروج
+        </h5>
+        <button type="button" class="btn-close btn-close-white ms-0 me-auto" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+      </div>
+      <div class="modal-body">
+        <form id="permission-form" onsubmit="savePermission(event)" novalidate>
+          <input type="hidden" id="perm-edit-id" value="">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الموظف <span class="text-danger">*</span></label>
+              <select class="form-select" id="perm-emp-id" required>
+                <option value="">-- اختر موظفاً --</option>
+              </select>
+              <div class="invalid-feedback">يرجى اختيار موظف</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">تاريخ الإذن <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" id="perm-date" required>
+              <div class="invalid-feedback">يرجى تحديد التاريخ</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">وقت الخروج <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" id="perm-exit-time" required oninput="calculatePermDuration()">
+              <div class="invalid-feedback">يرجى تحديد وقت الخروج</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">وقت العودة <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" id="perm-return-time" required oninput="calculatePermDuration()">
+              <div class="invalid-feedback">يرجى تحديد وقت العودة</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">المدة (دقيقة)</label>
+              <input type="number" class="form-control bg-light" id="perm-duration" readonly placeholder="تُحسب تلقائياً">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">السبب <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="perm-reason" rows="3" required placeholder="اكتب سبب طلب الإذن..."></textarea>
+              <div class="invalid-feedback">يرجى كتابة سبب الإذن</div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bi bi-x-circle me-1"></i> إلغاء
+        </button>
+        <button type="submit" form="permission-form" class="btn btn-primary" id="perm-save-btn">
+          <i class="bi bi-check-lg me-1"></i> حفظ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 11000;" id="perm-toast-container"></div>
+
+<script>
+(function () {
+  let allPermissions = [];
+  let permEmployees = [];
+  let permCurrentMonth = new Date().getMonth() + 1;
+  let permCurrentYear = new Date().getFullYear();
+
+  const arabicMonths = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+
+  function permShowToast(message, type) {
+    type = type || 'success';
+    const container = document.getElementById('perm-toast-container');
+    const id = 'perm-toast-' + Date.now();
+    const bg = type === 'success' ? 'bg-success' : 'bg-danger';
+    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+    container.insertAdjacentHTML('beforeend',
+      '<div id="' + id + '" class="toast align-items-center text-white ' + bg + ' border-0" role="alert" aria-live="assertive" aria-atomic="true">' +
+        '<div class="d-flex">' +
+          '<div class="toast-body"><i class="bi ' + icon + ' me-2"></i>' + message + '</div>' +
+          '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="إغلاق"></button>' +
+        '</div>' +
+      '</div>'
+    );
+    const toastEl = document.getElementById(id);
+    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+    toast.show();
+    toastEl.addEventListener('hidden.bs.toast', function () { toastEl.remove(); });
+  }
+
+  function permSetBtnLoading(btn, loading) {
+    if (loading) {
+      btn.disabled = true;
+      btn.dataset.orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري التنفيذ...';
+    } else {
+      btn.disabled = false;
+      if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
+    }
+  }
+
+  async function initPermissions() {
+    const monthSel = document.getElementById('perm-filter-month');
+    const yearSel = document.getElementById('perm-filter-year');
+
+    arabicMonths.forEach(function (name, i) {
+      const opt = document.createElement('option');
+      opt.value = i + 1;
+      opt.textContent = name;
+      if (i + 1 === permCurrentMonth) opt.selected = true;
+      monthSel.appendChild(opt);
+    });
+
+    for (let y = permCurrentYear - 2; y <= permCurrentYear + 2; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === permCurrentYear) opt.selected = true;
+      yearSel.appendChild(opt);
+    }
+
+    try {
+      permEmployees = await window.API.employees.getAll();
+      const filterSel = document.getElementById('perm-filter-employee');
+      const formSel = document.getElementById('perm-emp-id');
+      permEmployees.forEach(function (emp) {
+        const o1 = document.createElement('option');
+        o1.value = emp.id;
+        o1.textContent = emp.name;
+        filterSel.appendChild(o1);
+
+        const o2 = document.createElement('option');
+        o2.value = emp.id;
+        o2.textContent = emp.name;
+        formSel.appendChild(o2);
+      });
+    } catch (err) {
+      permShowToast('فشل تحميل بيانات الموظفين', 'error');
+    }
+
+    await loadAndRenderPermissions();
+  }
+
+  async function loadAndRenderPermissions() {
+    const month = parseInt(document.getElementById('perm-filter-month').value);
+    const year = parseInt(document.getElementById('perm-filter-year').value);
+    const employeeId = document.getElementById('perm-filter-employee').value;
+
+    const tbody = document.getElementById('perm-table-body');
+    tbody.innerHTML =
+      '<tr><td colspan="10" class="text-center py-4">' +
+        '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">جاري التحميل...</span></div>' +
+      '</td></tr>';
+
+    try {
+      const params = { month: month, year: year };
+      if (employeeId) params.employee_id = employeeId;
+      allPermissions = await window.API.permissions.getAll(params);
+      renderPermissions(allPermissions);
+    } catch (err) {
+      tbody.innerHTML =
+        '<tr><td colspan="10" class="text-center text-danger py-4">' +
+          '<i class="bi bi-exclamation-circle me-2"></i>فشل تحميل البيانات' +
+        '</td></tr>';
+      permShowToast('فشل تحميل بيانات الأذونات', 'error');
+    }
+  }
+
+  function renderPermissions(perms) {
+    const tbody = document.getElementById('perm-table-body');
+    const warnAlert = document.getElementById('perm-warning-alert');
+    const warnText = document.getElementById('perm-warning-text');
+
+    if (!perms || perms.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="10" class="text-center text-muted py-4">' +
+          '<i class="bi bi-inbox me-2"></i>لا توجد أذونات لهذه الفترة' +
+        '</td></tr>';
+      warnAlert.classList.add('d-none');
+      return;
+    }
+
+    const countByEmployee = {};
+    perms.forEach(function (p) {
+      countByEmployee[p.employee_id] = (countByEmployee[p.employee_id] || 0) + 1;
+    });
+
+    const overLimit = permEmployees.filter(function (e) {
+      return (countByEmployee[e.id] || 0) >= 2;
+    });
+
+    if (overLimit.length > 0) {
+      warnText.textContent = 'تحذير: الموظف/الموظفون التاليون لديهم إذنان أو أكثر هذا الشهر: ' +
+        overLimit.map(function (e) { return e.name; }).join('، ');
+      warnAlert.classList.remove('d-none');
+    } else {
+      warnAlert.classList.add('d-none');
+    }
+
+    const statusMap = {
+      approved: '<span class="badge bg-success fs-6 px-3">معتمد</span>',
+      pending:  '<span class="badge bg-warning text-dark fs-6 px-3">معلق</span>',
+      rejected: '<span class="badge bg-danger fs-6 px-3">مرفوض</span>'
+    };
+
+    tbody.innerHTML = perms.map(function (p, i) {
+      const count = countByEmployee[p.employee_id] || 0;
+      const countBadge = count >= 2
+        ? '<span class="badge bg-danger rounded-pill">' + count + '</span>'
+        : '<span class="badge bg-secondary rounded-pill">' + count + '</span>';
+      const statusBadge = statusMap[p.status] ||
+        '<span class="badge bg-secondary">' + (p.status || 'غير محدد') + '</span>';
+      const empObj = permEmployees.find(function (e) { return e.id == p.employee_id; });
+      const empName = (empObj && empObj.name) ? empObj.name : (p.employee_name || '—');
+      const isPending = !p.status || p.status === 'pending';
+
+      return '<tr>' +
+        '<td class="text-center">' + (i + 1) + '</td>' +
+        '<td>' + empName + '</td>' +
+        '<td class="text-center">' + (p.permission_date || '—') + '</td>' +
+        '<td class="text-center">' + (p.exit_time || '—') + '</td>' +
+        '<td class="text-center">' + (p.return_time || '—') + '</td>' +
+        '<td class="text-center">' + (p.duration_minutes != null ? p.duration_minutes : '—') + '</td>' +
+        '<td>' + (p.reason || '—') + '</td>' +
+        '<td class="text-center">' + countBadge + '</td>' +
+        '<td class="text-center">' + statusBadge + '</td>' +
+        '<td class="text-center">' +
+          '<div class="d-flex gap-1 justify-content-center flex-wrap">' +
+          (isPending
+            ? '<button class="btn btn-sm btn-success" onclick="approvePermission(' + p.id + ')" title="اعتماد"><i class="bi bi-check-lg"></i></button>' +
+              '<button class="btn btn-sm btn-danger" onclick="rejectPermission(' + p.id + ')" title="رفض"><i class="bi bi-x-lg"></i></button>'
+            : '') +
+          '<button class="btn btn-sm btn-outline-danger" onclick="deletePermission(' + p.id + ')" title="حذف"><i class="bi bi-trash3"></i></button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function calculatePermDuration() {
+    const exit = document.getElementById('perm-exit-time').value;
+    const ret = document.getElementById('perm-return-time').value;
+    const durField = document.getElementById('perm-duration');
+    if (exit && ret) {
+      const exitParts = exit.split(':').map(Number);
+      const retParts = ret.split(':').map(Number);
+      const exitMins = exitParts[0] * 60 + exitParts[1];
+      const retMins = retParts[0] * 60 + retParts[1];
+      const diff = retMins - exitMins;
+      durField.value = diff > 0 ? diff : '';
+    } else {
+      durField.value = '';
+    }
+  }
+
+  function openAddPermModal() {
+    document.getElementById('perm-edit-id').value = '';
+    document.getElementById('permission-form').reset();
+    document.getElementById('permission-form').classList.remove('was-validated');
+    document.getElementById('perm-duration').value = '';
+    document.getElementById('permissionModalLabel').innerHTML =
+      '<i class="bi bi-door-open me-2"></i>إضافة إذن خروج';
+    document.getElementById('perm-date').value = new Date().toISOString().split('T')[0];
+    const modal = new bootstrap.Modal(document.getElementById('permissionModal'));
+    modal.show();
+  }
+
+  async function savePermission(e) {
+    e.preventDefault();
+    const form = document.getElementById('permission-form');
+    form.classList.add('was-validated');
+    if (!form.checkValidity()) return;
+
+    const btn = document.getElementById('perm-save-btn');
+    permSetBtnLoading(btn, true);
+
+    const employee_id = parseInt(document.getElementById('perm-emp-id').value);
+    const permission_date = document.getElementById('perm-date').value;
+    const exit_time = document.getElementById('perm-exit-time').value;
+    const return_time = document.getElementById('perm-return-time').value;
+    const duration_minutes = parseInt(document.getElementById('perm-duration').value) || null;
+    const reason = document.getElementById('perm-reason').value.trim();
+
+    try {
+      await window.API.permissions.create({
+        employee_id: employee_id,
+        permission_date: permission_date,
+        exit_time: exit_time,
+        return_time: return_time,
+        duration_minutes: duration_minutes,
+        reason: reason
+      });
+      bootstrap.Modal.getInstance(document.getElementById('permissionModal')).hide();
+      form.classList.remove('was-validated');
+      permShowToast('تم حفظ إذن الخروج بنجاح', 'success');
+      await loadAndRenderPermissions();
+    } catch (err) {
+      permShowToast('فشل حفظ الإذن: ' + (err.message || 'خطأ غير متوقع'), 'error');
+    } finally {
+      permSetBtnLoading(btn, false);
+    }
+  }
+
+  async function approvePermission(id) {
+    if (!confirm('هل تريد اعتماد هذا الإذن؟')) return;
+    try {
+      await window.API.permissions.approve(id);
+      permShowToast('تم اعتماد الإذن بنجاح', 'success');
+      await loadAndRenderPermissions();
+    } catch (err) {
+      permShowToast('فشل اعتماد الإذن: ' + (err.message || 'خطأ غير متوقع'), 'error');
+    }
+  }
+
+  async function rejectPermission(id) {
+    if (!confirm('هل تريد رفض هذا الإذن؟')) return;
+    try {
+      await window.API.permissions.reject(id);
+      permShowToast('تم رفض الإذن', 'success');
+      await loadAndRenderPermissions();
+    } catch (err) {
+      permShowToast('فشل رفض الإذن: ' + (err.message || 'خطأ غير متوقع'), 'error');
+    }
+  }
+
+  async function deletePermission(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا الإذن؟\nلا يمكن التراجع عن هذا الإجراء.')) return;
+    try {
+      await window.API.permissions.delete(id);
+      permShowToast('تم حذف الإذن بنجاح', 'success');
+      await loadAndRenderPermissions();
+    } catch (err) {
+      permShowToast('فشل حذف الإذن: ' + (err.message || 'خطأ غير متوقع'), 'error');
+    }
+  }
+
+  window.loadAndRenderPermissions = loadAndRenderPermissions;
+  window.openAddPermModal = openAddPermModal;
+  window.savePermission = savePermission;
+  window.approvePermission = approvePermission;
+  window.rejectPermission = rejectPermission;
+  window.deletePermission = deletePermission;
+  window.calculatePermDuration = calculatePermDuration;
+
+  initPermissions();
+})();
+</script>

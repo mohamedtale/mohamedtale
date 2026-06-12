@@ -1,0 +1,375 @@
+<div class="page-header d-flex justify-between align-center mb-2">
+  <h2 style="font-size:20px;font-weight:800;color:var(--navy);">الموظفين</h2>
+  <button class="btn btn-primary" onclick="openAddEmployee()">+ إضافة موظف</button>
+</div>
+
+<!-- Search + filter bar -->
+<div class="search-bar mb-2">
+  <input type="text" id="emp-search" placeholder="بحث بالاسم أو الرقم الوظيفي..." oninput="filterEmployees()">
+  <select id="emp-dept-filter" onchange="filterEmployees()">
+    <option value="">كل الأقسام</option>
+  </select>
+  <label style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--gray-600);cursor:pointer;">
+    <input type="checkbox" id="show-inactive" onchange="filterEmployees()"> إظهار الموظفين غير النشطين
+  </label>
+</div>
+
+<!-- Employee table -->
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrapper">
+    <table id="employees-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الاسم</th>
+          <th>الرقم الوظيفي</th>
+          <th>القسم</th>
+          <th>الدرجة</th>
+          <th>المرتبة</th>
+          <th>تاريخ التعيين</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="employees-body">
+        <tr><td colspan="9" class="text-center" style="padding:40px;color:var(--gray-400);">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal for add/edit -->
+<div id="emp-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="emp-modal-title">إضافة موظف</h3>
+      <button class="modal-close" onclick="closeEmpModal()">×</button>
+    </div>
+    <div style="padding:0 4px;">
+      <form id="emp-form" onsubmit="saveEmployee(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>الاسم الرابعي *</label>
+            <input type="text" id="emp-name" name="full_name" required>
+          </div>
+          <div class="form-group">
+            <label>الرقم الوظيفي *</label>
+            <input type="text" id="emp-number" name="emp_number" required>
+          </div>
+          <div class="form-group">
+            <label>القسم</label>
+            <select id="emp-dept" name="department_id"></select>
+          </div>
+          <div class="form-group">
+            <label>الدرجة (1-14)</label>
+            <select id="emp-grade" name="grade_level">
+              <option value="">اختر الدرجة</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>عدد البدلات (المرتبة)</label>
+            <select id="emp-allowance" name="grade_allowance_count">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>تاريخ التعيين</label>
+            <input type="date" id="emp-start-date" name="start_date">
+          </div>
+          <div class="form-group">
+            <label>رقم الهوية</label>
+            <input type="text" id="emp-national-id" name="national_id">
+          </div>
+          <div class="form-group">
+            <label>الهاتف</label>
+            <input type="text" id="emp-phone" name="phone">
+          </div>
+          <div class="form-group">
+            <label>المسمى الوظيفي</label>
+            <input type="text" id="emp-job-title" name="job_title">
+          </div>
+          <div class="form-group">
+            <label>نوع العقد</label>
+            <select id="emp-contract" name="contract_type">
+              <option value="permanent">دائم</option>
+              <option value="temporary">مؤقت</option>
+              <option value="contract">عقد</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>رصيد الإجازة (أيام)</label>
+            <input type="number" id="emp-leave-balance" name="leave_balance" value="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>الحالة</label>
+            <select id="emp-status" name="status">
+              <option value="active">نشط</option>
+              <option value="leave">في إجازة</option>
+              <option value="suspended">موقوف</option>
+              <option value="inactive">غير نشط</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>ملاحظات</label>
+            <textarea id="emp-notes" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeEmpModal()">إلغاء</button>
+      <button type="submit" form="emp-form" class="btn btn-primary">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let allEmployees = [];
+  let departments = [];
+  let editingEmpId = null;
+
+  // Build grade options 1-14
+  (function buildGradeOptions() {
+    const sel = document.getElementById('emp-grade');
+    for (let i = 1; i <= 14; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = 'الدرجة ' + i;
+      sel.appendChild(opt);
+    }
+  })();
+
+  async function initEmployees() {
+    try {
+      const [empsRes, deptsRes] = await Promise.all([
+        api.employees.list(),
+        api.departments.list()
+      ]);
+      allEmployees = Array.isArray(empsRes) ? empsRes : (empsRes.employees || empsRes.data || []);
+      departments  = Array.isArray(deptsRes) ? deptsRes : (deptsRes.departments || deptsRes.data || []);
+
+      // Populate department filter
+      const deptFilter = document.getElementById('emp-dept-filter');
+      deptFilter.innerHTML = '<option value="">كل الأقسام</option>';
+      departments.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.name;
+        deptFilter.appendChild(opt);
+      });
+
+      populateDeptSelect();
+      filterEmployees();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('employees-body').innerHTML =
+        '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:30px;">فشل تحميل البيانات: ' + escHtml(err.message || '') + '</td></tr>';
+      showToast('فشل تحميل بيانات الموظفين', 'error');
+    }
+  }
+
+  function populateDeptSelect() {
+    const sel = document.getElementById('emp-dept');
+    sel.innerHTML = '<option value="">بدون قسم</option>';
+    departments.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function getDeptName(deptId) {
+    if (!deptId) return '-';
+    const d = departments.find(x => String(x.id) === String(deptId));
+    return d ? d.name : '-';
+  }
+
+  function statusBadge(status) {
+    const map = {
+      active:    ['badge-green', 'نشط'],
+      leave:     ['badge-gold',  'في إجازة'],
+      suspended: ['badge-red',   'موقوف'],
+      inactive:  ['badge-gray',  'غير نشط'],
+    };
+    const [cls, label] = map[status] || ['badge-gray', status || '-'];
+    return '<span class="badge ' + cls + '">' + label + '</span>';
+  }
+
+  function renderEmployees(employees) {
+    const tbody = document.getElementById('employees-body');
+    if (!employees || employees.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">👤</div><p>لا يوجد موظفون</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = employees.map(function(emp, i) {
+      const deptName  = getDeptName(emp.department_id);
+      const startDate = emp.start_date ? formatDate(emp.start_date) : '-';
+      const grade     = emp.grade_level || '-';
+      const rank      = emp.grade_allowance_count != null ? emp.grade_allowance_count : '-';
+      const isActive  = emp.status === 'active';
+      return '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td style="font-weight:600;">' + escHtml(emp.full_name || '-') + '</td>' +
+        '<td>' + escHtml(emp.emp_number || emp.employee_number || '-') + '</td>' +
+        '<td>' + escHtml(deptName) + '</td>' +
+        '<td>' + grade + '</td>' +
+        '<td>' + rank + '</td>' +
+        '<td>' + startDate + '</td>' +
+        '<td>' + statusBadge(emp.status) + '</td>' +
+        '<td>' +
+          '<div class="btn-group" style="justify-content:center;">' +
+            '<button class="btn btn-sm btn-outline" onclick="openEditEmployee(' + emp.id + ')">✏️ تعديل</button>' +
+            (isActive ? '<button class="btn btn-sm btn-danger" onclick="deactivateEmployee(' + emp.id + ')">🚫 تعطيل</button>' : '') +
+          '</div>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function filterEmployees() {
+    const search     = (document.getElementById('emp-search').value || '').trim().toLowerCase();
+    const deptId     = document.getElementById('emp-dept-filter').value;
+    const showInactive = document.getElementById('show-inactive').checked;
+
+    const filtered = allEmployees.filter(function(emp) {
+      if (!showInactive && (emp.status === 'inactive' || emp.status === 'suspended')) return false;
+      if (search) {
+        const name = (emp.full_name || '').toLowerCase();
+        const num  = (emp.emp_number || emp.employee_number || '').toLowerCase();
+        if (!name.includes(search) && !num.includes(search)) return false;
+      }
+      if (deptId && String(emp.department_id) !== String(deptId)) return false;
+      return true;
+    });
+
+    renderEmployees(filtered);
+  }
+
+  function openAddEmployee() {
+    editingEmpId = null;
+    document.getElementById('emp-modal-title').textContent = 'إضافة موظف';
+    document.getElementById('emp-form').reset();
+    document.getElementById('emp-leave-balance').value = 0;
+    document.getElementById('emp-status').value   = 'active';
+    document.getElementById('emp-contract').value = 'permanent';
+    document.getElementById('emp-allowance').value = '0';
+    openEmpModal();
+  }
+
+  function openEditEmployee(id) {
+    const emp = allEmployees.find(function(e) { return e.id === id; });
+    if (!emp) { showToast('الموظف غير موجود', 'error'); return; }
+    editingEmpId = id;
+    document.getElementById('emp-modal-title').textContent = 'تعديل بيانات الموظف';
+
+    document.getElementById('emp-name').value          = emp.full_name || '';
+    document.getElementById('emp-number').value        = emp.emp_number || emp.employee_number || '';
+    document.getElementById('emp-dept').value          = emp.department_id || '';
+    document.getElementById('emp-grade').value         = emp.grade_level || '';
+    document.getElementById('emp-allowance').value     = emp.grade_allowance_count != null ? String(emp.grade_allowance_count) : '0';
+    document.getElementById('emp-start-date').value    = emp.start_date ? emp.start_date.split('T')[0] : '';
+    document.getElementById('emp-national-id').value   = emp.national_id || '';
+    document.getElementById('emp-phone').value         = emp.phone || '';
+    document.getElementById('emp-job-title').value     = emp.job_title || '';
+    document.getElementById('emp-contract').value      = emp.contract_type || 'permanent';
+    document.getElementById('emp-leave-balance').value = emp.leave_balance != null ? emp.leave_balance : 0;
+    document.getElementById('emp-status').value        = emp.status || 'active';
+    document.getElementById('emp-notes').value         = emp.notes || '';
+
+    openEmpModal();
+  }
+
+  async function saveEmployee(e) {
+    e.preventDefault();
+    const data = {
+      full_name:             document.getElementById('emp-name').value.trim(),
+      emp_number:            document.getElementById('emp-number').value.trim(),
+      department_id:         document.getElementById('emp-dept').value || null,
+      grade_level:           document.getElementById('emp-grade').value ? Number(document.getElementById('emp-grade').value) : null,
+      grade_allowance_count: Number(document.getElementById('emp-allowance').value),
+      start_date:            document.getElementById('emp-start-date').value || null,
+      national_id:           document.getElementById('emp-national-id').value.trim() || null,
+      phone:                 document.getElementById('emp-phone').value.trim() || null,
+      job_title:             document.getElementById('emp-job-title').value.trim() || null,
+      contract_type:         document.getElementById('emp-contract').value,
+      leave_balance:         Number(document.getElementById('emp-leave-balance').value),
+      status:                document.getElementById('emp-status').value,
+      notes:                 document.getElementById('emp-notes').value.trim() || null,
+    };
+
+    const submitBtn = document.querySelector('button[form="emp-form"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'جاري الحفظ...'; }
+
+    try {
+      if (editingEmpId) {
+        await api.employees.update(editingEmpId, data);
+        showToast('تم تحديث بيانات الموظف بنجاح', 'success');
+      } else {
+        await api.employees.create(data);
+        showToast('تم إضافة الموظف بنجاح', 'success');
+      }
+      closeEmpModal();
+      await reloadEmployees();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل الحفظ: ' + (err.message || 'خطأ غير معروف'), 'error');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'حفظ'; }
+    }
+  }
+
+  async function deactivateEmployee(id) {
+    const emp = allEmployees.find(function(e) { return e.id === id; });
+    const name = emp ? emp.full_name : 'الموظف';
+    if (!confirm('هل أنت متأكد من تعطيل الموظف "' + name + '"؟')) return;
+    try {
+      await api.employees.delete(id);
+      showToast('تم تعطيل الموظف بنجاح', 'success');
+      await reloadEmployees();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل تعطيل الموظف: ' + (err.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function reloadEmployees() {
+    try {
+      const res = await api.employees.list();
+      allEmployees = Array.isArray(res) ? res : (res.employees || res.data || []);
+      filterEmployees();
+    } catch (err) {
+      showToast('فشل تحديث القائمة', 'error');
+    }
+  }
+
+  function openEmpModal()  { document.getElementById('emp-modal').classList.add('open'); }
+  function closeEmpModal() { document.getElementById('emp-modal').classList.remove('open'); }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('emp-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeEmpModal();
+  });
+
+  // Expose to global scope for inline handlers
+  window.openAddEmployee    = openAddEmployee;
+  window.openEditEmployee   = openEditEmployee;
+  window.saveEmployee       = saveEmployee;
+  window.deactivateEmployee = deactivateEmployee;
+  window.closeEmpModal      = closeEmpModal;
+  window.filterEmployees    = filterEmployees;
+
+  initEmployees();
+})();
+</script>

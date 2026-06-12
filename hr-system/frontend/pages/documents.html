@@ -1,0 +1,239 @@
+<div class="card no-print">
+  <div class="d-flex justify-between align-center mb-2">
+    <div class="card-title mb-0"><span class="icon">📄</span> الوثائق</div>
+  </div>
+
+  <!-- Employee Selector -->
+  <div class="form-group mt-2">
+    <label class="form-label">اختر موظفاً</label>
+    <select id="doc-emp-select" class="form-control" style="max-width:400px;font-size:1rem;padding:.6rem 1rem;" onchange="loadEmployeeDocuments(this.value)">
+      <option value="">-- اختر موظفاً --</option>
+    </select>
+  </div>
+</div>
+
+<!-- Upload Area (shown after employee selected) -->
+<div class="card no-print" id="upload-section" style="display:none;">
+  <div class="card-title mb-2"><span class="icon">⬆️</span> رفع وثيقة جديدة</div>
+  <form id="upload-form" onsubmit="uploadDocument(event)">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الملف <span style="color:red">*</span></label>
+        <input type="file" id="doc-file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">نوع الوثيقة <span style="color:red">*</span></label>
+        <select id="doc-type" class="form-control" required>
+          <option value="">-- اختر النوع --</option>
+          <option value="personal">شخصية</option>
+          <option value="certificate">شهادات</option>
+          <option value="contract">عقد</option>
+          <option value="id">هوية</option>
+          <option value="medical">طبية</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">اسم الوثيقة <span style="color:red">*</span></label>
+        <input type="text" id="doc-name" class="form-control" placeholder="مثال: شهادة الميلاد" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ملاحظات</label>
+        <input type="text" id="doc-notes" class="form-control" placeholder="اختياري">
+      </div>
+    </div>
+    <div class="mt-2">
+      <button type="submit" class="btn btn-primary" id="upload-btn">⬆️ رفع الوثيقة</button>
+    </div>
+  </form>
+</div>
+
+<!-- Documents Table -->
+<div class="card" id="docs-section" style="display:none;">
+  <div class="card-title mb-2"><span class="icon">📋</span> وثائق الموظف</div>
+  <div id="docs-loading" style="display:none;text-align:center;padding:2rem;color:#888;">جارٍ التحميل...</div>
+  <div class="table-wrapper">
+    <table id="docs-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم الملف</th>
+          <th>النوع</th>
+          <th>الحجم</th>
+          <th>تاريخ الرفع</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="docs-tbody">
+        <tr><td colspan="6" style="text-align:center;color:#888;">لا توجد وثائق</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function () {
+  let selectedEmployeeId = null;
+  let employees = [];
+
+  const DOC_TYPE_LABELS = {
+    personal: 'شخصية',
+    certificate: 'شهادات',
+    contract: 'عقد',
+    id: 'هوية',
+    medical: 'طبية',
+    other: 'أخرى'
+  };
+
+  async function initDocuments() {
+    try {
+      employees = await window.API.employees.getAll();
+      const select = document.getElementById('doc-emp-select');
+      select.innerHTML = '<option value="">-- اختر موظفاً --</option>';
+      employees.forEach(emp => {
+        const opt = document.createElement('option');
+        opt.value = emp.id;
+        opt.textContent = `${emp.employee_number ? emp.employee_number + ' - ' : ''}${emp.full_name}`;
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error('فشل تحميل قائمة الموظفين:', err);
+    }
+  }
+
+  async function loadEmployeeDocuments(employeeId) {
+    if (!employeeId) {
+      document.getElementById('upload-section').style.display = 'none';
+      document.getElementById('docs-section').style.display = 'none';
+      selectedEmployeeId = null;
+      return;
+    }
+
+    selectedEmployeeId = employeeId;
+    document.getElementById('upload-section').style.display = '';
+    document.getElementById('docs-section').style.display = '';
+    document.getElementById('docs-loading').style.display = '';
+    document.getElementById('docs-tbody').innerHTML = '';
+
+    try {
+      const docs = await window.API.documents.getByEmployee(employeeId);
+      renderDocuments(docs);
+    } catch (err) {
+      console.error('فشل تحميل الوثائق:', err);
+      document.getElementById('docs-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">فشل تحميل الوثائق</td></tr>';
+    } finally {
+      document.getElementById('docs-loading').style.display = 'none';
+    }
+  }
+
+  function renderDocuments(docs) {
+    const tbody = document.getElementById('docs-tbody');
+    if (!docs || docs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;">لا توجد وثائق لهذا الموظف</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = docs.map((doc, index) => {
+      const typeLabel = DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type || '-';
+      const size = formatFileSize(doc.file_size || 0);
+      const uploadDate = doc.created_at ? new Date(doc.created_at).toLocaleDateString('ar-LY') : '-';
+      const downloadUrl = window.API.documents.getDownloadUrl(doc.id);
+
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(doc.doc_name || doc.file_name || '-')}</td>
+          <td><span class="badge badge-info">${typeLabel}</span></td>
+          <td>${size}</td>
+          <td>${uploadDate}</td>
+          <td>
+            <a href="${downloadUrl}" target="_blank" class="btn btn-sm btn-secondary" title="تحميل">⬇️ تحميل</a>
+            <button class="btn btn-sm btn-danger" onclick="window._deleteDocument(${doc.id})" title="حذف">🗑️ حذف</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function uploadDocument(e) {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('doc-file');
+    const docType = document.getElementById('doc-type').value;
+    const docName = document.getElementById('doc-name').value.trim();
+    const notes = document.getElementById('doc-notes').value.trim();
+
+    if (!fileInput.files[0]) { alert('يرجى اختيار ملف'); return; }
+    if (!docType) { alert('يرجى اختيار نوع الوثيقة'); return; }
+    if (!docName) { alert('يرجى إدخال اسم الوثيقة'); return; }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('employee_id', selectedEmployeeId);
+    formData.append('doc_type', docType);
+    formData.append('doc_name', docName);
+    if (notes) formData.append('notes', notes);
+
+    const btn = document.getElementById('upload-btn');
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الرفع...';
+
+    try {
+      await window.API.documents.upload(formData);
+      document.getElementById('upload-form').reset();
+      await loadEmployeeDocuments(selectedEmployeeId);
+      showToast('تم رفع الوثيقة بنجاح', 'success');
+    } catch (err) {
+      console.error('فشل رفع الوثيقة:', err);
+      showToast('فشل رفع الوثيقة: ' + (err.message || 'خطأ غير معروف'), 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '⬆️ رفع الوثيقة';
+    }
+  }
+
+  async function deleteDocument(id) {
+    if (!confirm('هل أنت متأكد من حذف هذه الوثيقة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+
+    try {
+      await window.API.documents.delete(id);
+      await loadEmployeeDocuments(selectedEmployeeId);
+      showToast('تم حذف الوثيقة بنجاح', 'success');
+    } catch (err) {
+      console.error('فشل حذف الوثيقة:', err);
+      showToast('فشل حذف الوثيقة: ' + (err.message || 'خطأ غير معروف'), 'error');
+    }
+  }
+
+  function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function showToast(msg, type) {
+    if (window.showToast) { window.showToast(msg, type); return; }
+    // Fallback simple toast
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = `position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:${type === 'success' ? '#22c55e' : '#ef4444'};color:#fff;padding:.75rem 1.5rem;border-radius:.5rem;z-index:9999;font-size:1rem;box-shadow:0 4px 12px rgba(0,0,0,.2)`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  // Expose delete to inline onclick
+  window._deleteDocument = deleteDocument;
+
+  initDocuments();
+})();
+</script>

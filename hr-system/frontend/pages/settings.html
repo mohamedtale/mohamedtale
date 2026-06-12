@@ -1,0 +1,146 @@
+<div class="page-header">
+  <h2>الإعدادات</h2>
+</div>
+
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+  <div class="card-header">
+    <h3>إعدادات النظام</h3>
+  </div>
+  <div class="card-body">
+    <div id="settings-alert"></div>
+    <form id="settings-form" onsubmit="saveSettings(event)">
+      <div class="form-group">
+        <label>اسم المنظمة</label>
+        <input type="text" id="setting-org-name" name="organization_name" class="form-control" placeholder="الجهاز التنفيذي لحفر وصيانة آبار المياه">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>وقت بداية الدوام</label>
+          <input type="time" id="setting-start-time" name="work_start_time" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>وقت نهاية الدوام</label>
+          <input type="time" id="setting-end-time" name="work_end_time" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>أيام الإجازة السنوية</label>
+          <input type="number" id="setting-annual-leave" name="annual_leave_days" class="form-control" min="1" max="365" value="30">
+        </div>
+        <div class="form-group">
+          <label>الحد الأقصى لإجازة الطوارئ (أيام/سنة)</label>
+          <input type="number" id="setting-emergency-max" name="emergency_leave_max_days" class="form-control" min="1" max="30" value="12">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>موظفون بدون بصمة (أرقام وظيفية مفصولة بفاصلة)</label>
+        <textarea id="setting-no-fingerprint" name="no_fingerprint_employees" class="form-control" rows="3"
+          placeholder="مثال: EMP001, EMP002, EMP003"></textarea>
+        <small class="text-muted">أدخل الأرقام الوظيفية للموظفين المعفيين من البصمة، مفصولة بفاصلة</small>
+      </div>
+      <div class="form-group mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <span id="save-btn-text">💾 حفظ الإعدادات</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mt-4" style="max-width: 700px; margin: 16px auto 0;">
+  <div class="card-header">
+    <h3>معلومات النظام</h3>
+  </div>
+  <div class="card-body">
+    <table class="data-table">
+      <tbody>
+        <tr>
+          <td class="fw-bold">اسم النظام</td>
+          <td>نظام إدارة الموارد البشرية</td>
+        </tr>
+        <tr>
+          <td class="fw-bold">الإصدار</td>
+          <td>1.0.0</td>
+        </tr>
+        <tr>
+          <td class="fw-bold">المطور</td>
+          <td>قسم تقنية المعلومات</td>
+        </tr>
+        <tr>
+          <td class="fw-bold">قاعدة البيانات</td>
+          <td id="db-status">جاري الفحص...</td>
+        </tr>
+        <tr>
+          <td class="fw-bold">الخادم</td>
+          <td id="server-status">جاري الفحص...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function initSettings() {
+  try {
+    const data = await window.API.settings.get();
+    if (data) {
+      if (data.organization_name) document.getElementById('setting-org-name').value = data.organization_name;
+      if (data.work_start_time) document.getElementById('setting-start-time').value = data.work_start_time;
+      if (data.work_end_time) document.getElementById('setting-end-time').value = data.work_end_time;
+      if (data.annual_leave_days) document.getElementById('setting-annual-leave').value = data.annual_leave_days;
+      if (data.emergency_leave_max_days) document.getElementById('setting-emergency-max').value = data.emergency_leave_max_days;
+      if (data.no_fingerprint_employees) document.getElementById('setting-no-fingerprint').value = data.no_fingerprint_employees;
+    }
+  } catch (err) {
+    document.getElementById('settings-alert').innerHTML =
+      `<div class="alert alert-warning">تعذر تحميل الإعدادات: ${err.message}</div>`;
+  }
+
+  // Check server status
+  try {
+    const response = await fetch('http://localhost:3000/api/health');
+    const health = await response.json();
+    document.getElementById('server-status').innerHTML = '<span class="badge badge-success">متصل ✓</span>';
+    document.getElementById('db-status').innerHTML = health.status === 'ok'
+      ? '<span class="badge badge-success">متصل ✓</span>'
+      : '<span class="badge badge-danger">غير متصل ✗</span>';
+  } catch (e) {
+    document.getElementById('server-status').innerHTML = '<span class="badge badge-danger">غير متصل ✗</span>';
+    document.getElementById('db-status').innerHTML = '<span class="badge badge-danger">غير متصل ✗</span>';
+  }
+}
+
+async function saveSettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-btn-text');
+  btn.textContent = 'جاري الحفظ...';
+
+  const data = {
+    organization_name: document.getElementById('setting-org-name').value,
+    work_start_time: document.getElementById('setting-start-time').value,
+    work_end_time: document.getElementById('setting-end-time').value,
+    annual_leave_days: document.getElementById('setting-annual-leave').value,
+    emergency_leave_max_days: document.getElementById('setting-emergency-max').value,
+    no_fingerprint_employees: document.getElementById('setting-no-fingerprint').value
+  };
+
+  try {
+    await window.API.settings.update(data);
+    document.getElementById('settings-alert').innerHTML =
+      '<div class="alert alert-success">✓ تم حفظ الإعدادات بنجاح</div>';
+    window.showToast && window.showToast('تم حفظ الإعدادات بنجاح', 'success');
+    setTimeout(() => {
+      document.getElementById('settings-alert').innerHTML = '';
+    }, 3000);
+  } catch (err) {
+    document.getElementById('settings-alert').innerHTML =
+      `<div class="alert alert-danger">خطأ في الحفظ: ${err.message}</div>`;
+    window.showToast && window.showToast('خطأ في حفظ الإعدادات', 'error');
+  } finally {
+    btn.textContent = '💾 حفظ الإعدادات';
+  }
+}
+
+initSettings();
+</script>
