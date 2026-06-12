@@ -5,3 +5,4 @@ frontend/.next/
 .env
 .env.local
 *.log
+.claude/
