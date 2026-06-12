@@ -6,6 +6,8 @@ const pool = require('./db');
 const errorHandler = require('./middleware/errorHandler');
 
 // استيراد المسارات
+const authRouter = require('./routes/auth');
+const authMiddleware = require('./middleware/auth');
 const employeesRouter = require('./routes/employees');
 const departmentsRouter = require('./routes/departments');
 const leavesRouter = require('./routes/leaves');
@@ -33,23 +35,35 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const uploadDir = process.env.UPLOAD_DIR || './uploads';
 app.use('/uploads', express.static(path.resolve(uploadDir)));
 
-// تركيب المسارات
-app.use('/api/employees', employeesRouter);
-app.use('/api/departments', departmentsRouter);
-app.use('/api/leaves', leavesRouter);
-app.use('/api/permissions', permissionsRouter);
-app.use('/api/attendance', attendanceRouter);
-app.use('/api/allowances', allowancesRouter);
-app.use('/api/documents', documentsRouter);
-app.use('/api/reports', reportsRouter);
-app.use('/api/settings', settingsRouter);
+// مسارات المصادقة (لا تحتاج توكن)
+app.use('/api/auth', authRouter);
+
+// تركيب المسارات المحمية
+app.use('/api/employees', authMiddleware, employeesRouter);
+app.use('/api/departments', authMiddleware, departmentsRouter);
+app.use('/api/leaves', authMiddleware, leavesRouter);
+app.use('/api/permissions', authMiddleware, permissionsRouter);
+app.use('/api/attendance', authMiddleware, attendanceRouter);
+app.use('/api/allowances', authMiddleware, allowancesRouter);
+app.use('/api/documents', authMiddleware, documentsRouter);
+app.use('/api/reports', authMiddleware, reportsRouter);
+app.use('/api/settings', authMiddleware, settingsRouter);
+
+// تقديم الملفات الثابتة للواجهة الأمامية
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // مسار الصحة
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// معالج 404
+// SPA fallback — كل المسارات غير API ترجع index.html
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+// معالج 404 للـ API فقط
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'المسار غير موجود' });
 });

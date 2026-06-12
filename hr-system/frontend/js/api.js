@@ -3,25 +3,17 @@
  * Base URL: http://localhost:3000
  */
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = '';
 
-/**
- * Generic request wrapper
- * @param {string} method - HTTP method
- * @param {string} path - API path (e.g. /api/employees)
- * @param {object|FormData|null} body - Request body
- * @param {boolean} isFormData - Whether body is FormData
- * @returns {Promise<any>} Parsed JSON response
- */
 async function request(method, path, body = null, isFormData = false) {
+  const token = localStorage.getItem('hr_token');
   const options = {
     method,
-    headers: {},
+    headers: token ? { 'Authorization': 'Bearer ' + token } : {},
   };
 
   if (body !== null) {
     if (isFormData) {
-      // Let browser set Content-Type with boundary for multipart
       options.body = body;
     } else {
       options.headers['Content-Type'] = 'application/json';
@@ -31,9 +23,16 @@ async function request(method, path, body = null, isFormData = false) {
 
   let response;
   try {
-    response = await fetch(`${BASE_URL}${path}`, options);
+    response = await fetch(path, options);
   } catch (networkError) {
-    throw new Error('خطأ في الاتصال بالخادم. يرجى التحقق من الاتصال بالإنترنت.');
+    throw new Error('خطأ في الاتصال بالخادم. يرجى التحقق من الاتصال بالشبكة.');
+  }
+
+  if (response.status === 401) {
+    localStorage.removeItem('hr_token');
+    localStorage.removeItem('hr_user');
+    window.location.replace('/login.html');
+    throw new Error('انتهت الجلسة');
   }
 
   if (!response.ok) {
@@ -326,7 +325,7 @@ window.API = {
      * @param {number|string} id
      * @returns {string}
      */
-    getDownloadUrl: (id) => `${BASE_URL}/api/documents/${id}/download`,
+    getDownloadUrl: (id) => `/api/documents/${id}/download`,
   },
 
   // ─── REPORTS ────────────────────────────────────────────────────────────────

@@ -435,4 +435,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Show logged-in user name in header
+  try {
+    const user = JSON.parse(localStorage.getItem('hr_user') || '{}');
+    const el = document.getElementById('header-user');
+    if (el && user.full_name) el.textContent = '👤 ' + user.full_name;
+  } catch(e) {}
 });

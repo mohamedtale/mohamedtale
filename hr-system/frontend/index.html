@@ -5,6 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>نظام إدارة الموارد البشرية</title>
   <link rel="stylesheet" href="css/main.css" />
+  <script>
+    // Auth guard — redirect to login if no valid token
+    (function() {
+      var token = localStorage.getItem('hr_token');
+      if (!token) { window.location.replace('/login.html'); return; }
+      try {
+        var exp = JSON.parse(atob(token.split('.')[1])).exp;
+        if (exp * 1000 < Date.now()) {
+          localStorage.removeItem('hr_token');
+          localStorage.removeItem('hr_user');
+          window.location.replace('/login.html');
+        }
+      } catch(e) { window.location.replace('/login.html'); }
+    })();
+
+    function doLogout() {
+      fetch('/api/auth/logout', { method: 'POST' }).catch(function(){});
+      localStorage.removeItem('hr_token');
+      localStorage.removeItem('hr_user');
+      window.location.replace('/login.html');
+    }
+  </script>
 </head>
 <body>
   <div id="app">
@@ -160,8 +182,13 @@
           نظام إدارة الموارد البشرية
         </div>
 
-        <div class="header-date" id="header-date" aria-live="polite">
-          <!-- Arabic date injected by app.js -->
+        <div class="header-date" id="header-date" aria-live="polite"></div>
+
+        <div style="display:flex; align-items:center; gap:12px; margin-right:auto; margin-left:0;">
+          <span id="header-user" style="font-size:13px; font-weight:600; color:#6c757d;"></span>
+          <button onclick="doLogout()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f8f9fa;border:1.5px solid #dee2e6;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:600;color:#0B4F6C;cursor:pointer;" title="تسجيل الخروج">
+            🚪 خروج
+          </button>
         </div>
       </header>
 

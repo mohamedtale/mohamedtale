@@ -219,6 +219,22 @@ CREATE TRIGGER update_exit_permissions_updated_at BEFORE UPDATE ON exit_permissi
 CREATE TRIGGER update_allowances_updated_at BEFORE UPDATE ON allowances
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- جدول المستخدمين
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(60) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255),
+    role VARCHAR(20) NOT NULL DEFAULT 'staff' CHECK (role IN ('admin', 'manager', 'staff')),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- مستخدم افتراضي: admin / admin123
+INSERT INTO users (username, password_hash, full_name, role) VALUES
+    ('admin', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'مدير النظام', 'admin')
+ON CONFLICT (username) DO NOTHING;
+
 -- إعدادات افتراضية
 INSERT INTO settings (key, value) VALUES
     ('organization_name', 'الجهة الحكومية'),
