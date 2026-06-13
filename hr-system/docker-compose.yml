@@ -33,6 +33,9 @@ services:
       PORT: 3000
       UPLOAD_DIR: /app/uploads
       MAX_FILE_SIZE: 52428800
+      # غيّر هذا المفتاح قبل التشغيل:
+      # node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env file}
     volumes:
       - uploads:/app/uploads
       - ./frontend:/app/frontend
