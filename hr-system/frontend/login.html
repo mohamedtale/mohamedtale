@@ -554,15 +554,29 @@
     if (revealed) return;
     revealed = true;
 
-    // Ripple effect on logo
-    const btn = document.getElementById('logo-btn');
-    const ripple = document.createElement('div');
-    ripple.className = 'ripple';
-    ripple.style.cssText = 'width:40px;height:40px;left:calc(50% - 20px);top:calc(50% - 20px);';
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 900);
+    const brand = document.getElementById('brand');
+    const form  = document.getElementById('form-panel');
+    const W     = window.innerWidth;
+    const formW = Math.min(440, W);
 
-    // Trigger animation
+    // Step 1: tilt brand panel
+    brand.style.transition = 'transform 0.35s ease-in';
+    brand.style.transform  = 'perspective(1400px) rotateY(-10deg)';
+
+    setTimeout(() => {
+      // Step 2: slide brand to right, reveal form
+      brand.style.transition = 'all 0.7s cubic-bezier(.77,0,.18,1)';
+      brand.style.transform  = 'none';
+      brand.style.width      = (W - formW) + 'px';
+      brand.style.left       = formW + 'px';
+
+      form.style.transition  = 'all 0.6s cubic-bezier(.34,1.1,.64,1)';
+      form.style.transform   = 'none';
+      form.style.opacity     = '1';
+      form.style.pointerEvents = 'auto';
+    }, 200);
+
+    // Trigger CSS class too (fallback)
     document.body.classList.add('revealed');
 
     // Focus username after animation
