@@ -12,6 +12,8 @@ function getSpreadsheet() {
   if (!globalSS) globalSS = SpreadsheetApp.openById(SS_ID);
   return globalSS;
 }
+function ping() { return { ok: true, time: new Date().toString(), empCount: DataLayer.getRawData("emp").length - 1 }; }
+
 function doGet(e) {
   var page = e.parameter.p;
   var id = e.parameter.id;

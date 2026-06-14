@@ -67,6 +67,7 @@
     </div>
     <div class="flex items-center gap-2">
       <span id="pending-badge" class="hidden badge badge-red text-xs"><i class="fas fa-bell"></i> <span id="pending-count">0</span></span>
+      <button onclick="testPing()" class="btn-outline text-xs py-2 px-3" style="background:rgba(34,197,94,.15);border-color:#4ade80;color:#4ade80"><i class="fas fa-plug"></i> اختبار</button>
       <button onclick="initSheetsSetup()" class="btn-outline text-xs py-2 px-3"><i class="fas fa-database"></i> تهيئة</button>
       <a href="<?= ScriptApp.getService().getUrl() ?>" class="btn-red text-xs py-2 px-3"><i class="fas fa-sign-out-alt"></i> خروج</a>
     </div>
@@ -505,10 +506,11 @@ function switchTab(name) {
 
 // ====== DASHBOARD ======
 function loadDashboard() {
+  document.getElementById('stat-total').textContent = '⏳';
   google.script.run
     .withSuccessHandler(data => {
-      if (!data) { toast('لا توجد بيانات من الخادم', 'error'); return; }
-      if (data.error) { toast('خطأ: ' + data.error, 'error'); return; }
+      if (!data) { toast('❌ الخادم أرجع بيانات فارغة', 'error'); document.getElementById('stat-total').textContent = '!'; return; }
+      if (data.error) { toast('❌ خطأ في الخادم: ' + data.error, 'error'); document.getElementById('stat-total').textContent = '!'; return; }
       document.getElementById('stat-total').textContent = data.total || 0;
       document.getElementById('stat-active').textContent = data.active || 0;
       document.getElementById('stat-onleave').textContent = data.onLeave || 0;
@@ -1070,6 +1072,18 @@ function generateBonus() {
     w.document.write(html);
     w.document.close();
   }).generatePrintableReport(m);
+}
+
+// ====== TEST ======
+function testPing() {
+  toast('جاري الاتصال بالخادم...', 'info');
+  google.script.run
+    .withSuccessHandler(r => {
+      if (r && r.ok) toast('✅ الاتصال ناجح! عدد الموظفين: ' + r.empCount + ' | ' + r.time, 'success');
+      else toast('⚠️ الخادم أرجع: ' + JSON.stringify(r), 'error');
+    })
+    .withFailureHandler(e => toast('❌ فشل الاتصال: ' + e.message, 'error'))
+    .ping();
 }
 
 // ====== SETUP ======
