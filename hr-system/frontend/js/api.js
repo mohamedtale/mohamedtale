@@ -78,6 +78,9 @@ function buildParams(params) {
 }
 
 window.API = {
+  // Generic request helper for pages that call API directly
+  request: (method, path, body = null) => request(method, path, body),
+
   // ─── EMPLOYEES ──────────────────────────────────────────────────────────────
   employees: {
     /**

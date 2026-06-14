@@ -1,0 +1,180 @@
+<div class="page-header">
+  <h1 class="page-title">إدارة المستخدمين</h1>
+  <button class="btn btn-primary" onclick="openAddUser()">+ إضافة مستخدم</button>
+</div>
+
+<div class="card">
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم المستخدم</th>
+          <th>الاسم الكامل</th>
+          <th>الدور</th>
+          <th>الحالة</th>
+          <th>تاريخ الإنشاء</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:#adb5bd;">جارٍ التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title"></h3>
+      <button class="modal-close" onclick="hideModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+const ROLE_LABELS = { admin: 'مدير النظام', manager: 'مشرف', staff: 'موظف' };
+const ROLE_BADGE  = { admin: 'badge--danger', manager: 'badge--warning', staff: 'badge--info' };
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  try {
+    const data = await window.API.request('GET', '/api/users');
+    if (!data?.data?.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#adb5bd;">لا يوجد مستخدمون</td></tr>';
+      return;
+    }
+    const me = JSON.parse(localStorage.getItem('hr_user') || '{}');
+    tbody.innerHTML = data.data.map((u, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${u.username}</strong></td>
+        <td>${u.full_name || '—'}</td>
+        <td><span class="badge ${ROLE_BADGE[u.role] || 'badge--secondary'}">${ROLE_LABELS[u.role] || u.role}</span></td>
+        <td><span class="badge ${u.is_active ? 'badge--success' : 'badge--secondary'}">${u.is_active ? 'نشط' : 'موقوف'}</span></td>
+        <td style="font-size:12px;">${new Date(u.created_at).toLocaleDateString('ar-IQ')}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="openEditUser(${u.id},'${u.username}','${u.full_name||''}','${u.role}',${u.is_active})">تعديل</button>
+            <button class="btn btn-warning"   style="padding:4px 10px;font-size:12px;" onclick="openResetPassword(${u.id},'${u.username}')">إعادة كلمة المرور</button>
+            ${u.id !== me.id ? `<button class="btn ${u.is_active ? 'btn-danger' : 'btn-success'}" style="padding:4px 10px;font-size:12px;" onclick="toggleUser(${u.id},${!u.is_active})">${u.is_active ? 'إيقاف' : 'تفعيل'}</button>` : ''}
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#c53030;">${e.message}</td></tr>`;
+  }
+}
+
+function openAddUser() {
+  showModal('إضافة مستخدم جديد', `
+    <div class="form-group"><label>اسم المستخدم *</label><input id="u-username" class="form-control" placeholder="بالإنجليزية فقط"></div>
+    <div class="form-group"><label>الاسم الكامل</label><input id="u-fullname" class="form-control" placeholder="الاسم بالعربية"></div>
+    <div class="form-group"><label>كلمة المرور *</label><input id="u-password" type="password" class="form-control" placeholder="8 أحرف على الأقل"></div>
+    <div class="form-group"><label>الدور *</label>
+      <select id="u-role" class="form-select">
+        <option value="staff">موظف</option>
+        <option value="manager">مشرف</option>
+        <option value="admin">مدير النظام</option>
+      </select>
+    </div>
+    <div id="u-error" style="color:#c53030;font-size:13px;display:none;"></div>`,
+    `<button class="btn btn-primary" onclick="submitAddUser()">حفظ</button>
+     <button class="btn btn-secondary" onclick="hideModal()">إلغاء</button>`
+  );
+}
+
+async function submitAddUser() {
+  const err = document.getElementById('u-error');
+  err.style.display = 'none';
+  const body = {
+    username: document.getElementById('u-username').value.trim(),
+    full_name: document.getElementById('u-fullname').value.trim(),
+    password: document.getElementById('u-password').value,
+    role: document.getElementById('u-role').value
+  };
+  try {
+    await window.API.request('POST', '/api/users', body);
+    hideModal();
+    showToast('تم إضافة المستخدم بنجاح', 'success');
+    loadUsers();
+  } catch (e) {
+    err.textContent = e.message;
+    err.style.display = 'block';
+  }
+}
+
+function openEditUser(id, username, fullName, role, isActive) {
+  showModal('تعديل المستخدم — ' + username, `
+    <div class="form-group"><label>الاسم الكامل</label><input id="e-fullname" class="form-control" value="${fullName}"></div>
+    <div class="form-group"><label>الدور</label>
+      <select id="e-role" class="form-select">
+        <option value="staff"   ${role==='staff'  ?'selected':''}>موظف</option>
+        <option value="manager" ${role==='manager'?'selected':''}>مشرف</option>
+        <option value="admin"   ${role==='admin'  ?'selected':''}>مدير النظام</option>
+      </select>
+    </div>
+    <div id="e-error" style="color:#c53030;font-size:13px;display:none;"></div>`,
+    `<button class="btn btn-primary" onclick="submitEditUser(${id})">حفظ</button>
+     <button class="btn btn-secondary" onclick="hideModal()">إلغاء</button>`
+  );
+}
+
+async function submitEditUser(id) {
+  const err = document.getElementById('e-error');
+  err.style.display = 'none';
+  try {
+    await window.API.request('PUT', `/api/users/${id}`, {
+      full_name: document.getElementById('e-fullname').value.trim(),
+      role: document.getElementById('e-role').value
+    });
+    hideModal();
+    showToast('تم تحديث المستخدم', 'success');
+    loadUsers();
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+
+function openResetPassword(id, username) {
+  showModal('إعادة تعيين كلمة المرور — ' + username, `
+    <div class="form-group"><label>كلمة المرور الجديدة</label><input id="rp-pass" type="password" class="form-control" placeholder="8 أحرف على الأقل"></div>
+    <div id="rp-error" style="color:#c53030;font-size:13px;display:none;"></div>`,
+    `<button class="btn btn-danger" onclick="submitResetPassword(${id})">تغيير</button>
+     <button class="btn btn-secondary" onclick="hideModal()">إلغاء</button>`
+  );
+}
+
+async function submitResetPassword(id) {
+  const err = document.getElementById('rp-error');
+  err.style.display = 'none';
+  const np = document.getElementById('rp-pass').value;
+  try {
+    await window.API.request('PUT', `/api/users/${id}/reset-password`, { new_password: np });
+    hideModal();
+    showToast('تم تغيير كلمة المرور', 'success');
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+}
+
+async function toggleUser(id, activate) {
+  if (!await confirmAction(activate ? 'تفعيل هذا الحساب؟' : 'إيقاف هذا الحساب؟')) return;
+  try {
+    await window.API.request('PUT', `/api/users/${id}`, { is_active: activate });
+    showToast(activate ? 'تم تفعيل الحساب' : 'تم إيقاف الحساب', 'success');
+    loadUsers();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+// helper for direct API calls
+if (!window.API.request) {
+  window.API.request = (m, p, b) => fetch(p, {
+    method: m,
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + localStorage.getItem('hr_token') },
+    body: b ? JSON.stringify(b) : undefined
+  }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error || 'خطأ'); return d; });
+}
+
+loadUsers();
+</script>

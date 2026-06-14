@@ -5,14 +5,17 @@
 // ─── ROUTES ─────────────────────────────────────────────────────────────────
 const routes = {
   '/': { file: null, init: initDashboard, title: 'الرئيسية' },
-  '/employees': { file: 'pages/employees.html', init: 'initEmployees', title: 'الموظفين' },
-  '/leaves': { file: 'pages/leaves.html', init: 'initLeaves', title: 'الإجازات' },
-  '/permissions': { file: 'pages/permissions.html', init: 'initPermissions', title: 'إذن الخروج' },
+  '/employees':  { file: 'pages/employees.html',  init: 'initEmployees',  title: 'الموظفين' },
+  '/leaves':     { file: 'pages/leaves.html',     init: 'initLeaves',     title: 'الإجازات' },
+  '/permissions':{ file: 'pages/permissions.html',init: 'initPermissions',title: 'إذن الخروج' },
   '/attendance': { file: 'pages/attendance.html', init: 'initAttendance', title: 'الحضور والغياب' },
   '/allowances': { file: 'pages/allowances.html', init: 'initAllowances', title: 'بدل التنقل والترقيات' },
-  '/documents': { file: 'pages/documents.html', init: 'initDocuments', title: 'الوثائق' },
-  '/reports': { file: 'pages/reports.html', init: 'initReports', title: 'التقارير' },
-  '/settings': { file: 'pages/settings.html', init: 'initSettings', title: 'الإعدادات' },
+  '/documents':  { file: 'pages/documents.html',  init: 'initDocuments',  title: 'الوثائق' },
+  '/reports':    { file: 'pages/reports.html',    init: 'initReports',    title: 'التقارير' },
+  '/settings':   { file: 'pages/settings.html',   init: 'initSettings',   title: 'الإعدادات' },
+  '/users':      { file: 'pages/users.html',      init: 'loadUsers',      title: 'المستخدمون' },
+  '/audit':      { file: 'pages/audit.html',      init: 'loadAudit',      title: 'سجل العمليات' },
+  '/profile':    { file: 'pages/profile.html',    init: null,             title: 'الملف الشخصي' },
 };
 
 // ─── NAVIGATE ────────────────────────────────────────────────────────────────

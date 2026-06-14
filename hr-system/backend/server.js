@@ -28,7 +28,9 @@ const allowancesRouter  = require('./routes/allowances');
 const documentsRouter   = require('./routes/documents');
 const reportsRouter     = require('./routes/reports');
 const settingsRouter    = require('./routes/settings');
-const auditLogsRouter   = require('./routes/auditLogs');
+const auditLogsRouter      = require('./routes/auditLogs');
+const usersRouter          = require('./routes/users');
+const notificationsRouter  = require('./routes/notifications');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -91,7 +93,9 @@ app.use('/api/allowances',  authMiddleware, allowancesRouter);
 app.use('/api/documents',   authMiddleware, documentsRouter);
 app.use('/api/reports',     authMiddleware, reportsRouter);
 app.use('/api/settings',    authMiddleware, settingsRouter);
-app.use('/api/audit-logs', authMiddleware, auditLogsRouter);
+app.use('/api/audit-logs',    authMiddleware, auditLogsRouter);
+app.use('/api/users',         authMiddleware, usersRouter);
+app.use('/api/notifications', authMiddleware, notificationsRouter);
 
 // ── Static frontend (no /uploads exposed publicly) ────────────────────────
 app.use(express.static(path.join(__dirname, '../frontend')));
