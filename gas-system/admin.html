@@ -56,8 +56,8 @@
 <body>
 
 <!-- VERSION BANNER -->
-<div id="v-banner" style="background:#c5a059;color:#0a1628;text-align:center;padding:8px;font-weight:900;font-size:14px;cursor:pointer;" onclick="this.innerHTML='✅ JavaScript يعمل! النسخة: v3.0'">
-  ⚡ النسخة الجديدة v3.0 — اضغط هنا لاختبار JavaScript
+<div id="v-banner" style="background:#c5a059;color:#0a1628;text-align:center;padding:8px;font-weight:900;font-size:14px;cursor:pointer;" onclick="this.innerHTML='typeof testPing = [' + (typeof testPing) + '] | typeof toast = [' + (typeof toast) + '] | typeof switchTab = [' + (typeof switchTab) + ']'">
+  ⚡ اضغط هنا لفحص الدوال
 </div>
 
 <!-- ====== HEADER ====== -->
@@ -472,6 +472,13 @@
 <div id="toast" class="toast"></div>
 
 <script>
+window.onerror = function(msg, src, line, col, err) {
+  document.getElementById('v-banner').style.background = '#dc2626';
+  document.getElementById('v-banner').style.color = '#fff';
+  document.getElementById('v-banner').textContent = '❌ خطأ JS: ' + msg + ' | السطر: ' + line;
+  return false;
+};
+
 // ====== GLOBALS ======
 const ADMIN_NAME = "<?= adminName ?>";
 let allEmployees = [], selectedFiles = [], attData = [], attHeaders = [], currentLeaveRow = null;
