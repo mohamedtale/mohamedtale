@@ -38,7 +38,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env file}
     volumes:
       - uploads:/app/uploads
-      - ./frontend:/app/frontend
+      - ./frontend:/frontend
     ports:
       - "3001:3001"
     depends_on:
