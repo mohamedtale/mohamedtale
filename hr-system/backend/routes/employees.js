@@ -94,10 +94,12 @@ router.post('/', async (req, res, next) => {
   try {
     const {
       emp_number, national_id, full_name, gender, birth_date,
-      education_level, job_title, department_id, contract_type,
-      start_date, grade_level, grade_allowance_count, settlement_date,
-      settlement_type, work_start_time, work_end_time,
-      no_fingerprint, leave_balance, status, notes
+      education_level, job_title, department_id, section, manager,
+      contract_type, start_date, grade_level, grade_allowance_count,
+      settlement_date, settlement_type, work_start_time, work_end_time,
+      no_fingerprint, leave_balance, status, notes,
+      work_location, current_salary, old_salary, promotion_decision,
+      financial_notes, evaluation
     } = req.body;
 
     if (!emp_number || !full_name) {
@@ -113,16 +115,23 @@ router.post('/', async (req, res, next) => {
     const result = await pool.query(
       `INSERT INTO employees (
         emp_number, national_id, full_name, gender, birth_date,
-        education_level, job_title, department_id, contract_type,
-        start_date, grade_level, grade_allowance_count, allowance_due_date,
-        settlement_date, settlement_type, work_start_time, work_end_time,
-        no_fingerprint, leave_balance, status, notes
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+        education_level, job_title, department_id, section, manager,
+        contract_type, start_date, grade_level, grade_allowance_count,
+        allowance_due_date, settlement_date, settlement_type,
+        work_start_time, work_end_time, no_fingerprint, leave_balance,
+        status, notes, work_location, current_salary, old_salary,
+        promotion_decision, financial_notes, evaluation
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+        $11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+        $21,$22,$23,$24,$25,$26,$27,$28,$29
+      )
       RETURNING *`,
       [
         emp_number, national_id || null, full_name, gender || null,
         birth_date || null, education_level || null, job_title || null,
         department_id ? parseInt(department_id) : null,
+        section || null, manager || null,
         contract_type || null, start_date || null,
         grade_level ? parseInt(grade_level) : null,
         grade_allowance_count ? parseInt(grade_allowance_count) : 0,
@@ -130,7 +139,12 @@ router.post('/', async (req, res, next) => {
         work_start_time || null, work_end_time || null,
         no_fingerprint === true || no_fingerprint === 'true',
         leave_balance !== undefined ? parseInt(leave_balance) : 45,
-        status || 'active', notes || null
+        status || 'مستمر', notes || null,
+        work_location || null,
+        current_salary ? parseFloat(current_salary) : null,
+        old_salary ? parseFloat(old_salary) : null,
+        promotion_decision || null, financial_notes || null,
+        evaluation || null
       ]
     );
 
@@ -146,10 +160,12 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
     const {
       emp_number, national_id, full_name, gender, birth_date,
-      education_level, job_title, department_id, contract_type,
-      start_date, grade_level, grade_allowance_count, allowance_due_date,
-      settlement_date, settlement_type, work_start_time, work_end_time,
-      no_fingerprint, leave_balance, status, notes
+      education_level, job_title, department_id, section, manager,
+      contract_type, start_date, grade_level, grade_allowance_count,
+      allowance_due_date, settlement_date, settlement_type,
+      work_start_time, work_end_time, no_fingerprint, leave_balance,
+      status, notes, work_location, current_salary, old_salary,
+      promotion_decision, financial_notes, evaluation
     } = req.body;
 
     // التحقق من وجود الموظف
@@ -174,27 +190,36 @@ router.put('/:id', async (req, res, next) => {
         education_level = COALESCE($6, education_level),
         job_title = COALESCE($7, job_title),
         department_id = COALESCE($8, department_id),
-        contract_type = COALESCE($9, contract_type),
-        start_date = COALESCE($10, start_date),
-        grade_level = COALESCE($11, grade_level),
-        grade_allowance_count = COALESCE($12, grade_allowance_count),
-        allowance_due_date = COALESCE($13, allowance_due_date),
-        settlement_date = COALESCE($14, settlement_date),
-        settlement_type = COALESCE($15, settlement_type),
-        work_start_time = COALESCE($16, work_start_time),
-        work_end_time = COALESCE($17, work_end_time),
-        no_fingerprint = COALESCE($18, no_fingerprint),
-        leave_balance = COALESCE($19, leave_balance),
-        status = COALESCE($20, status),
-        notes = COALESCE($21, notes),
+        section = COALESCE($9, section),
+        manager = COALESCE($10, manager),
+        contract_type = COALESCE($11, contract_type),
+        start_date = COALESCE($12, start_date),
+        grade_level = COALESCE($13, grade_level),
+        grade_allowance_count = COALESCE($14, grade_allowance_count),
+        allowance_due_date = COALESCE($15, allowance_due_date),
+        settlement_date = COALESCE($16, settlement_date),
+        settlement_type = COALESCE($17, settlement_type),
+        work_start_time = COALESCE($18, work_start_time),
+        work_end_time = COALESCE($19, work_end_time),
+        no_fingerprint = COALESCE($20, no_fingerprint),
+        leave_balance = COALESCE($21, leave_balance),
+        status = COALESCE($22, status),
+        notes = COALESCE($23, notes),
+        work_location = COALESCE($24, work_location),
+        current_salary = COALESCE($25, current_salary),
+        old_salary = COALESCE($26, old_salary),
+        promotion_decision = COALESCE($27, promotion_decision),
+        financial_notes = COALESCE($28, financial_notes),
+        evaluation = COALESCE($29, evaluation),
         updated_at = NOW()
-      WHERE id = $22
+      WHERE id = $30
       RETURNING *`,
       [
         emp_number || null, national_id || null, full_name || null,
         gender || null, birth_date || null, education_level || null,
         job_title || null,
         department_id !== undefined ? parseInt(department_id) : null,
+        section || null, manager || null,
         contract_type || null, start_date || null,
         grade_level !== undefined ? parseInt(grade_level) : null,
         grade_allowance_count !== undefined ? parseInt(grade_allowance_count) : null,
@@ -204,6 +229,11 @@ router.put('/:id', async (req, res, next) => {
         no_fingerprint !== undefined ? (no_fingerprint === true || no_fingerprint === 'true') : null,
         leave_balance !== undefined ? parseInt(leave_balance) : null,
         status || null, notes || null,
+        work_location || null,
+        current_salary !== undefined ? parseFloat(current_salary) : null,
+        old_salary !== undefined ? parseFloat(old_salary) : null,
+        promotion_decision || null, financial_notes || null,
+        evaluation || null,
         parseInt(id)
       ]
     );
@@ -219,7 +249,7 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
-      `UPDATE employees SET status = 'suspended', updated_at = NOW()
+      `UPDATE employees SET status = 'موقوف', updated_at = NOW()
        WHERE id = $1 RETURNING id, full_name, status`,
       [parseInt(id)]
     );
