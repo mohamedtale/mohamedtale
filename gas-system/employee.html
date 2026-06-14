@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>بوابة الموظف | الجهاز التنفيذي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{--gold:#c5a059;--navy:#0a1628;--navy2:#111f38;--navy3:#1a2f4a;--safe-bottom:env(safe-area-inset-bottom,0px);}
+
+html,body{height:100%;background:var(--navy);color:#f8fafc;overflow:hidden;}
+
+/* ===== شاشة التحميل ===== */
+#splash{
+  position:fixed;inset:0;background:var(--navy);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .6s ease;
+}
+#splash.out{opacity:0;pointer-events:none;}
+.splash-img{width:90px;height:90px;border-radius:50%;border:2px solid var(--gold);animation:pulse-ring 1.8s ease-in-out infinite;}
+@keyframes pulse-ring{0%,100%{box-shadow:0 0 0 0 rgba(197,160,89,.4);}50%{box-shadow:0 0 0 18px rgba(197,160,89,0);}}
+.splash-bar{width:180px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.splash-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e8c878);border-radius:2px;animation:fill 1.5s ease forwards;}
+@keyframes fill{from{width:0}to{width:100%}}
+
+/* ===== صفحة تسجيل الدخول ===== */
+#login-page{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--navy);
+  background-image:radial-gradient(at 0% 0%,rgba(197,160,89,.12) 0,transparent 50%),radial-gradient(at 100% 100%,rgba(30,60,120,.2) 0,transparent 50%);
+  padding:20px;overflow-y:auto;
+}
+.login-box{width:100%;max-width:400px;animation:slideUp .5s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+
+.login-logo-wrap{position:relative;width:90px;height:90px;margin:0 auto 20px;}
+.login-logo-wrap img{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid var(--gold);box-shadow:0 0 25px rgba(197,160,89,.3);position:relative;z-index:2;}
+.login-ring{position:absolute;inset:-8px;border-radius:50%;border:1.5px solid rgba(197,160,89,.3);animation:spin-s 5s linear infinite;}
+@keyframes spin-s{to{transform:rotate(360deg);}}
+.login-ping{position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(197,160,89,.2);animation:ping-s 2s ease-out infinite;}
+@keyframes ping-s{0%{transform:scale(1);opacity:.7;}100%{transform:scale(1.35);opacity:0;}}
+
+.login-title{text-align:center;margin-bottom:24px;}
+.login-title h2{font-size:18px;font-weight:900;background:linear-gradient(135deg,#fff 30%,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.login-title p{color:rgba(255,255,255,.4);font-size:12px;margin-top:4px;}
+
+.login-card{
+  background:rgba(255,255,255,.03);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
+  border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:26px 22px;
+  box-shadow:0 25px 70px rgba(0,0,0,.5);position:relative;
+}
+.login-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:45%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+
+.inp-wrap{position:relative;margin-bottom:14px;}
+.inp-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:16px;}
+.inp-toggle{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.35);cursor:pointer;font-size:15px;}
+.inp-wrap input{
+  width:100%;padding:14px 44px 14px 44px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;color:#fff;font-family:'Cairo';font-size:16px;outline:none;transition:.25s;
+}
+.inp-wrap input:focus{border-color:var(--gold);background:rgba(255,255,255,.07);}
+.inp-wrap input::placeholder{color:rgba(255,255,255,.3);}
+
+.alert-box{
+  display:none;align-items:center;gap:8px;
+  padding:11px 14px;border-radius:10px;margin-bottom:14px;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);
+  color:#fca5a5;font-size:13px;font-weight:600;
+}
+.alert-box.show{display:flex;}
+.alert-box.ok{background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2);color:#4ade80;}
+
+.btn-enter{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--gold),#a07840);
+  color:var(--navy);border:none;border-radius:13px;
+  font-family:'Cairo';font-size:17px;font-weight:900;cursor:pointer;
+  transition:.3s;box-shadow:0 8px 24px rgba(197,160,89,.25);
+  display:flex;align-items:center;justify-content:center;gap:9px;margin-top:6px;
+}
+.btn-enter:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(197,160,89,.35);}
+.btn-enter:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* ===== التطبيق الرئيسي ===== */
+#app{display:none;height:100%;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* الهيدر */
+.app-header{
+  background:rgba(10,22,40,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.emp-avatar{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#7a5c2a);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;color:var(--navy);flex-shrink:0;
+}
+.emp-info{flex:1;margin-right:10px;}
+.emp-info .name{font-weight:900;font-size:15px;line-height:1.2;}
+.emp-info .title{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
+
+/* محتوى التطبيق */
+.app-body{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(70px + var(--safe-bottom));}
+.app-body::-webkit-scrollbar{width:0;}
+
+/* التبويبات السفلية */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  background:rgba(10,22,40,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid rgba(255,255,255,.07);
+  display:flex;padding-bottom:var(--safe-bottom);
+  padding-top:2px;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 4px;gap:4px;cursor:pointer;border:none;background:transparent;
+  color:rgba(255,255,255,.35);transition:.2s;
+}
+.nav-btn i{font-size:20px;transition:.2s;}
+.nav-btn span{font-size:10px;font-weight:700;font-family:'Cairo';}
+.nav-btn.active{color:var(--gold);}
+.nav-btn.active i{transform:translateY(-2px);}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);margin-top:2px;opacity:0;}
+.nav-btn.active .nav-dot{opacity:1;}
+
+/* الصفحات */
+.page{display:none;animation:fadeIn .25s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ===== صفحة الرئيسية ===== */
+.balance-hero{
+  margin:16px;border-radius:22px;padding:22px 20px;
+  background:linear-gradient(135deg,rgba(197,160,89,.18),rgba(197,160,89,.06));
+  border:1px solid rgba(197,160,89,.25);
+  position:relative;overflow:hidden;
+}
+.balance-hero::after{
+  content:'';position:absolute;top:-40px;left:-40px;
+  width:140px;height:140px;background:rgba(197,160,89,.08);
+  border-radius:50%;
+}
+.balance-label{font-size:12px;color:rgba(255,255,255,.5);font-weight:600;margin-bottom:4px;}
+.balance-val{font-size:54px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:4px;}
+.balance-unit{font-size:14px;color:rgba(255,255,255,.5);font-weight:600;}
+.balance-progress{
+  margin-top:14px;height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;
+}
+.balance-bar{height:100%;background:linear-gradient(90deg,var(--gold),#e8c878);border-radius:6px;transition:width .8s ease;}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 16px;}
+.info-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:14px;
+}
+.info-card .ic-label{font-size:11px;color:rgba(255,255,255,.4);font-weight:600;margin-bottom:4px;}
+.info-card .ic-val{font-size:14px;font-weight:700;color:#f8fafc;line-height:1.3;}
+.info-card .ic-icon{font-size:22px;color:var(--gold);margin-bottom:8px;display:block;}
+
+.quick-actions{margin:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.qa-btn{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px;padding:16px;cursor:pointer;transition:.2s;
+  display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+}
+.qa-btn:hover{border-color:var(--gold);background:rgba(197,160,89,.08);}
+.qa-btn i{font-size:22px;color:var(--gold);}
+.qa-btn span{font-size:13px;font-weight:700;color:#f8fafc;}
+
+/* ===== صفحة الإجازات ===== */
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:16px 16px 12px;
+}
+.section-title{font-size:16px;font-weight:900;color:var(--gold);}
+.tab-pills{display:flex;gap:6px;margin:0 16px 14px;background:rgba(255,255,255,.04);border-radius:12px;padding:4px;}
+.pill{flex:1;padding:9px;border:none;background:transparent;border-radius:9px;color:rgba(255,255,255,.45);font-family:'Cairo';font-size:13px;font-weight:700;cursor:pointer;transition:.2s;}
+.pill.active{background:var(--gold);color:var(--navy);}
+
+/* نموذج الطلب */
+.form-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;margin:0 16px 16px;padding:18px;}
+.form-row{margin-bottom:14px;}
+.form-label{font-size:12px;color:rgba(255,255,255,.45);font-weight:600;display:block;margin-bottom:6px;}
+.form-input{
+  width:100%;padding:12px 14px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:11px;color:#fff;font-family:'Cairo';font-size:15px;outline:none;transition:.25s;
+}
+.form-input:focus{border-color:var(--gold);background:rgba(255,255,255,.08);}
+.form-input::placeholder{color:rgba(255,255,255,.3);}
+select.form-input option{background:#1a2f4a;color:#fff;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.info-chip{
+  background:rgba(197,160,89,.08);border:1px solid rgba(197,160,89,.2);
+  border-radius:10px;padding:10px 14px;margin-bottom:14px;
+  font-size:13px;color:rgba(255,255,255,.7);
+  display:flex;align-items:center;gap:8px;
+}
+.info-chip i{color:var(--gold);}
+
+/* زر الإرسال */
+.btn-submit{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--gold),#a07840);
+  color:var(--navy);border:none;border-radius:12px;
+  font-family:'Cairo';font-size:16px;font-weight:900;cursor:pointer;
+  transition:.3s;box-shadow:0 6px 20px rgba(197,160,89,.2);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-submit:hover{transform:translateY(-1px);}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* سجل الإجازات */
+.leave-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.05);
+}
+.leave-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.leave-info .ltype{font-size:14px;font-weight:700;}
+.leave-info .ldates{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;}
+.leave-info .ldays{font-size:12px;color:rgba(255,255,255,.4);}
+.leave-status{margin-right:auto;flex-shrink:0;}
+
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-pending{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2);}
+.badge-ok{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
+.badge-done{background:rgba(56,189,248,.1);color:#38bdf8;border:1px solid rgba(56,189,248,.2);}
+.badge-rej{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2);}
+.badge-gold{background:rgba(197,160,89,.1);color:var(--gold);border:1px solid rgba(197,160,89,.2);}
+
+/* ===== صفحة الوثائق ===== */
+.doc-item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:.15s;
+}
+.doc-item:hover{background:rgba(255,255,255,.03);}
+.doc-icon{width:40px;height:40px;border-radius:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.doc-icon i{color:#f87171;font-size:18px;}
+.doc-body .doc-name{font-size:14px;font-weight:700;line-height:1.3;}
+.doc-body .doc-meta{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+
+/* ===== صفحة الحساب ===== */
+.profile-hero{
+  margin:16px;border-radius:20px;padding:22px 18px;
+  background:linear-gradient(135deg,rgba(197,160,89,.12),rgba(10,22,40,.8));
+  border:1px solid rgba(197,160,89,.2);
+  display:flex;align-items:center;gap:14px;
+}
+.profile-avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#7a5c2a);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:900;color:var(--navy);flex-shrink:0;
+  border:2px solid rgba(197,160,89,.3);
+}
+.profile-details .pname{font-size:17px;font-weight:900;}
+.profile-details .psub{font-size:12px;color:rgba(255,255,255,.45);margin-top:3px;}
+.profile-details .pbadge{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.2);}
+
+.profile-rows{margin:0 16px 16px;}
+.prow{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.prow:last-child{border:none;}
+.prow-label{font-size:13px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:8px;}
+.prow-label i{color:var(--gold);width:16px;text-align:center;}
+.prow-val{font-size:14px;font-weight:700;color:#f8fafc;}
+
+.pass-section{margin:0 16px 16px;}
+.pass-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.pass-strength{height:4px;border-radius:4px;margin-top:6px;transition:.3s;}
+
+/* مؤشر تحميل بسيط */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(15,22,40,.3);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* تنبيه نجاح/خطأ عائم */
+#float-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  padding:12px 22px;border-radius:14px;font-size:14px;font-weight:700;
+  display:none;z-index:200;white-space:nowrap;
+  box-shadow:0 8px 25px rgba(0,0,0,.4);
+}
+
+/* ===== حالة فارغة ===== */
+.empty-state{text-align:center;padding:40px 20px;color:rgba(255,255,255,.25);}
+.empty-state i{font-size:40px;margin-bottom:12px;display:block;}
+.empty-state p{font-size:14px;}
+
+/* ===== مودال المعاينة ===== */
+#doc-preview-modal{
+  display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);
+  flex-direction:column;
+}
+#doc-preview-modal.open{display:flex;}
+.modal-header{
+  background:var(--navy);padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.modal-close{color:rgba(255,255,255,.5);font-size:20px;cursor:pointer;padding:6px;}
+#doc-iframe{flex:1;border:none;background:#fff;}
+</style>
+</head>
+<body>
+
+<!-- شاشة التحميل -->
+<div id="splash">
+  <img src="https://i.ibb.co/rf5pWjnT/image.png" class="splash-img" alt="شعار">
+  <div style="color:var(--gold);font-weight:700;font-size:14px;">بوابة الموظف الذكية</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- ===== صفحة تسجيل الدخول ===== -->
+<div id="login-page">
+  <div class="login-box">
+    <!-- الشعار -->
+    <div style="text-align:center;margin-bottom:22px;">
+      <div class="login-logo-wrap">
+        <div class="login-ring"></div>
+        <div class="login-ping"></div>
+        <img src="https://i.ibb.co/rf5pWjnT/image.png" alt="شعار">
+      </div>
+      <div class="login-title">
+        <h2>بوابة الخدمات الذاتية</h2>
+        <p>الجهاز التنفيذي لحفر وصيانة آبار المياه</p>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <div id="login-alert" class="alert-box"><i class="fas fa-exclamation-circle"></i><span id="login-alert-msg"></span></div>
+
+      <div class="inp-wrap">
+        <i class="inp-icon fas fa-id-card"></i>
+        <input type="text" id="inp-id" inputmode="numeric" placeholder="الرقم الوظيفي" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('inp-pass').focus()">
+      </div>
+      <div class="inp-wrap">
+        <i class="inp-icon fas fa-lock"></i>
+        <input type="password" id="inp-pass" placeholder="كلمة المرور (الرقم الوطني افتراضياً)" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+        <i class="inp-toggle fas fa-eye" onclick="togglePass(this,'inp-pass')"></i>
+      </div>
+
+      <button class="btn-enter" id="btn-login" onclick="doLogin()">
+        <i class="fas fa-sign-in-alt"></i>
+        دخول البوابة
+      </button>
+
+      <div style="text-align:center;margin-top:14px;font-size:12px;color:rgba(255,255,255,.3);">
+        <i class="fas fa-shield-halved" style="color:var(--gold);margin-left:4px;"></i>
+        كلمة المرور الافتراضية: آخر 4 أرقام من الرقم الوطني
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:rgba(255,255,255,.2);">
+      © 2026 منظومة شؤون العاملين • الإصدار الماسي
+    </div>
+  </div>
+</div>
+
+<!-- ===== التطبيق الرئيسي ===== -->
+<div id="app">
+
+  <!-- الهيدر -->
+  <div class="app-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="emp-avatar" id="hdr-avatar">م</div>
+      <div class="emp-info">
+        <div class="name" id="hdr-name">اسم الموظف</div>
+        <div class="title" id="hdr-title">المسمى الوظيفي</div>
+      </div>
+    </div>
+    <button onclick="doLogout()" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:10px;padding:7px 12px;cursor:pointer;font-family:'Cairo';font-size:12px;font-weight:700;">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+  </div>
+
+  <!-- المحتوى -->
+  <div class="app-body">
+
+    <!-- ===== الرئيسية ===== -->
+    <div id="page-home" class="page active">
+      <!-- بطاقة الرصيد -->
+      <div class="balance-hero">
+        <div class="balance-label">رصيد إجازاتك السنوية المتاح</div>
+        <div>
+          <span class="balance-val" id="home-balance">0</span>
+          <span class="balance-unit"> يوم</span>
+        </div>
+        <div class="balance-progress">
+          <div class="balance-bar" id="balance-bar" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:rgba(255,255,255,.35);">
+          <span>المستهلك: <span id="home-used">0</span> يوم</span>
+          <span>الحد الأقصى: <span id="home-max">30</span> يوم</span>
+        </div>
+      </div>
+
+      <!-- معلومات الموظف -->
+      <div class="info-grid">
+        <div class="info-card">
+          <i class="ic-icon fas fa-briefcase"></i>
+          <div class="ic-label">المسمى الوظيفي</div>
+          <div class="ic-val" id="info-title">-</div>
+        </div>
+        <div class="info-card">
+          <i class="ic-icon fas fa-building"></i>
+          <div class="ic-label">الإدارة / القسم</div>
+          <div class="ic-val" id="info-dept">-</div>
+        </div>
+        <div class="info-card">
+          <i class="ic-icon fas fa-graduation-cap"></i>
+          <div class="ic-label">المؤهل العلمي</div>
+          <div class="ic-val" id="info-qual">-</div>
+        </div>
+        <div class="info-card">
+          <i class="ic-icon fas fa-layer-group"></i>
+          <div class="ic-label">الدرجة الوظيفية</div>
+          <div class="ic-val" id="info-grade">-</div>
+        </div>
+        <div class="info-card">
+          <i class="ic-icon fas fa-calendar-check"></i>
+          <div class="ic-label">تاريخ المباشرة</div>
+          <div class="ic-val" id="info-hire">-</div>
+        </div>
+        <div class="info-card">
+          <i class="ic-icon fas fa-star" style="color:#fbbf24;"></i>
+          <div class="ic-label">موعد الاستحقاق</div>
+          <div class="ic-val" id="info-due" style="color:#fbbf24;">-</div>
+        </div>
+      </div>
+
+      <!-- إجراءات سريعة -->
+      <div style="margin:4px 16px 10px;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);">إجراءات سريعة</div>
+      <div class="quick-actions">
+        <div class="qa-btn" onclick="gotoTab('leaves');setLeaveTab('new')">
+          <i class="fas fa-paper-plane"></i>
+          <span>طلب إجازة جديدة</span>
+        </div>
+        <div class="qa-btn" onclick="gotoTab('leaves');setLeaveTab('history')">
+          <i class="fas fa-history"></i>
+          <span>سجل إجازاتي</span>
+        </div>
+        <div class="qa-btn" onclick="gotoTab('docs')">
+          <i class="fas fa-folder-open"></i>
+          <span>وثائقي المحفوظة</span>
+        </div>
+        <div class="qa-btn" onclick="gotoTab('profile');focusPassChange()">
+          <i class="fas fa-key"></i>
+          <span>تغيير كلمة المرور</span>
+        </div>
+      </div>
+    </div><!-- end home -->
+
+    <!-- ===== الإجازات ===== -->
+    <div id="page-leaves" class="page">
+      <div class="tab-pills">
+        <button class="pill active" onclick="setLeaveTab('new')" id="pill-new">طلب جديد</button>
+        <button class="pill" onclick="setLeaveTab('history')" id="pill-history">سجل طلباتي</button>
+      </div>
+
+      <!-- نموذج الطلب -->
+      <div id="leave-new-panel">
+        <div class="form-card">
+          <div class="info-chip">
+            <i class="fas fa-info-circle"></i>
+            رصيد إجازاتك السنوية: <strong id="leave-balance-chip" style="color:var(--gold);margin-right:4px;">0</strong> يوم
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">نوع الإجازة *</label>
+            <select id="leave-type" class="form-input">
+              <option value="">اختر نوع الإجازة...</option>
+              <option value="سنوية">سنوية</option>
+              <option value="طارئة">طارئة</option>
+              <option value="مرضية">مرضية</option>
+              <option value="أمومة">أمومة</option>
+              <option value="حج">حج</option>
+              <option value="بدون راتب">بدون راتب</option>
+            </select>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">تاريخ البداية *</label>
+              <input type="date" id="leave-start" class="form-input" onchange="calcDays()">
+            </div>
+            <div class="form-row">
+              <label class="form-label">تاريخ النهاية *</label>
+              <input type="date" id="leave-end" class="form-input" onchange="calcDays()">
+            </div>
+          </div>
+
+          <div id="days-chip" style="display:none;margin-bottom:14px;">
+            <div style="background:rgba(197,160,89,.08);border:1px solid rgba(197,160,89,.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:13px;color:rgba(255,255,255,.6);">مدة الإجازة:</span>
+              <span id="days-count" style="font-size:18px;font-weight:900;color:var(--gold);">0 يوم</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">ملاحظات (اختياري)</label>
+            <textarea id="leave-note" class="form-input" rows="3" placeholder="أسباب الإجازة أو أي ملاحظات..."></textarea>
+          </div>
+
+          <div id="leave-alert" class="alert-box" style="margin-bottom:12px;"><i class="fas fa-exclamation-circle"></i><span id="leave-alert-msg"></span></div>
+          <div id="leave-success" class="alert-box ok" style="margin-bottom:12px;display:none;"><i class="fas fa-check-circle"></i><span id="leave-success-msg"></span></div>
+
+          <button class="btn-submit" id="btn-submit-leave" onclick="submitLeave()">
+            <i class="fas fa-paper-plane"></i> إرسال الطلب
+          </button>
+        </div>
+      </div>
+
+      <!-- سجل الطلبات -->
+      <div id="leave-history-panel" style="display:none;">
+        <div id="leaves-loading" class="empty-state"><div class="spinner" style="width:32px;height:32px;border-width:3px;border-top-color:var(--gold);margin:0 auto 12px;display:block;"></div><p>جاري التحميل...</p></div>
+        <div id="leaves-list"></div>
+      </div>
+    </div><!-- end leaves -->
+
+    <!-- ===== الوثائق ===== -->
+    <div id="page-docs" class="page">
+      <div class="section-head">
+        <div class="section-title"><i class="fas fa-folder-open" style="margin-left:7px;"></i>وثائقي المحفوظة</div>
+        <button onclick="loadMyDocs()" style="background:transparent;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:14px;"><i class="fas fa-sync"></i></button>
+      </div>
+      <div id="docs-loading" class="empty-state"><div class="spinner" style="width:32px;height:32px;border-width:3px;border-top-color:var(--gold);margin:0 auto 12px;display:block;"></div><p>جاري التحميل...</p></div>
+      <div id="docs-list" style="display:none;"></div>
+    </div><!-- end docs -->
+
+    <!-- ===== الحساب ===== -->
+    <div id="page-profile" class="page">
+      <!-- بطاقة الملف الشخصي -->
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profile-avatar">م</div>
+        <div class="profile-details">
+          <div class="pname" id="profile-name">-</div>
+          <div class="psub" id="profile-title">-</div>
+          <span class="pbadge" id="profile-status">مستمر</span>
+        </div>
+      </div>
+
+      <!-- تفاصيل الموظف -->
+      <div class="form-card" style="margin:0 16px 16px;">
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-id-badge"></i>الرقم الوظيفي</span>
+          <span class="prow-val" id="p-id">-</span>
+        </div>
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-building"></i>الإدارة</span>
+          <span class="prow-val" id="p-dept">-</span>
+        </div>
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-sitemap"></i>القسم</span>
+          <span class="prow-val" id="p-section">-</span>
+        </div>
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-graduation-cap"></i>المؤهل</span>
+          <span class="prow-val" id="p-qual">-</span>
+        </div>
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-layer-group"></i>الدرجة</span>
+          <span class="prow-val" id="p-grade">-</span>
+        </div>
+        <div class="prow">
+          <span class="prow-label"><i class="fas fa-calendar"></i>تاريخ المباشرة</span>
+          <span class="prow-val" id="p-hire">-</span>
+        </div>
+        <div class="prow" style="border:none;">
+          <span class="prow-label"><i class="fas fa-star" style="color:#fbbf24;"></i>موعد الاستحقاق</span>
+          <span class="prow-val" id="p-due" style="color:#fbbf24;">-</span>
+        </div>
+      </div>
+
+      <!-- تغيير كلمة المرور -->
+      <div class="form-card" style="margin:0 16px 30px;" id="pass-section">
+        <div class="pass-title"><i class="fas fa-key"></i>تغيير كلمة المرور</div>
+
+        <div id="pass-alert" class="alert-box" style="margin-bottom:12px;"><i class="fas fa-exclamation-circle"></i><span id="pass-alert-msg"></span></div>
+        <div id="pass-success" class="alert-box ok" style="margin-bottom:12px;display:none;"><i class="fas fa-check-circle"></i><span id="pass-success-msg"></span></div>
+
+        <div class="inp-wrap" style="margin-bottom:12px;">
+          <i class="inp-icon fas fa-lock"></i>
+          <input type="password" id="cur-pass" class="form-input" placeholder="كلمة المرور الحالية" style="padding-right:44px;" autocomplete="current-password">
+          <i class="inp-toggle fas fa-eye" onclick="togglePass(this,'cur-pass')"></i>
+        </div>
+        <div class="inp-wrap" style="margin-bottom:4px;">
+          <i class="inp-icon fas fa-lock-open"></i>
+          <input type="password" id="new-pass" class="form-input" placeholder="كلمة المرور الجديدة" style="padding-right:44px;" autocomplete="new-password" oninput="checkPassStrength(this.value)">
+          <i class="inp-toggle fas fa-eye" onclick="togglePass(this,'new-pass')"></i>
+        </div>
+        <div id="pass-strength-bar" class="pass-strength" style="background:rgba(255,255,255,.06);margin-bottom:12px;"></div>
+        <div class="inp-wrap" style="margin-bottom:14px;">
+          <i class="inp-icon fas fa-check-double"></i>
+          <input type="password" id="con-pass" class="form-input" placeholder="تأكيد كلمة المرور الجديدة" style="padding-right:44px;" autocomplete="new-password">
+          <i class="inp-toggle fas fa-eye" onclick="togglePass(this,'con-pass')"></i>
+        </div>
+
+        <button class="btn-submit" id="btn-change-pass" onclick="changePassword()">
+          <i class="fas fa-save"></i> حفظ كلمة المرور الجديدة
+        </button>
+      </div>
+    </div><!-- end profile -->
+
+  </div><!-- end app-body -->
+
+  <!-- التبويبات السفلية -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="gotoTab('home')" id="nav-home">
+      <i class="fas fa-home"></i><span>الرئيسية</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" onclick="gotoTab('leaves')" id="nav-leaves">
+      <i class="fas fa-calendar-alt"></i><span>إجازاتي</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" onclick="gotoTab('docs')" id="nav-docs">
+      <i class="fas fa-folder"></i><span>وثائقي</span><div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" onclick="gotoTab('profile')" id="nav-profile">
+      <i class="fas fa-user-circle"></i><span>حسابي</span><div class="nav-dot"></div>
+    </button>
+  </div>
+</div><!-- end app -->
+
+<!-- مودال معاينة الوثيقة -->
+<div id="doc-preview-modal">
+  <div class="modal-header">
+    <span id="modal-doc-title" style="font-weight:700;font-size:14px;color:var(--gold);">معاينة الوثيقة</span>
+    <span class="modal-close" onclick="closeDocPreview()"><i class="fas fa-times"></i></span>
+  </div>
+  <iframe id="doc-iframe"></iframe>
+</div>
+
+<!-- Toast عائم -->
+<div id="float-toast"></div>
+
+<script>
+// ===== البيانات العالمية =====
+let EMP = null;
+
+// ===== مساعدات =====
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('float-toast');
+  el.textContent = msg;
+  el.style.background = type === 'error' ? '#7f1d1d' : type === 'warn' ? '#78350f' : '#14532d';
+  el.style.color = '#fff';
+  el.style.border = '1px solid ' + (type === 'error' ? 'rgba(239,68,68,.3)' : type === 'warn' ? 'rgba(251,191,36,.3)' : 'rgba(34,197,94,.3)');
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3200);
+}
+
+function togglePass(icon, id) {
+  const inp = document.getElementById(id);
+  if (!inp) return;
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  icon.className = 'inp-toggle fas ' + (isPass ? 'fa-eye-slash' : 'fa-eye');
+}
+
+function setAlert(id, msg, isOk) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = 'flex';
+  el.style.background = isOk ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)';
+  el.style.borderColor = isOk ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)';
+  el.style.color = isOk ? '#4ade80' : '#fca5a5';
+  const span = el.querySelector('span') || el;
+  if (el.querySelector('span')) el.querySelector('span').textContent = msg;
+  else el.textContent = msg;
+}
+
+function hideEl(id) { const e = document.getElementById(id); if (e) e.style.display = 'none'; }
+
+// ===== تسجيل الدخول =====
+function doLogin() {
+  const id = document.getElementById('inp-id').value.trim();
+  const pass = document.getElementById('inp-pass').value;
+  if (!id || !pass) { setAlert('login-alert', 'أدخل الرقم الوظيفي وكلمة المرور'); return; }
+  hideEl('login-alert');
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> جاري التحقق...';
+  google.script.run
+    .withSuccessHandler(emp => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول البوابة';
+      if (!emp) { setAlert('login-alert', 'الرقم الوظيفي أو كلمة المرور غير صحيحة'); return; }
+      if (typeof emp === 'string' && emp.startsWith('Error')) { setAlert('login-alert', 'حدث خطأ: ' + emp); return; }
+      EMP = emp;
+      initApp();
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول البوابة';
+      setAlert('login-alert', 'خطأ في الاتصال: ' + e.message);
+    })
+    .employeeLogin(id, pass);
+}
+
+function doLogout() {
+  EMP = null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('inp-id').value = '';
+  document.getElementById('inp-pass').value = '';
+}
+
+// ===== تهيئة التطبيق =====
+function initApp() {
+  document.getElementById('login-page').style.display = 'none';
+  const app = document.getElementById('app');
+  app.classList.add('visible');
+
+  const name = String(EMP[0] || '');
+  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('') || 'م';
+  const title = String(EMP[5] || '');
+  const dept = String(EMP[6] || '');
+  const balance = parseFloat(EMP[3]) || 0;
+  const maxBal = 30;
+  const used = Math.max(0, maxBal - balance);
+
+  document.getElementById('hdr-avatar').textContent = initials;
+  document.getElementById('hdr-name').textContent = name || '-';
+  document.getElementById('hdr-title').textContent = title || '-';
+
+  document.getElementById('home-balance').textContent = balance;
+  document.getElementById('home-used').textContent = used;
+  document.getElementById('home-max').textContent = maxBal;
+  setTimeout(() => document.getElementById('balance-bar').style.width = Math.min(100, (balance / maxBal) * 100) + '%', 300);
+
+  document.getElementById('info-title').textContent = title || '-';
+  document.getElementById('info-dept').textContent = (dept + (EMP[7] ? ' / ' + EMP[7] : '')) || '-';
+  document.getElementById('info-qual').textContent = String(EMP[4] || '-');
+  document.getElementById('info-grade').textContent = String(EMP[10] || '-');
+  document.getElementById('info-hire').textContent = fmtDate(EMP[9]) || '-';
+  document.getElementById('info-due').textContent = fmtDate(EMP[21]) || '-';
+
+  document.getElementById('leave-balance-chip').textContent = balance;
+
+  document.getElementById('profile-avatar').textContent = initials;
+  document.getElementById('profile-name').textContent = name || '-';
+  document.getElementById('profile-title').textContent = title || '-';
+  document.getElementById('profile-status').textContent = String(EMP[17] || 'مستمر');
+  document.getElementById('p-id').textContent = String(EMP[1] || '-');
+  document.getElementById('p-dept').textContent = dept || '-';
+  document.getElementById('p-section').textContent = String(EMP[7] || '-');
+  document.getElementById('p-qual').textContent = String(EMP[4] || '-');
+  document.getElementById('p-grade').textContent = String(EMP[10] || '-');
+  document.getElementById('p-hire').textContent = fmtDate(EMP[9]) || '-';
+  document.getElementById('p-due').textContent = fmtDate(EMP[21]) || '-';
+}
+
+function fmtDate(v) {
+  if (!v) return '';
+  if (typeof v === 'string' && v.match(/^\d{4}/)) return v;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+  return y + '/' + m + '/' + dd;
+}
+
+// ===== التنقل =====
+function gotoTab(tab) {
+  ['home','leaves','docs','profile'].forEach(t => {
+    document.getElementById('page-' + t).classList.toggle('active', t === tab);
+    document.getElementById('nav-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'docs') loadMyDocs();
+  if (tab === 'leaves' && document.getElementById('pill-history').classList.contains('active')) loadMyLeaves();
+}
+
+// ===== الإجازات =====
+function setLeaveTab(t) {
+  document.getElementById('pill-new').classList.toggle('active', t === 'new');
+  document.getElementById('pill-history').classList.toggle('active', t === 'history');
+  document.getElementById('leave-new-panel').style.display = t === 'new' ? 'block' : 'none';
+  document.getElementById('leave-history-panel').style.display = t === 'history' ? 'block' : 'none';
+  if (t === 'history') loadMyLeaves();
+}
+
+function calcDays() {
+  const s = document.getElementById('leave-start').value;
+  const e = document.getElementById('leave-end').value;
+  if (!s || !e) { hideEl('days-chip'); return; }
+  const days = Math.round((new Date(e) - new Date(s)) / 86400000) + 1;
+  if (days < 1) { hideEl('days-chip'); return; }
+  document.getElementById('days-chip').style.display = 'block';
+  document.getElementById('days-count').textContent = days + ' يوم';
+}
+
+function submitLeave() {
+  const type = document.getElementById('leave-type').value;
+  const start = document.getElementById('leave-start').value;
+  const end = document.getElementById('leave-end').value;
+  const note = document.getElementById('leave-note').value;
+  hideEl('leave-alert');
+  hideEl('leave-success');
+  if (!type) { setAlert('leave-alert', 'اختر نوع الإجازة'); return; }
+  if (!start || !end) { setAlert('leave-alert', 'حدد تاريخ البداية والنهاية'); return; }
+  if (new Date(end) < new Date(start)) { setAlert('leave-alert', 'تاريخ النهاية يجب أن يكون بعد البداية'); return; }
+
+  const btn = document.getElementById('btn-submit-leave');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> جاري الإرسال...';
+
+  const obj = {
+    empName: String(EMP[0]),
+    empId: String(EMP[1]),
+    leaveType: type,
+    startDate: start,
+    endDate: end,
+    note: note
+  };
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+      if (res && res.startsWith('✅')) {
+        document.getElementById('leave-success').style.display = 'flex';
+        document.getElementById('leave-success-msg').textContent = res;
+        document.getElementById('leave-type').value = '';
+        document.getElementById('leave-start').value = '';
+        document.getElementById('leave-end').value = '';
+        document.getElementById('leave-note').value = '';
+        hideEl('days-chip');
+        toast('تم إرسال طلب الإجازة بنجاح');
+      } else {
+        setAlert('leave-alert', res || 'حدث خطأ');
+      }
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+      setAlert('leave-alert', 'خطأ في الاتصال: ' + e.message);
+    })
+    .saveNewLeave(obj);
+}
+
+function loadMyLeaves() {
+  document.getElementById('leaves-loading').style.display = 'block';
+  document.getElementById('leaves-list').innerHTML = '';
+  google.script.run
+    .withSuccessHandler(data => {
+      document.getElementById('leaves-loading').style.display = 'none';
+      if (!data || !data.length) {
+        document.getElementById('leaves-list').innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>لا توجد طلبات مسجلة</p></div>';
+        return;
+      }
+      const colors = { 'طلب معلق':'#fbbf24','لم يباشر':'#38bdf8','تمت المباشرة':'#4ade80','مرفوض':'#f87171' };
+      const icons = { 'سنوية':'sun','مرضية':'hospital','طارئة':'bolt','أمومة':'baby','حج':'kaaba','بدون راتب':'file-invoice' };
+      document.getElementById('leaves-list').innerHTML = data.map(r => {
+        const st = r.status || 'طلب معلق';
+        const col = colors[st] || 'var(--gold)';
+        const icon = icons[r.type] || 'calendar';
+        const badgeClass = st === 'طلب معلق' ? 'badge-pending' : st === 'لم يباشر' ? 'badge-ok' : st === 'تمت المباشرة' ? 'badge-done' : st === 'مرفوض' ? 'badge-rej' : 'badge-gold';
+        return `<div class="leave-item">
+          <div class="leave-icon" style="background:${col}18;border:1px solid ${col}30;">
+            <i class="fas fa-${icon}" style="color:${col};font-size:17px;"></i>
+          </div>
+          <div class="leave-info" style="flex:1;">
+            <div class="ltype">${r.type}</div>
+            <div class="ldates">${r.start} — ${r.end}</div>
+            <div class="ldays">${r.days} يوم${r.notes ? ' • ' + r.notes : ''}</div>
+          </div>
+          <div class="leave-status"><span class="badge ${badgeClass}">${st}</span></div>
+        </div>`;
+      }).join('');
+    })
+    .withFailureHandler(() => {
+      document.getElementById('leaves-loading').style.display = 'none';
+      document.getElementById('leaves-list').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>تعذّر تحميل السجل</p></div>';
+    })
+    .getMyLeaves(String(EMP[1]));
+}
+
+// ===== الوثائق =====
+let docsLoaded = false;
+function loadMyDocs() {
+  document.getElementById('docs-loading').style.display = 'block';
+  document.getElementById('docs-list').style.display = 'none';
+  google.script.run
+    .withSuccessHandler(data => {
+      document.getElementById('docs-loading').style.display = 'none';
+      document.getElementById('docs-list').style.display = 'block';
+      if (!data || !data.length) {
+        document.getElementById('docs-list').innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>لا توجد وثائق محفوظة لك حتى الآن</p></div>';
+        return;
+      }
+      const iconColor = { 'بطاقة شخصية':'#38bdf8','جواز سفر':'#a78bfa','قرار تعيين':'#4ade80','مؤهل علمي':'#fbbf24','مباشرة عمل':'#fb923c','تقرير طبي':'#f87171' };
+      document.getElementById('docs-list').innerHTML = data.map(d => {
+        const col = iconColor[d.type] || 'var(--gold)';
+        const now = new Date();
+        const exp = d.expDate ? new Date(d.expDate) : null;
+        const expSoon = exp && exp >= now && exp <= new Date(now.getTime() + 30 * 86400000);
+        const expired = exp && exp < now;
+        return `<div class="doc-item" onclick="previewDoc('${d.driveId}','${d.name}')">
+          <div class="doc-icon" style="background:${col}18;border-color:${col}25;">
+            <i class="fas fa-file-alt" style="color:${col};"></i>
+          </div>
+          <div class="doc-body" style="flex:1;">
+            <div class="doc-name">${d.type}</div>
+            <div class="doc-meta">${d.name} • ${d.size||''} ${d.date ? '• '+d.date : ''}</div>
+            ${expired ? '<div style="font-size:11px;color:#f87171;margin-top:2px;"><i class="fas fa-exclamation-circle"></i> منتهية الصلاحية</div>' : expSoon ? '<div style="font-size:11px;color:#fbbf24;margin-top:2px;"><i class="fas fa-exclamation-triangle"></i> تنتهي ' + d.expDate + '</div>' : ''}
+          </div>
+          <i class="fas fa-eye" style="color:rgba(255,255,255,.2);font-size:14px;flex-shrink:0;"></i>
+        </div>`;
+      }).join('');
+      docsLoaded = true;
+    })
+    .withFailureHandler(() => {
+      document.getElementById('docs-loading').style.display = 'none';
+      document.getElementById('docs-list').style.display = 'block';
+      document.getElementById('docs-list').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>تعذّر تحميل الوثائق</p></div>';
+    })
+    .getEmpDocuments(String(EMP[1]));
+}
+
+function previewDoc(driveId, name) {
+  if (!driveId) return;
+  document.getElementById('modal-doc-title').textContent = name || 'معاينة الوثيقة';
+  document.getElementById('doc-iframe').src = 'https://drive.google.com/file/d/' + driveId + '/preview';
+  document.getElementById('doc-preview-modal').classList.add('open');
+}
+
+function closeDocPreview() {
+  document.getElementById('doc-preview-modal').classList.remove('open');
+  document.getElementById('doc-iframe').src = '';
+}
+
+// ===== كلمة المرور =====
+function checkPassStrength(val) {
+  const bar = document.getElementById('pass-strength-bar');
+  if (!val) { bar.style.width = '0'; return; }
+  let score = 0;
+  if (val.length >= 4) score++;
+  if (val.length >= 8) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^a-zA-Z0-9؀-ۿ]/.test(val)) score++;
+  const colors = ['#f87171','#fbbf24','#60a5fa','#4ade80'];
+  bar.style.background = colors[score - 1] || '#f87171';
+  bar.style.width = (score * 25) + '%';
+}
+
+function focusPassChange() {
+  setTimeout(() => {
+    const el = document.getElementById('cur-pass');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+  }, 300);
+}
+
+function changePassword() {
+  const cur = document.getElementById('cur-pass').value;
+  const nw = document.getElementById('new-pass').value.trim();
+  const con = document.getElementById('con-pass').value.trim();
+  hideEl('pass-alert');
+  hideEl('pass-success');
+  if (!cur) { setAlert('pass-alert', 'أدخل كلمة المرور الحالية'); return; }
+  if (!nw || nw.length < 4) { setAlert('pass-alert', 'كلمة المرور الجديدة يجب أن تكون 4 أحرف على الأقل'); return; }
+  if (nw !== con) { setAlert('pass-alert', 'كلمة المرور الجديدة وتأكيدها غير متطابقين'); return; }
+
+  const btn = document.getElementById('btn-change-pass');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> جاري الحفظ...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ كلمة المرور الجديدة';
+      if (res && res.success) {
+        document.getElementById('pass-success').style.display = 'flex';
+        document.getElementById('pass-success-msg').textContent = res.msg;
+        document.getElementById('cur-pass').value = '';
+        document.getElementById('new-pass').value = '';
+        document.getElementById('con-pass').value = '';
+        document.getElementById('pass-strength-bar').style.width = '0';
+        toast('تم تغيير كلمة المرور بنجاح');
+      } else {
+        setAlert('pass-alert', (res && res.msg) || 'فشل تغيير كلمة المرور');
+      }
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ كلمة المرور الجديدة';
+      setAlert('pass-alert', 'خطأ: ' + e.message);
+    })
+    .changeEmpPassword(String(EMP[1]), cur, nw);
+}
+
+// ===== الإعداد الأولي =====
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('splash').classList.add('out'), 1600);
+});
+
+document.getElementById('doc-preview-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDocPreview();
+});
+</script>
+</body>
+</html>
