@@ -219,22 +219,6 @@ CREATE TRIGGER update_exit_permissions_updated_at BEFORE UPDATE ON exit_permissi
 CREATE TRIGGER update_allowances_updated_at BEFORE UPDATE ON allowances
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- جدول سجل العمليات (Audit Log)
-CREATE TABLE IF NOT EXISTS audit_logs (
-    id          BIGSERIAL PRIMARY KEY,
-    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    username    VARCHAR(60),
-    action      VARCHAR(50) NOT NULL,   -- CREATE / UPDATE / DELETE / LOGIN / LOGOUT / LOGIN_FAIL
-    entity      VARCHAR(60),            -- employees / leaves / permissions ...
-    entity_id   INTEGER,
-    description TEXT,
-    ip_address  VARCHAR(45),
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user    ON audit_logs (user_id);
-
 -- جدول المستخدمين
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -245,6 +229,22 @@ CREATE TABLE IF NOT EXISTS users (
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- جدول سجل العمليات (Audit Log)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username    VARCHAR(60),
+    action      VARCHAR(50) NOT NULL,
+    entity      VARCHAR(60),
+    entity_id   INTEGER,
+    description TEXT,
+    ip_address  VARCHAR(45),
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user    ON audit_logs (user_id);
 
 -- مستخدم افتراضي: admin / admin123
 INSERT INTO users (username, password_hash, full_name, role) VALUES
