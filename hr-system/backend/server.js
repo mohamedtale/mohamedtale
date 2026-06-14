@@ -15,6 +15,7 @@ const errorHandler  = require('./middleware/errorHandler');
 const authMiddleware = require('./middleware/auth');
 const requireRole    = require('./middleware/rbac');
 const { apiLimiter } = require('./middleware/rateLimiter');
+const auditMiddleware   = require('./middleware/auditLog');
 
 // Routes
 const authRouter        = require('./routes/auth');
@@ -27,6 +28,7 @@ const allowancesRouter  = require('./routes/allowances');
 const documentsRouter   = require('./routes/documents');
 const reportsRouter     = require('./routes/reports');
 const settingsRouter    = require('./routes/settings');
+const auditLogsRouter   = require('./routes/auditLogs');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +75,9 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // ── Global rate limiter ────────────────────────────────────────────────────
 app.use('/api/', apiLimiter);
 
+// ── Audit log — record all write operations ────────────────────────────────
+app.use('/api/', auditMiddleware);
+
 // ── Auth routes (public) ───────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
 
@@ -86,6 +91,7 @@ app.use('/api/allowances',  authMiddleware, allowancesRouter);
 app.use('/api/documents',   authMiddleware, documentsRouter);
 app.use('/api/reports',     authMiddleware, reportsRouter);
 app.use('/api/settings',    authMiddleware, settingsRouter);
+app.use('/api/audit-logs', authMiddleware, auditLogsRouter);
 
 // ── Static frontend (no /uploads exposed publicly) ────────────────────────
 app.use(express.static(path.join(__dirname, '../frontend')));

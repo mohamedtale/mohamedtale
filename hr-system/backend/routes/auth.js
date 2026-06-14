@@ -4,10 +4,13 @@ const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const { loginLimiter, recordFail, isLocked, resetFails } = require('../middleware/rateLimiter');
 const authMiddleware = require('../middleware/auth');
+const audit = require('../middleware/auditLog');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = '8h';
+
+const getIP = (req) => req.ip || req.headers['x-forwarded-for'] || 'unknown';
 
 // POST /api/auth/login
 router.post('/login', loginLimiter, async (req, res) => {
@@ -19,8 +22,8 @@ router.post('/login', loginLimiter, async (req, res) => {
 
   const cleanUsername = username.trim().toLowerCase().slice(0, 60);
 
-  // Check lockout
   if (isLocked(cleanUsername)) {
+    audit.log({ username: cleanUsername, action: 'LOGIN_FAIL', description: 'الحساب مقفل', ip: getIP(req) });
     return res.status(429).json({ error: 'الحساب مقفل مؤقتاً بسبب محاولات دخول متعددة. يرجى الانتظار 20 دقيقة.' });
   }
 
@@ -31,17 +34,18 @@ router.post('/login', loginLimiter, async (req, res) => {
     );
     const user = result.rows[0];
 
-    // Always compare hash even if user not found (prevents timing attack)
     const dummyHash = '$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
     const hashToCompare = user ? user.password_hash : dummyHash;
     const valid = await bcrypt.compare(password, hashToCompare);
 
     if (!user || !valid || !user.is_active) {
       recordFail(cleanUsername);
+      audit.log({ username: cleanUsername, action: 'LOGIN_FAIL', description: 'كلمة مرور أو اسم مستخدم خاطئ', ip: getIP(req) });
       return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
 
     resetFails(cleanUsername);
+    audit.log({ userId: user.id, username: user.username, action: 'LOGIN', description: 'تسجيل دخول ناجح', ip: getIP(req) });
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
@@ -59,8 +63,9 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-// POST /api/auth/logout  (client clears token; server logs the event)
+// POST /api/auth/logout
 router.post('/logout', authMiddleware, (req, res) => {
+  audit.log({ userId: req.user.id, username: req.user.username, action: 'LOGOUT', description: 'تسجيل خروج', ip: getIP(req) });
   res.json({ message: 'تم تسجيل الخروج بنجاح' });
 });
 
