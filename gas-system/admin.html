@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة الإدارة | الجهاز التنفيذي</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  *{font-family:'Cairo',sans-serif;box-sizing:border-box;}
+  :root{--gold:#c5a059;--navy:#0f172a;--navy2:#1e293b;}
+  body{background:var(--navy);color:#f8fafc;min-height:100vh;}
+  .tab-btn.active{background:var(--gold)!important;color:var(--navy)!important;}
+  .tab-btn{transition:.2s;border-radius:10px;}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;}
+  .gold{color:var(--gold);}
+  input,select,textarea{background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.15)!important;border-radius:10px;color:#fff!important;padding:10px 14px;width:100%;outline:none;font-size:15px;font-family:'Cairo';}
+  input::placeholder,textarea::placeholder{color:#94a3b8!important;}
+  input:focus,select:focus,textarea:focus{border-color:var(--gold)!important;}
+  select option{background:#1e293b;color:#fff;}
+  .btn-gold{background:var(--gold);color:var(--navy);font-weight:700;border:none;border-radius:10px;padding:10px 22px;cursor:pointer;transition:.2s;}
+  .btn-gold:hover{opacity:.88;}
+  .btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:10px;padding:9px 18px;cursor:pointer;transition:.2s;}
+  .btn-outline:hover{background:var(--gold);color:var(--navy);}
+  .btn-red{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:7px 14px;cursor:pointer;}
+  .btn-green{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:7px 14px;cursor:pointer;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .badge-gold{background:rgba(197,160,89,.15);color:var(--gold);}
+  .badge-green{background:rgba(34,197,94,.12);color:#4ade80;}
+  .badge-red{background:rgba(239,68,68,.12);color:#f87171;}
+  .badge-blue{background:rgba(56,189,248,.12);color:#38bdf8;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:rgba(255,255,255,.05);padding:11px 12px;font-size:12px;font-weight:700;color:#94a3b8;text-align:right;white-space:nowrap;}
+  td{padding:11px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.05);}
+  tr:hover td{background:rgba(255,255,255,.03);}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#1e293b;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;padding:28px;}
+  ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:#0f172a;} ::-webkit-scrollbar-thumb{background:#c5a059;border-radius:4px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 22px;border-radius:14px;z-index:999;display:none;font-weight:600;}
+  .stat-card{border-radius:18px;padding:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+  .loader{display:inline-block;width:20px;height:20px;border:2px solid rgba(197,160,89,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .section-hidden{display:none;}
+  .rpt-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;cursor:pointer;transition:.2s;}
+  .rpt-card:hover{border-color:var(--gold);background:rgba(197,160,89,.06);}
+  .rpt-card.active{border-color:var(--gold);background:rgba(197,160,89,.1);}
+  .drop-zone{border:2px dashed rgba(197,160,89,.4);border-radius:16px;padding:40px;text-align:center;cursor:pointer;transition:.2s;}
+  .drop-zone:hover{border-color:var(--gold);background:rgba(197,160,89,.06);}
+  @media(max-width:768px){.side-nav{display:none!important;} .mobile-tabs{display:flex!important;overflow-x:auto;}}
+</style>
+</head>
+<body>
+
+<!-- ====== HEADER ====== -->
+<header class="sticky top-0 z-50" style="background:rgba(15,23,42,.95);border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(12px);">
+  <div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="https://i.ibb.co/rf5pWjnT/image.png" class="w-10 h-10 rounded-full border-2" style="border-color:var(--gold)">
+      <div>
+        <div class="font-black text-sm" style="color:var(--gold)">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+        <div class="text-xs text-slate-400">لوحة شؤون العاملين · مرحباً، <span id="hdr-admin"><?= adminName ?></span></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="pending-badge" class="hidden badge badge-red text-xs"><i class="fas fa-bell"></i> <span id="pending-count">0</span></span>
+      <button onclick="initSheetsSetup()" class="btn-outline text-xs py-2 px-3"><i class="fas fa-database"></i> تهيئة</button>
+      <a href="<?= ScriptApp.getService().getUrl() ?>" class="btn-red text-xs py-2 px-3"><i class="fas fa-sign-out-alt"></i> خروج</a>
+    </div>
+  </div>
+</header>
+
+<!-- ====== NAV TABS ====== -->
+<div style="background:rgba(15,23,42,.9);border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:61px;z-index:40;">
+  <div class="max-w-screen-2xl mx-auto px-4">
+    <div class="flex gap-1 overflow-x-auto py-2" id="main-tabs">
+      <button class="tab-btn active whitespace-nowrap px-4 py-2 text-sm font-bold" onclick="switchTab('dashboard')" data-tab="dashboard"><i class="fas fa-chart-pie ml-1"></i>لوحة التحكم</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('employees')" data-tab="employees"><i class="fas fa-users ml-1"></i>الموظفون</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('leaves')" data-tab="leaves"><i class="fas fa-calendar-alt ml-1"></i>الإجازات</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('docs')" data-tab="docs"><i class="fas fa-folder-open ml-1"></i>الأرشيف</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('attendance')" data-tab="attendance"><i class="fas fa-fingerprint ml-1"></i>الحضور</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('permissions')" data-tab="permissions"><i class="fas fa-door-open ml-1"></i>الأذونات</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('reports')" data-tab="reports"><i class="fas fa-chart-bar ml-1"></i>التقارير</button>
+      <button class="tab-btn whitespace-nowrap px-4 py-2 text-sm font-bold text-slate-400" onclick="switchTab('print')" data-tab="print"><i class="fas fa-print ml-1"></i>الطباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MAIN CONTENT ====== -->
+<div class="max-w-screen-2xl mx-auto px-4 py-5">
+
+<!-- ===== DASHBOARD ===== -->
+<div id="tab-dashboard">
+  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">إجمالي الموظفين</div><div class="text-3xl font-black gold" id="stat-total">-</div></div>
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">على رأس العمل</div><div class="text-3xl font-black text-emerald-400" id="stat-active">-</div></div>
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">في إجازة</div><div class="text-3xl font-black text-amber-400" id="stat-onleave">-</div></div>
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">طلبات معلقة</div><div class="text-3xl font-black text-red-400" id="stat-pending">-</div></div>
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">الوثائق المحفوظة</div><div class="text-3xl font-black text-sky-400" id="stat-docs">-</div></div>
+    <div class="stat-card col-span-1"><div class="text-xs text-slate-400 mb-1">تنتهي قريباً</div><div class="text-3xl font-black text-orange-400" id="stat-expiring">-</div></div>
+  </div>
+  <div class="grid lg:grid-cols-3 gap-5 mb-5">
+    <div class="card p-5 lg:col-span-2">
+      <div class="font-bold mb-4 gold"><i class="fas fa-chart-bar ml-1"></i>الموظفون حسب الإدارة</div>
+      <canvas id="chart-dept" height="180"></canvas>
+    </div>
+    <div class="card p-5">
+      <div class="font-bold mb-4 gold"><i class="fas fa-chart-pie ml-1"></i>حالة الموظفين</div>
+      <canvas id="chart-status" height="180"></canvas>
+    </div>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="card">
+      <div class="p-4 border-b border-white/5 font-bold gold"><i class="fas fa-clock ml-1"></i>آخر الوثائق المرفوعة</div>
+      <div id="recent-docs" class="divide-y divide-white/5"></div>
+    </div>
+    <div class="card">
+      <div class="p-4 border-b border-white/5 font-bold text-orange-400"><i class="fas fa-exclamation-triangle ml-1"></i>وثائق تنتهي قريباً</div>
+      <div id="expiring-list" class="p-4 space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EMPLOYEES ===== -->
+<div id="tab-employees" class="section-hidden">
+  <div class="flex flex-wrap gap-3 mb-4 items-center">
+    <input id="emp-q" placeholder="بحث..." class="flex-1 min-w-48" onkeyup="filterEmployeeTable()">
+    <select id="emp-f-dept" class="w-48" onchange="filterEmployeeTable()"><option value="">كل الإدارات</option></select>
+    <select id="emp-f-status" class="w-44" onchange="filterEmployeeTable()">
+      <option value="">كل الحالات</option><option>مستمر</option><option>موقوف</option><option>مستقيل</option><option>متقاعد</option>
+    </select>
+    <button class="btn-gold" onclick="openEmpModal()"><i class="fas fa-plus ml-1"></i>إضافة موظف</button>
+    <button class="btn-outline" onclick="loadEmployees()"><i class="fas fa-sync ml-1"></i></button>
+  </div>
+  <div class="card overflow-x-auto">
+    <table id="emp-table">
+      <thead><tr>
+        <th>#</th><th>الاسم الكامل</th><th>الرقم الوظيفي</th><th>المسمى الوظيفي</th><th>الإدارة</th><th>الدرجة</th><th>الرصيد</th><th>الحالة</th><th>إجراءات</th>
+      </tr></thead>
+      <tbody id="emp-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== LEAVES ===== -->
+<div id="tab-leaves" class="section-hidden">
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="card">
+      <div class="p-4 border-b border-white/5 font-bold flex items-center justify-between">
+        <span class="text-amber-400"><i class="fas fa-hourglass ml-1"></i>الطلبات المعلقة</span>
+        <button class="btn-outline text-xs py-1 px-3" onclick="loadPendingLeaves()"><i class="fas fa-sync"></i></button>
+      </div>
+      <div id="pending-leaves" class="divide-y divide-white/5 max-h-96 overflow-y-auto"></div>
+    </div>
+    <div class="card p-5">
+      <div class="font-bold mb-4 gold"><i class="fas fa-list ml-1"></i>الموظفون في إجازة حالياً</div>
+      <div id="on-leave-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DOCUMENTS ARCHIVE ===== -->
+<div id="tab-docs" class="section-hidden">
+  <div class="grid lg:grid-cols-5 gap-5">
+    <!-- Upload Panel -->
+    <div class="lg:col-span-2 card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-cloud-upload-alt ml-1"></i>رفع وثائق جديدة</div>
+      <div class="space-y-3">
+        <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي *</label><input id="doc-jobId" placeholder="أدخل الرقم..." onblur="lookupEmpForDoc()"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">الاسم</label><input id="doc-name" readonly style="opacity:.7"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">الإدارة</label><input id="doc-dept" readonly style="opacity:.7"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">نوع الوثيقة *</label>
+          <select id="doc-type"><option value="">اختر...</option>
+            <option>بطاقة شخصية</option><option>جواز سفر</option><option>قرار تعيين</option><option>مؤهل علمي</option><option>مباشرة عمل</option><option>عقد عمل</option><option>قرار نقل</option><option>قرار ترقية</option><option>شهادة خبرة</option><option>دورة تدريبية</option><option>تقرير طبي</option><option>إجازة</option><option>إنذار</option><option>إخلاء طرف</option><option>رخصة قيادة</option><option>صورة شخصية</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="text-xs text-slate-400 block mb-1">تاريخ الوثيقة</label><input id="doc-date" type="date"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">تاريخ الانتهاء</label><input id="doc-expdate" type="date"></div>
+        </div>
+        <div><label class="text-xs text-slate-400 block mb-1">ملاحظات</label><textarea id="doc-notes" rows="2" placeholder="اختياري..."></textarea></div>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="doc-secret" class="w-4 h-4" style="width:18px;height:18px;background:transparent;border:1px solid #c5a059;padding:0;"><span class="text-sm font-bold text-red-400">وثيقة سرية</span></label>
+        <div class="drop-zone" id="doc-drop" onclick="document.getElementById('doc-files').click()">
+          <input type="file" id="doc-files" multiple hidden onchange="handleDocFiles(this.files)">
+          <i class="fas fa-cloud-upload-alt text-2xl gold mb-2"></i><br>
+          <span class="font-bold">اسحب الملفات هنا أو انقر للاختيار</span><br>
+          <span class="text-xs text-slate-400">PDF, Word, صور حتى 50MB</span>
+        </div>
+        <div id="doc-file-list" class="space-y-1"></div>
+        <button id="btn-upload-doc" class="btn-gold w-full" onclick="uploadDocs()" disabled><i class="fas fa-upload ml-1"></i>رفع الملفات</button>
+        <div id="doc-progress" class="hidden">
+          <div class="flex justify-between text-xs mb-1"><span>جاري الرفع...</span><span id="doc-prog-text">0%</span></div>
+          <div class="h-2 rounded-full" style="background:rgba(255,255,255,.1)"><div id="doc-prog-bar" class="h-2 rounded-full transition-all" style="background:var(--gold);width:0"></div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Search Panel -->
+    <div class="lg:col-span-3 card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-search ml-1"></i>البحث في الأرشيف</div>
+      <div class="flex gap-2 mb-3">
+        <input id="doc-search-q" placeholder="ابحث باسم الموظف أو نوع الوثيقة..." class="flex-1" onkeyup="if(event.key==='Enter')searchDocs()">
+        <button class="btn-gold px-4" onclick="searchDocs()"><i class="fas fa-search"></i></button>
+      </div>
+      <div class="flex gap-2 flex-wrap mb-3">
+        <select id="doc-f-type" class="flex-1 min-w-36"><option value="">كل الأنواع</option><option>بطاقة شخصية</option><option>قرار تعيين</option><option>مؤهل علمي</option><option>مباشرة عمل</option><option>أخرى</option></select>
+        <select id="doc-f-status" class="flex-1 min-w-36"><option value="">الكل</option><option value="expiring">تنتهي قريباً</option><option value="expired">منتهية</option><option value="secret">سرية</option></select>
+      </div>
+      <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+        <table id="doc-results-table">
+          <thead><tr><th>الموظف</th><th>الوثيقة</th><th>النوع</th><th>التاريخ</th><th>الانتهاء</th><th>الحجم</th><th>#</th></tr></thead>
+          <tbody id="doc-results"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ATTENDANCE ===== -->
+<div id="tab-attendance" class="section-hidden">
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-file-excel ml-1"></i>استيراد بيانات البصمة</div>
+      <div class="drop-zone mb-4" id="att-drop" onclick="document.getElementById('att-file').click()">
+        <input type="file" id="att-file" accept=".xlsx,.xls,.csv" hidden onchange="handleAttFile(this)">
+        <i class="fas fa-fingerprint text-3xl gold mb-2"></i><br>
+        <span class="font-bold">اختر ملف Excel من جهاز البصمة</span><br>
+        <span class="text-xs text-slate-400">xlsx / xls / csv</span>
+      </div>
+      <div id="att-preview" class="hidden mb-4">
+        <div class="text-sm font-bold gold mb-2">معاينة البيانات — تأكد من مطابقة الأعمدة:</div>
+        <div class="overflow-x-auto"><table id="att-prev-table" class="text-xs"><thead></thead><tbody></tbody></table></div>
+        <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div><label class="text-slate-400 block mb-1">عمود الرقم الوظيفي</label><select id="col-id" class="text-sm"></select></div>
+          <div><label class="text-slate-400 block mb-1">عمود التاريخ</label><select id="col-date" class="text-sm"></select></div>
+          <div><label class="text-slate-400 block mb-1">عمود وقت الدخول</label><select id="col-in" class="text-sm"></select></div>
+          <div><label class="text-slate-400 block mb-1">عمود وقت الخروج</label><select id="col-out" class="text-sm"></select></div>
+        </div>
+        <button class="btn-gold w-full mt-3" onclick="importAttendance()"><i class="fas fa-upload ml-1"></i>استيراد البيانات</button>
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-search ml-1"></i>عرض سجلات الحضور</div>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div><label class="text-xs text-slate-400 block mb-1">من</label><input id="att-from" type="date"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">إلى</label><input id="att-to" type="date"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">رقم موظف</label><input id="att-emp" placeholder="اختياري"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">الإدارة</label><input id="att-dept" placeholder="اختياري"></div>
+      </div>
+      <button class="btn-gold w-full mb-4" onclick="loadAttendance()"><i class="fas fa-search ml-1"></i>عرض التقرير</button>
+      <div id="att-results" class="overflow-x-auto max-h-80 overflow-y-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PERMISSIONS ===== -->
+<div id="tab-permissions" class="section-hidden">
+  <div class="grid lg:grid-cols-2 gap-5">
+    <div class="card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-plus ml-1"></i>تسجيل إذن خروج</div>
+      <div class="space-y-3">
+        <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي *</label><input id="perm-id" placeholder="أدخل الرقم..."></div>
+        <div><label class="text-xs text-slate-400 block mb-1">التاريخ *</label><input id="perm-date" type="date"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">نوع الإذن</label>
+          <select id="perm-type"><option>شخصي</option><option>عمل</option><option>طبي</option><option>طارئ</option></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="text-xs text-slate-400 block mb-1">وقت الخروج</label><input id="perm-out" type="time"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">وقت العودة</label><input id="perm-in" type="time"></div>
+        </div>
+        <div><label class="text-xs text-slate-400 block mb-1">ملاحظات</label><textarea id="perm-notes" rows="2"></textarea></div>
+        <button class="btn-gold w-full" onclick="savePermission()"><i class="fas fa-save ml-1"></i>حفظ الإذن</button>
+      </div>
+    </div>
+    <div class="card p-5">
+      <div class="font-bold gold mb-4"><i class="fas fa-list ml-1"></i>سجل الأذونات</div>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div><label class="text-xs text-slate-400 block mb-1">من</label><input id="pf-from" type="date"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">إلى</label><input id="pf-to" type="date"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">رقم موظف</label><input id="pf-emp" placeholder="اختياري"></div>
+        <div><label class="text-xs text-slate-400 block mb-1">نوع الإذن</label><select id="pf-type"><option value="">الكل</option><option>شخصي</option><option>عمل</option><option>طبي</option><option>طارئ</option></select></div>
+      </div>
+      <button class="btn-gold w-full mb-3" onclick="loadPermissions()"><i class="fas fa-search ml-1"></i>بحث</button>
+      <div id="perms-results" class="overflow-x-auto max-h-80 overflow-y-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REPORTS ===== -->
+<div id="tab-reports" class="section-hidden">
+  <div class="grid md:grid-cols-5 gap-5">
+    <div class="md:col-span-2 space-y-3">
+      <div class="rpt-card active" onclick="selectReport('r1')" id="rpt-r1"><div class="font-bold text-sm">البيانات العامة للموظفين</div><div class="text-xs text-slate-400 mt-1">فلترة حسب الإدارة، المسمى، الحالة</div></div>
+      <div class="rpt-card" onclick="selectReport('r2')" id="rpt-r2"><div class="font-bold text-sm">خلاصة الحضور والانصراف</div><div class="text-xs text-slate-400 mt-1">ملخص يومي للفترة المحددة</div></div>
+      <div class="rpt-card" onclick="selectReport('r3')" id="rpt-r3"><div class="font-bold text-sm">حركة أذونات الخروج</div><div class="text-xs text-slate-400 mt-1">أذونات الموظفين خلال فترة</div></div>
+      <div class="rpt-card" onclick="selectReport('r4')" id="rpt-r4"><div class="font-bold text-sm">الإجازات (ربع سنوي)</div><div class="text-xs text-slate-400 mt-1">إجمالي أو تفصيل موظف واحد</div></div>
+      <div class="rpt-card" onclick="selectReport('r5')" id="rpt-r5"><div class="font-bold text-sm">الموظف 360°</div><div class="text-xs text-slate-400 mt-1">ملف شامل لموظف واحد</div></div>
+    </div>
+    <div class="md:col-span-3 card p-5">
+      <!-- R1 -->
+      <div id="rpt-form-r1">
+        <div class="font-bold gold mb-4"><i class="fas fa-users ml-1"></i>تقرير البيانات العامة للموظفين</div>
+        <div class="space-y-3 mb-4">
+          <div><label class="text-xs text-slate-400 block mb-1">الإدارة (اختياري)</label><input id="r1-dept" placeholder="أتركه فارغاً للكل"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">المسمى الوظيفي (اختياري)</label><input id="r1-title" placeholder="جزء من المسمى..."></div>
+          <div><label class="text-xs text-slate-400 block mb-1">الحالة (اختياري)</label>
+            <select id="r1-status"><option value="">الكل</option><option>مستمر</option><option>موقوف</option><option>مستقيل</option><option>متقاعد</option><option>منتهي بعقد</option></select>
+          </div>
+        </div>
+        <button class="btn-gold" onclick="runReport('r1')"><i class="fas fa-play ml-1"></i>تشغيل التقرير</button>
+      </div>
+      <!-- R2 -->
+      <div id="rpt-form-r2" class="hidden">
+        <div class="font-bold gold mb-4"><i class="fas fa-fingerprint ml-1"></i>تقرير خلاصة الحضور والانصراف</div>
+        <div class="space-y-3 mb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="text-xs text-slate-400 block mb-1">من تاريخ *</label><input id="r2-from" type="date"></div>
+            <div><label class="text-xs text-slate-400 block mb-1">إلى تاريخ *</label><input id="r2-to" type="date"></div>
+          </div>
+          <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي (لموظف بعينه)</label><input id="r2-emp" placeholder="اتركه فارغاً للكل"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">الإدارة</label><input id="r2-dept" placeholder="اختياري"></div>
+        </div>
+        <button class="btn-gold" onclick="runReport('r2')"><i class="fas fa-play ml-1"></i>تشغيل التقرير</button>
+      </div>
+      <!-- R3 -->
+      <div id="rpt-form-r3" class="hidden">
+        <div class="font-bold gold mb-4"><i class="fas fa-door-open ml-1"></i>تقرير حركة أذونات الخروج</div>
+        <div class="space-y-3 mb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="text-xs text-slate-400 block mb-1">من تاريخ *</label><input id="r3-from" type="date"></div>
+            <div><label class="text-xs text-slate-400 block mb-1">إلى تاريخ *</label><input id="r3-to" type="date"></div>
+          </div>
+          <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي (اختياري)</label><input id="r3-emp" placeholder="اتركه فارغاً للكل"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">نوع الإذن</label><select id="r3-type"><option value="">الكل</option><option>شخصي</option><option>عمل</option><option>طبي</option><option>طارئ</option></select></div>
+        </div>
+        <button class="btn-gold" onclick="runReport('r3')"><i class="fas fa-play ml-1"></i>تشغيل التقرير</button>
+      </div>
+      <!-- R4 -->
+      <div id="rpt-form-r4" class="hidden">
+        <div class="font-bold gold mb-4"><i class="fas fa-calendar-alt ml-1"></i>تقرير الإجازات (ربع سنوي)</div>
+        <div class="p-3 rounded-lg mb-3 text-xs" style="background:rgba(197,160,89,.08);border:1px solid rgba(197,160,89,.2)">
+          <b class="gold">ملاحظة:</b> إذا أدخلت رقم موظف → يُظهر تفاصيل إجازاته. إذا تركته فارغاً → يُظهر إجمالي كل الموظفين.
+        </div>
+        <div class="space-y-3 mb-4">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="text-xs text-slate-400 block mb-1">من تاريخ *</label><input id="r4-from" type="date"></div>
+            <div><label class="text-xs text-slate-400 block mb-1">إلى تاريخ *</label><input id="r4-to" type="date"></div>
+          </div>
+          <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي (اختياري)</label><input id="r4-emp" placeholder="فارغ = تقرير عام"></div>
+          <div><label class="text-xs text-slate-400 block mb-1">نوع الإجازة</label><select id="r4-type"><option value="">الكل</option><option>سنوية</option><option>مرضية</option><option>طارئة</option><option>أمومة</option><option>حج</option></select></div>
+        </div>
+        <button class="btn-gold" onclick="runReport('r4')"><i class="fas fa-play ml-1"></i>تشغيل التقرير</button>
+      </div>
+      <!-- R5 -->
+      <div id="rpt-form-r5" class="hidden">
+        <div class="font-bold gold mb-4"><i class="fas fa-user-circle ml-1"></i>تقرير الموظف 360°</div>
+        <div class="space-y-3 mb-4">
+          <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي *</label><input id="r5-emp" placeholder="أدخل الرقم الوظيفي..."></div>
+          <div><label class="text-xs text-slate-400 block mb-1">السنة (اختياري)</label><input id="r5-year" type="number" placeholder="2026"></div>
+        </div>
+        <button class="btn-gold" onclick="runReport('r5')"><i class="fas fa-play ml-1"></i>تشغيل التقرير</button>
+      </div>
+
+      <!-- Results -->
+      <div id="rpt-loading" class="hidden text-center py-8"><div class="loader mx-auto mb-2"></div><div class="text-sm text-slate-400">جاري تحميل التقرير...</div></div>
+      <div id="rpt-results" class="mt-5"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRINT ===== -->
+<div id="tab-print" class="section-hidden">
+  <div class="grid md:grid-cols-2 gap-5 max-w-3xl">
+    <div class="card p-6 cursor-pointer hover:border-yellow-400 transition" onclick="openPrintReport('staff')">
+      <div class="w-14 h-14 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-4"><i class="fas fa-list text-yellow-400 text-xl"></i></div>
+      <div class="font-bold text-lg mb-1">كشف العاملين العام</div>
+      <div class="text-sm text-slate-400">سجل رسمي بجميع الموظفين قابل للطباعة</div>
+    </div>
+    <div class="card p-6 cursor-pointer hover:border-yellow-400 transition" onclick="openBonusReport()">
+      <div class="w-14 h-14 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-4"><i class="fas fa-medal text-yellow-400 text-xl"></i></div>
+      <div class="font-bold text-lg mb-1">كشف الزيادات السنوية</div>
+      <div class="text-sm text-slate-400">اختر الشهر وطباعة كشف الاستحقاقات</div>
+    </div>
+  </div>
+  <div id="print-bonus-picker" class="hidden mt-5 card p-5 max-w-sm">
+    <div class="font-bold gold mb-3">اختر الشهر:</div>
+    <select id="bonus-month" class="mb-3">
+      <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
+      <option value="4">أبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
+      <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
+      <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+    </select>
+    <button class="btn-gold w-full" onclick="generateBonus()"><i class="fas fa-print ml-1"></i>فتح الكشف</button>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- ===== EMPLOYEE MODAL ===== -->
+<div id="emp-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-5">
+      <div class="font-black text-lg gold" id="emp-modal-title">إضافة موظف جديد</div>
+      <button onclick="closeEmpModal()" class="text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div><label class="text-xs text-slate-400 block mb-1">الاسم الكامل *</label><input id="m-name"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">الرقم الوظيفي *</label><input id="m-id"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">الرقم الوطني / كلمة المرور</label><input id="m-secret"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">رصيد الإجازات</label><input id="m-balance" type="number" value="30"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">المؤهل العلمي</label><input id="m-qual"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">المسمى الوظيفي</label><input id="m-title"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">الإدارة</label><input id="m-dept" list="dept-list"><datalist id="dept-list"></datalist></div>
+      <div><label class="text-xs text-slate-400 block mb-1">القسم</label><input id="m-section"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">المدير المباشر</label><input id="m-manager"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">تاريخ المباشرة</label><input id="m-hire" type="date"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">الدرجة</label><input id="m-grade"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">مكان العمل</label><input id="m-loc"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">نوع التعاقد</label>
+        <select id="m-contract"><option>تعيين رسمي</option><option>ندب خارجية</option><option>ندب داخلي</option><option>متعاون</option><option>عقد</option></select>
+      </div>
+      <div><label class="text-xs text-slate-400 block mb-1">الحالة الوظيفية</label>
+        <select id="m-status"><option>مستمر</option><option>موقوف</option><option>مستقيل</option><option>متقاعد</option><option>منتهي بعقد</option></select>
+      </div>
+      <div><label class="text-xs text-slate-400 block mb-1">موعد الاستحقاق</label><input id="m-due" type="date"></div>
+      <div><label class="text-xs text-slate-400 block mb-1">الراتب الحالي</label><input id="m-salary" type="number"></div>
+      <div class="md:col-span-2"><label class="text-xs text-slate-400 block mb-1">ملاحظات إدارية</label><textarea id="m-notes" rows="2"></textarea></div>
+    </div>
+    <div class="flex gap-3 mt-5 justify-end">
+      <button onclick="closeEmpModal()" class="btn-outline">إلغاء</button>
+      <button onclick="saveEmployee()" class="btn-gold"><i class="fas fa-save ml-1"></i>حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LEAVE DETAIL MODAL ===== -->
+<div id="leave-modal" class="modal-overlay">
+  <div class="modal-box max-w-lg">
+    <div class="flex items-center justify-between mb-4">
+      <div class="font-black gold">مراجعة طلب الإجازة</div>
+      <button onclick="document.getElementById('leave-modal').classList.remove('open')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="leave-detail-content" class="mb-4"></div>
+    <div><label class="text-xs text-slate-400 block mb-1">ملاحظة القرار</label><textarea id="leave-note" rows="2" placeholder="اختياري..."></textarea></div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn-green flex-1" onclick="decideLeave('مقبول')"><i class="fas fa-check ml-1"></i>قبول</button>
+      <button class="btn-red flex-1" onclick="decideLeave('مرفوض')"><i class="fas fa-times ml-1"></i>رفض</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PREVIEW MODAL ===== -->
+<div id="preview-modal" class="modal-overlay" onclick="this.classList.remove('open')">
+  <div class="modal-box max-w-5xl" onclick="event.stopPropagation()" style="height:85vh">
+    <div class="flex items-center justify-between mb-3">
+      <div class="font-bold gold" id="preview-title">معاينة الوثيقة</div>
+      <button onclick="document.getElementById('preview-modal').classList.remove('open')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+    </div>
+    <iframe id="preview-iframe" class="w-full rounded-xl" style="height:calc(85vh - 80px);border:none;background:#fff"></iframe>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ====== GLOBALS ======
+const ADMIN_NAME = "<?= adminName ?>";
+let allEmployees = [], selectedFiles = [], attData = [], attHeaders = [], currentLeaveRow = null;
+let deptChart = null, statusChart = null;
+
+// ====== UTILS ======
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = type==='error' ? '#7f1d1d' : type==='info' ? '#1e3a5f' : '#14532d';
+  el.style.color = '#fff';
+  setTimeout(() => el.style.display='none', 3500);
+}
+
+function setLoading(btnId, on) {
+  const b = document.getElementById(btnId);
+  if (!b) return;
+  b.disabled = on;
+  b.innerHTML = on ? '<span class="loader"></span>' : b.dataset.orig || b.innerHTML;
+  if (!b.dataset.orig && !on) b.dataset.orig = b.innerHTML;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('section-hidden'));
+  document.getElementById('tab-' + name).classList.remove('section-hidden');
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('active');
+    b.classList.add('text-slate-400');
+  });
+  const btn = document.querySelector(`[data-tab="${name}"]`);
+  if (btn) { btn.classList.add('active'); btn.classList.remove('text-slate-400'); }
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'employees') loadEmployees();
+  if (name === 'leaves') loadLeavesTab();
+}
+
+// ====== DASHBOARD ======
+function loadDashboard() {
+  google.script.run.withSuccessHandler(data => {
+    if (!data) return;
+    document.getElementById('stat-total').textContent = data.total || 0;
+    document.getElementById('stat-active').textContent = data.active || 0;
+    document.getElementById('stat-onleave').textContent = data.onLeave || 0;
+    document.getElementById('stat-pending').textContent = data.pending || 0;
+    document.getElementById('stat-docs').textContent = data.totalDocs || 0;
+    document.getElementById('stat-expiring').textContent = data.expiring || 0;
+    if (data.pending > 0) {
+      document.getElementById('pending-badge').classList.remove('hidden');
+      document.getElementById('pending-count').textContent = data.pending;
+    }
+    renderRecentDocs(data.recentDocs || []);
+    renderExpiringList(data.expiringList || []);
+    renderDeptChart(data.deptStats || {});
+    renderStatusChart(data.statusStats || {});
+  }).getAdminDashboardStats();
+}
+
+function renderRecentDocs(docs) {
+  const el = document.getElementById('recent-docs');
+  if (!docs.length) { el.innerHTML = '<div class="p-6 text-center text-slate-500 text-sm">لا توجد وثائق مرفوعة بعد</div>'; return; }
+  el.innerHTML = docs.map(d => `
+    <div class="flex items-center gap-3 p-3 hover:bg-white/5 transition">
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-white/5"><i class="fas fa-file-alt" style="color:var(--gold)"></i></div>
+      <div class="flex-1 min-w-0"><div class="text-sm font-bold truncate">${d.name||'-'}</div><div class="text-xs text-slate-400">${d.type||''} · ${d.emp||''} · ${d.date||''}</div></div>
+      ${d.id ? `<button onclick="previewDoc('${d.id}')" class="text-slate-400 hover:text-sky-400 text-xs"><i class="fas fa-eye"></i></button>` : ''}
+    </div>`).join('');
+}
+
+function renderExpiringList(items) {
+  const el = document.getElementById('expiring-list');
+  if (!items.length) { el.innerHTML = '<div class="text-center text-slate-500 text-sm py-4">لا توجد وثائق تنتهي قريباً</div>'; return; }
+  el.innerHTML = items.map(it => `
+    <div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15)">
+      <div><div class="text-sm font-bold">${it.emp}</div><div class="text-xs text-slate-400">${it.doc}</div></div>
+      <div class="text-center"><div class="text-xl font-black text-red-400">${it.days}</div><div class="text-xs text-red-400">يوم</div></div>
+    </div>`).join('');
+}
+
+function renderDeptChart(data) {
+  const ctx = document.getElementById('chart-dept').getContext('2d');
+  if (deptChart) deptChart.destroy();
+  const labels = Object.keys(data), values = Object.values(data);
+  deptChart = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{ data:values, backgroundColor:'rgba(197,160,89,.7)', borderRadius:6 }] }, options:{ plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:'#94a3b8',font:{family:'Cairo',size:10}},grid:{color:'rgba(255,255,255,.05)'}}, y:{ticks:{color:'#94a3b8'},grid:{color:'rgba(255,255,255,.05)'}} } } });
+}
+
+function renderStatusChart(data) {
+  const ctx = document.getElementById('chart-status').getContext('2d');
+  if (statusChart) statusChart.destroy();
+  const colors = ['#4ade80','#f87171','#fbbf24','#60a5fa','#a78bfa'];
+  statusChart = new Chart(ctx, { type:'doughnut', data:{ labels:Object.keys(data), datasets:[{ data:Object.values(data), backgroundColor:colors, borderWidth:2, borderColor:'#0f172a' }] }, options:{ plugins:{ legend:{ position:'bottom', labels:{ color:'#94a3b8', font:{ family:'Cairo', size:11 } } } } } });
+}
+
+// ====== EMPLOYEES ======
+function loadEmployees() {
+  google.script.run.withSuccessHandler(data => {
+    allEmployees = data || [];
+    renderEmployeeTable(allEmployees);
+    populateDeptFilter(data);
+  }).getOrgStructure && google.script.run.withSuccessHandler(() => {}).getOrgStructure();
+  google.script.run.withSuccessHandler(data => {
+    allEmployees = data || [];
+    renderEmployeeTable(allEmployees);
+  }).withFailureHandler(e => toast('خطأ: ' + e.message, 'error')).report_GeneralEmployees({});
+}
+
+function renderEmployeeTable(data) {
+  const tb = document.getElementById('emp-tbody');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">لا توجد بيانات</td></tr>'; return; }
+  tb.innerHTML = data.map((e, i) => `
+    <tr>
+      <td class="text-slate-500 text-xs">${i+1}</td>
+      <td><div class="font-bold">${e.name}</div></td>
+      <td class="font-mono text-sm">${e.id}</td>
+      <td class="text-sm">${e.title||'-'}</td>
+      <td><span class="badge badge-gold text-xs">${e.dept||'-'}</span></td>
+      <td class="text-sm">${e.grade||'-'}</td>
+      <td class="text-sm text-emerald-400">${e.balance||0}</td>
+      <td><span class="badge ${e.status==='مستمر'?'badge-green':'badge-red'}">${e.status||'مستمر'}</span></td>
+      <td class="flex gap-1">
+        <button onclick="editEmployee(${i})" class="btn-outline text-xs py-1 px-2"><i class="fas fa-edit"></i></button>
+        <button onclick="confirmDelete('${e.id}')" class="btn-red text-xs py-1 px-2"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterEmployeeTable() {
+  const q = document.getElementById('emp-q').value.toLowerCase();
+  const dept = document.getElementById('emp-f-dept').value;
+  const status = document.getElementById('emp-f-status').value;
+  const filtered = allEmployees.filter(e => {
+    if (dept && e.dept !== dept) return false;
+    if (status && e.status !== status) return false;
+    if (q && !(e.name+e.id+e.title+e.dept).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderEmployeeTable(filtered);
+}
+
+function populateDeptFilter(data) {
+  const sel = document.getElementById('emp-f-dept');
+  const depts = [...new Set(data.map(e => e.dept).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">كل الإدارات</option>' + depts.map(d => `<option>${d}</option>`).join('');
+}
+
+let editingEmpIndex = null;
+function openEmpModal(idx) {
+  editingEmpIndex = null;
+  document.getElementById('emp-modal-title').textContent = 'إضافة موظف جديد';
+  ['m-name','m-id','m-secret','m-balance','m-qual','m-title','m-dept','m-section','m-manager','m-hire','m-grade','m-loc','m-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = id==='m-balance' ? '30' : '';
+  });
+  document.getElementById('m-status').value = 'مستمر';
+  document.getElementById('emp-modal').classList.add('open');
+}
+
+function editEmployee(idx) {
+  const e = allEmployees[idx];
+  if (!e) return;
+  editingEmpIndex = idx;
+  document.getElementById('emp-modal-title').textContent = 'تعديل بيانات موظف';
+  document.getElementById('m-name').value = e.name||'';
+  document.getElementById('m-id').value = e.id||'';
+  document.getElementById('m-qual').value = e.qualification||'';
+  document.getElementById('m-title').value = e.title||'';
+  document.getElementById('m-dept').value = e.dept||'';
+  document.getElementById('m-section').value = e.section||'';
+  document.getElementById('m-grade').value = e.grade||'';
+  document.getElementById('m-status').value = e.status||'مستمر';
+  document.getElementById('m-balance').value = e.balance||30;
+  document.getElementById('m-hire').value = e.hireDate||'';
+  document.getElementById('m-due').value = e.dueDate||'';
+  document.getElementById('emp-modal').classList.add('open');
+}
+
+function closeEmpModal() { document.getElementById('emp-modal').classList.remove('open'); }
+
+function saveEmployee() {
+  const obj = {
+    name: document.getElementById('m-name').value.trim(),
+    id: document.getElementById('m-id').value.trim(),
+    secretId: document.getElementById('m-secret').value.trim(),
+    balance: parseFloat(document.getElementById('m-balance').value)||30,
+    qualification: document.getElementById('m-qual').value,
+    jobTitle: document.getElementById('m-title').value,
+    department: document.getElementById('m-dept').value,
+    section: document.getElementById('m-section').value,
+    manager: document.getElementById('m-manager').value,
+    hireDate: document.getElementById('m-hire').value,
+    grade: document.getElementById('m-grade').value,
+    workLocation: document.getElementById('m-loc').value,
+    empStatus: document.getElementById('m-status').value,
+    dueDate: document.getElementById('m-due').value,
+    currentSalary: document.getElementById('m-salary')?.value||'',
+    adminNotes: document.getElementById('m-notes').value,
+    contractType: document.getElementById('m-contract')?.value||'تعيين رسمي'
+  };
+  if (!obj.name || !obj.id) { toast('الاسم والرقم الوظيفي مطلوبان', 'error'); return; }
+  const fn = editingEmpIndex !== null ? google.script.run.withSuccessHandler(res => { toast(res); closeEmpModal(); loadEmployees(); }).updateEmployeeData(obj, ADMIN_NAME) : google.script.run.withSuccessHandler(res => { toast(res); closeEmpModal(); loadEmployees(); }).saveFullEmployee(obj);
+}
+
+function confirmDelete(id) {
+  if (!confirm('هل تريد حذف الموظف رقم ' + id + ' نهائياً؟')) return;
+  google.script.run.withSuccessHandler(res => { toast(res); loadEmployees(); }).removeEmployee(id, ADMIN_NAME);
+}
+
+// ====== LEAVES ======
+function loadLeavesTab() {
+  loadPendingLeaves();
+  loadOnLeave();
+}
+
+function loadPendingLeaves() {
+  google.script.run.withSuccessHandler(data => {
+    const el = document.getElementById('pending-leaves');
+    if (!data || !data.length) { el.innerHTML = '<div class="p-6 text-center text-slate-500 text-sm">لا توجد طلبات معلقة</div>'; return; }
+    el.innerHTML = data.map((r, i) => `
+      <div class="p-4">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="font-bold">${r.name}</div>
+            <div class="text-xs text-slate-400 mt-0.5">${r.type} · ${r.days} يوم · من ${r.start} إلى ${r.end}</div>
+            ${r.notes ? `<div class="text-xs text-slate-400 mt-1">${r.notes}</div>` : ''}
+          </div>
+          <button onclick="openLeaveDecision(${i})" class="btn-gold text-xs py-1 px-3">مراجعة</button>
+        </div>
+      </div>`).join('');
+    window._pendingLeaves = data;
+  }).getPendingRequestsData();
+}
+
+function loadOnLeave() {
+  google.script.run.withSuccessHandler(data => {
+    const el = document.getElementById('on-leave-list');
+    if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 text-sm">لا أحد في إجازة حالياً</div>'; return; }
+    el.innerHTML = data.map(r => `
+      <div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15)">
+        <div><div class="text-sm font-bold">${r.name}</div><div class="text-xs text-slate-400">${r.leaveType||r.type||''}</div></div>
+        <div class="text-xs text-amber-400 font-bold">عودة: ${r.returnDate}</div>
+      </div>`).join('');
+  }).getOnLeaveEmployees();
+}
+
+function openLeaveDecision(idx) {
+  const r = window._pendingLeaves[idx];
+  if (!r) return;
+  currentLeaveRow = r.row;
+  document.getElementById('leave-detail-content').innerHTML = `
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.05)"><div class="text-xs text-slate-400">الاسم</div><div class="font-bold">${r.name}</div></div>
+      <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.05)"><div class="text-xs text-slate-400">النوع</div><div class="font-bold">${r.type}</div></div>
+      <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.05)"><div class="text-xs text-slate-400">من</div><div class="font-bold">${r.start}</div></div>
+      <div class="p-3 rounded-xl" style="background:rgba(255,255,255,.05)"><div class="text-xs text-slate-400">إلى</div><div class="font-bold">${r.end}</div></div>
+      <div class="p-3 rounded-xl col-span-2" style="background:rgba(255,255,255,.05)"><div class="text-xs text-slate-400">عدد الأيام</div><div class="font-black text-xl gold">${r.days}</div></div>
+    </div>`;
+  document.getElementById('leave-modal').classList.add('open');
+}
+
+function decideLeave(decision) {
+  if (!currentLeaveRow) return;
+  const note = document.getElementById('leave-note').value;
+  google.script.run.withSuccessHandler(res => {
+    toast(res);
+    document.getElementById('leave-modal').classList.remove('open');
+    loadLeavesTab();
+  }).processLeaveDecision(currentLeaveRow, decision);
+}
+
+// ====== DOCUMENTS ======
+function lookupEmpForDoc() {
+  const id = document.getElementById('doc-jobId').value.trim();
+  if (!id) return;
+  const emp = allEmployees.find(e => e.id === id);
+  if (emp) {
+    document.getElementById('doc-name').value = emp.name;
+    document.getElementById('doc-dept').value = emp.dept;
+  } else {
+    google.script.run.withSuccessHandler(data => {
+      if (data) { document.getElementById('doc-name').value = data[0]||''; document.getElementById('doc-dept').value = data[6]||''; }
+    }).getEmployeeForEdit(id);
+  }
+}
+
+let docSelectedFiles = [];
+function handleDocFiles(files) {
+  docSelectedFiles = Array.from(files);
+  const list = document.getElementById('doc-file-list');
+  list.innerHTML = docSelectedFiles.map((f,i) => `
+    <div class="flex items-center gap-2 p-2 rounded-xl" style="background:rgba(255,255,255,.05)">
+      <i class="fas fa-file text-xs gold"></i>
+      <span class="text-xs flex-1 truncate">${f.name}</span>
+      <span class="text-xs text-slate-400">${(f.size/1048576).toFixed(1)}MB</span>
+      <button onclick="docSelectedFiles.splice(${i},1);handleDocFiles([])" class="text-red-400 text-xs"><i class="fas fa-times"></i></button>
+    </div>`).join('');
+  document.getElementById('btn-upload-doc').disabled = docSelectedFiles.length === 0;
+}
+
+async function uploadDocs() {
+  const jobId = document.getElementById('doc-jobId').value.trim();
+  const name = document.getElementById('doc-name').value.trim();
+  const docType = document.getElementById('doc-type').value;
+  if (!jobId || !docType || !docSelectedFiles.length) { toast('الرقم الوظيفي ونوع الوثيقة والملفات مطلوبة', 'error'); return; }
+  const meta = { jobId, name, dept: document.getElementById('doc-dept').value, docType, docDate: document.getElementById('doc-date').value, expDate: document.getElementById('doc-expdate').value, notes: document.getElementById('doc-notes').value, secret: document.getElementById('doc-secret').checked, uploadedBy: ADMIN_NAME };
+  document.getElementById('doc-progress').classList.remove('hidden');
+  document.getElementById('btn-upload-doc').disabled = true;
+  const filesData = [];
+  for (let i = 0; i < docSelectedFiles.length; i++) {
+    const f = docSelectedFiles[i];
+    const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = e => r(e.target.result.split(',')[1]); fr.readAsDataURL(f); });
+    filesData.push({ name: f.name, type: f.type, size: f.size, data: b64 });
+    const pct = Math.round((i+1)/docSelectedFiles.length*100);
+    document.getElementById('doc-prog-bar').style.width = pct+'%';
+    document.getElementById('doc-prog-text').textContent = pct+'%';
+  }
+  google.script.run.withSuccessHandler(res => {
+    toast(res.msg || 'تم الرفع بنجاح', res.success ? 'success' : 'error');
+    document.getElementById('doc-progress').classList.add('hidden');
+    document.getElementById('btn-upload-doc').disabled = false;
+    docSelectedFiles = []; document.getElementById('doc-file-list').innerHTML = '';
+  }).withFailureHandler(e => { toast('فشل الرفع: '+e.message,'error'); document.getElementById('doc-progress').classList.add('hidden'); }).uploadDocuments(filesData, meta);
+}
+
+function searchDocs() {
+  const q = document.getElementById('doc-search-q').value;
+  const filters = { type: document.getElementById('doc-f-type').value, status: document.getElementById('doc-f-status').value };
+  google.script.run.withSuccessHandler(renderDocResults).searchDocuments(q, filters);
+}
+
+function renderDocResults(data) {
+  const tb = document.getElementById('doc-results');
+  if (!data || !data.length) { tb.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-500">لا توجد نتائج</td></tr>'; return; }
+  tb.innerHTML = data.map((d, i) => `
+    <tr>
+      <td><div class="font-bold text-sm">${d.emp||'-'}</div><div class="text-xs text-slate-400">${d.jobId||''}</div></td>
+      <td class="text-sm truncate max-w-xs">${d.fileName||'-'} ${d.isSecret?'<i class="fas fa-lock text-red-400 text-xs"></i>':''}</td>
+      <td><span class="badge badge-gold text-xs">${d.type||'-'}</span></td>
+      <td class="text-xs">${d.docDate||'-'}</td>
+      <td class="text-xs ${d.isExpiring?'text-orange-400 font-bold':d.isExpired?'text-red-400':''}">${d.expDate||'-'}</td>
+      <td class="text-xs text-slate-400">${d.size||'-'}</td>
+      <td class="flex gap-1">
+        <button onclick="previewDoc('${d.driveId}')" class="text-sky-400 hover:text-sky-300 text-sm"><i class="fas fa-eye"></i></button>
+        <button onclick="downloadDoc('${d.driveId}')" class="text-emerald-400 hover:text-emerald-300 text-sm"><i class="fas fa-download"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function previewDoc(fileId) {
+  document.getElementById('preview-iframe').src = 'https://drive.google.com/file/d/' + fileId + '/preview';
+  document.getElementById('preview-modal').classList.add('open');
+}
+
+function downloadDoc(fileId) {
+  google.script.run.withSuccessHandler(url => { if(url) window.open(url,'_blank'); }).getDocFileDownloadUrl(fileId);
+}
+
+// ====== ATTENDANCE ======
+let parsedAttRows = [];
+
+function handleAttFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, { type:'binary' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+    if (rows.length < 2) { toast('الملف فارغ أو غير صالح','error'); return; }
+    attHeaders = rows[0].map(String);
+    parsedAttRows = rows.slice(1);
+    showAttPreview(attHeaders, rows.slice(1,6));
+  };
+  reader.readAsBinaryString(file);
+}
+
+function showAttPreview(headers, rows) {
+  document.getElementById('att-preview').classList.remove('hidden');
+  const thead = document.querySelector('#att-prev-table thead');
+  const tbody = document.querySelector('#att-prev-table tbody');
+  thead.innerHTML = '<tr>' + headers.map(h => `<th class="px-2 py-1 text-xs">${h}</th>`).join('') + '</tr>';
+  tbody.innerHTML = rows.map(r => '<tr>' + headers.map((_, i) => `<td class="px-2 py-1 text-xs border-b border-white/5">${r[i]||''}</td>`).join('') + '</tr>').join('');
+  const colOptions = headers.map((h,i) => `<option value="${i}">${h}</option>`).join('');
+  ['col-id','col-date','col-in','col-out'].forEach(id => document.getElementById(id).innerHTML = colOptions);
+  headers.forEach((h, i) => {
+    const hl = h.toLowerCase();
+    if (hl.includes('رقم') || hl.includes('id') || hl.includes('code')) document.getElementById('col-id').value = i;
+    else if (hl.includes('تاريخ') || hl.includes('date')) document.getElementById('col-date').value = i;
+    else if (hl.includes('دخول') || hl.includes('in')) document.getElementById('col-in').value = i;
+    else if (hl.includes('خروج') || hl.includes('out')) document.getElementById('col-out').value = i;
+  });
+}
+
+function importAttendance() {
+  if (!parsedAttRows.length) { toast('لا توجد بيانات للاستيراد','error'); return; }
+  const ci = parseInt(document.getElementById('col-id').value);
+  const cd = parseInt(document.getElementById('col-date').value);
+  const cin = parseInt(document.getElementById('col-in').value);
+  const cout = parseInt(document.getElementById('col-out').value);
+  const rows = parsedAttRows.filter(r => r[ci]).map(r => ({
+    id: String(r[ci]||'').trim(),
+    date: String(r[cd]||'').trim(),
+    checkIn: String(r[cin]||'').trim(),
+    checkOut: String(r[cout]||'').trim(),
+    status: 'حضر'
+  }));
+  google.script.run.withSuccessHandler(res => {
+    toast(res.msg || 'تم الاستيراد', res.success ? 'success' : 'error');
+    document.getElementById('att-preview').classList.add('hidden');
+    parsedAttRows = [];
+  }).importAttendanceData(rows);
+}
+
+function loadAttendance() {
+  const from = document.getElementById('att-from').value;
+  const to = document.getElementById('att-to').value;
+  const empId = document.getElementById('att-emp').value;
+  const dept = document.getElementById('att-dept').value;
+  google.script.run.withSuccessHandler(data => renderAttResults(data)).getAttendanceReportData(from, to, empId, dept);
+}
+
+function renderAttResults(data) {
+  const el = document.getElementById('att-results');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-4">لا توجد نتائج</div>'; return; }
+  const isSingle = data.length === 1 && data[0].details && data[0].details.length > 0;
+  if (isSingle) {
+    const r = data[0];
+    el.innerHTML = `<div class="mb-3 p-3 rounded-xl" style="background:rgba(255,255,255,.05)"><div class="font-bold">${r.name}</div><div class="flex gap-4 mt-2 text-sm"><span class="text-emerald-400">حضور: ${r.present}</span><span class="text-red-400">غياب: ${r.absent}</span><span class="text-amber-400">إجازة: ${r.leave}</span><span class="text-sky-400">مأمورية: ${r.mission}</span><span class="gold">ساعات: ${r.totalHours}</span></div></div>
+    <table class="text-xs"><thead><tr><th>التاريخ</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>الساعات</th></tr></thead><tbody>${r.details.map(d=>`<tr><td>${d.date}</td><td>${d.checkIn}</td><td>${d.checkOut}</td><td>${d.status}</td><td>${d.hours}</td></tr>`).join('')}</tbody></table>`;
+  } else {
+    el.innerHTML = `<table><thead><tr><th>الاسم</th><th>الرقم</th><th>حضور</th><th>غياب</th><th>إجازة</th><th>ساعات</th></tr></thead><tbody>${data.map(r=>`<tr><td>${r.name}</td><td>${r.id}</td><td class="text-emerald-400">${r.present}</td><td class="text-red-400">${r.absent}</td><td class="text-amber-400">${r.leave}</td><td class="gold">${r.totalHours}</td></tr>`).join('')}</tbody></table>`;
+  }
+}
+
+// ====== PERMISSIONS ======
+function savePermission() {
+  const obj = {
+    jobId: document.getElementById('perm-id').value.trim(),
+    date: document.getElementById('perm-date').value,
+    type: document.getElementById('perm-type').value,
+    checkOut: document.getElementById('perm-out').value,
+    checkIn: document.getElementById('perm-in').value,
+    notes: document.getElementById('perm-notes').value
+  };
+  if (!obj.jobId || !obj.date) { toast('الرقم الوظيفي والتاريخ مطلوبان','error'); return; }
+  google.script.run.withSuccessHandler(res => { toast(res.msg||'تم الحفظ', res.success?'success':'error'); loadPermissions(); }).addExitPermission(obj);
+}
+
+function loadPermissions() {
+  const from = document.getElementById('pf-from').value, to = document.getElementById('pf-to').value;
+  const empId = document.getElementById('pf-emp').value, type = document.getElementById('pf-type').value;
+  google.script.run.withSuccessHandler(data => {
+    const el = document.getElementById('perms-results');
+    if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-4">لا توجد نتائج</div>'; return; }
+    el.innerHTML = `<table class="text-xs"><thead><tr><th>الاسم</th><th>التاريخ</th><th>النوع</th><th>خروج</th><th>عودة</th><th>مدة(د)</th></tr></thead><tbody>${data.map(r=>`<tr><td>${r.name}</td><td>${r.date}</td><td>${r.type}</td><td>${r.checkOut}</td><td>${r.checkIn}</td><td>${r.duration||0}</td></tr>`).join('')}</tbody></table>`;
+  }).getPermissionsData(from, to, empId, '', type);
+}
+
+// ====== REPORTS ======
+let currentReport = 'r1';
+function selectReport(id) {
+  document.querySelectorAll('.rpt-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('rpt-' + id).classList.add('active');
+  ['r1','r2','r3','r4','r5'].forEach(r => {
+    const el = document.getElementById('rpt-form-' + r);
+    if (el) el.classList.toggle('hidden', r !== id);
+  });
+  document.getElementById('rpt-results').innerHTML = '';
+  currentReport = id;
+}
+
+function runReport(id) {
+  document.getElementById('rpt-loading').classList.remove('hidden');
+  document.getElementById('rpt-results').innerHTML = '';
+  if (id === 'r1') {
+    const f = { dept: document.getElementById('r1-dept').value, jobTitle: document.getElementById('r1-title').value, status: document.getElementById('r1-status').value };
+    google.script.run.withSuccessHandler(showR1).report_GeneralEmployees(f);
+  } else if (id === 'r2') {
+    google.script.run.withSuccessHandler(showR2).getAttendanceReportData(document.getElementById('r2-from').value, document.getElementById('r2-to').value, document.getElementById('r2-emp').value, document.getElementById('r2-dept').value);
+  } else if (id === 'r3') {
+    google.script.run.withSuccessHandler(showR3).getPermissionsData(document.getElementById('r3-from').value, document.getElementById('r3-to').value, document.getElementById('r3-emp').value, '', document.getElementById('r3-type').value);
+  } else if (id === 'r4') {
+    google.script.run.withSuccessHandler(showR4).report_LeavesQuarterly(document.getElementById('r4-from').value, document.getElementById('r4-to').value, document.getElementById('r4-emp').value, document.getElementById('r4-type').value);
+  } else if (id === 'r5') {
+    const emp = document.getElementById('r5-emp').value.trim();
+    if (!emp) { toast('أدخل الرقم الوظيفي','error'); document.getElementById('rpt-loading').classList.add('hidden'); return; }
+    google.script.run.withSuccessHandler(showR5).report_Employee360(emp, document.getElementById('r5-year').value);
+  }
+}
+
+function _hideLoading() { document.getElementById('rpt-loading').classList.add('hidden'); }
+
+function showR1(data) {
+  _hideLoading();
+  const el = document.getElementById('rpt-results');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد نتائج</div>'; return; }
+  el.innerHTML = `<div class="text-xs text-slate-400 mb-2">إجمالي النتائج: ${data.length}</div><div class="overflow-x-auto"><table><thead><tr><th>#</th><th>الاسم</th><th>الرقم</th><th>المسمى</th><th>الإدارة</th><th>الدرجة</th><th>الرصيد</th><th>الحالة</th><th>المباشرة</th><th>الاستحقاق</th></tr></thead><tbody>${data.map((r,i)=>`<tr><td class="text-xs text-slate-500">${i+1}</td><td class="font-bold">${r.name}</td><td class="font-mono text-xs">${r.id}</td><td class="text-xs">${r.title||'-'}</td><td class="text-xs">${r.dept||'-'}</td><td class="text-xs">${r.grade||'-'}</td><td class="text-emerald-400 text-xs">${r.balance||0}</td><td><span class="badge ${r.status==='مستمر'?'badge-green':'badge-red'} text-xs">${r.status}</span></td><td class="text-xs">${r.hireDate||'-'}</td><td class="text-xs gold">${r.dueDate||'-'}</td></tr>`).join('')}</tbody></table></div>` + exportBtns('r1-data', data);
+  window['r1-data'] = data;
+}
+
+function showR2(data) {
+  _hideLoading();
+  const el = document.getElementById('rpt-results');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد نتائج</div>'; return; }
+  const isSingle = data.length===1 && data[0].details?.length;
+  let html = '';
+  if (isSingle) {
+    const r = data[0];
+    html = `<div class="grid grid-cols-4 gap-3 mb-4">${[['حضور',r.present,'emerald'],['غياب',r.absent,'red'],['إجازة',r.leave,'amber'],['مأمورية',r.mission,'sky']].map(([l,v,c])=>`<div class="p-3 rounded-xl text-center" style="background:rgba(255,255,255,.05)"><div class="text-xl font-black text-${c}-400">${v}</div><div class="text-xs text-slate-400">${l}</div></div>`).join('')}</div><div class="overflow-x-auto"><table class="text-xs"><thead><tr><th>التاريخ</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>الساعات</th></tr></thead><tbody>${r.details.map(d=>`<tr><td>${d.date}</td><td>${d.checkIn||'-'}</td><td>${d.checkOut||'-'}</td><td>${d.status}</td><td>${d.hours||'-'}</td></tr>`).join('')}</tbody></table></div>`;
+  } else {
+    html = `<div class="overflow-x-auto"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>الإدارة</th><th>حضور</th><th>غياب</th><th>إجازة</th><th>مأمورية</th><th>ساعات</th></tr></thead><tbody>${data.map(r=>`<tr><td class="font-bold">${r.name}</td><td>${r.id}</td><td>${r.dept}</td><td class="text-emerald-400">${r.present}</td><td class="text-red-400">${r.absent}</td><td class="text-amber-400">${r.leave}</td><td class="text-sky-400">${r.mission}</td><td class="gold">${r.totalHours}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  el.innerHTML = html;
+}
+
+function showR3(data) {
+  _hideLoading();
+  const el = document.getElementById('rpt-results');
+  if (!data || !data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد نتائج</div>'; return; }
+  const totalMins = data.reduce((s,r) => s+(parseInt(r.duration)||0), 0);
+  el.innerHTML = `<div class="text-xs text-slate-400 mb-2">إجمالي: ${data.length} إذن · ${totalMins} دقيقة</div><div class="overflow-x-auto"><table class="text-xs"><thead><tr><th>الاسم</th><th>الرقم</th><th>الإدارة</th><th>التاريخ</th><th>النوع</th><th>خروج</th><th>عودة</th><th>مدة (دقيقة)</th></tr></thead><tbody>${data.map(r=>`<tr><td class="font-bold">${r.name}</td><td>${r.jobId}</td><td>${r.dept}</td><td>${r.date}</td><td><span class="badge badge-blue text-xs">${r.type}</span></td><td>${r.checkOut||'-'}</td><td>${r.checkIn||'-'}</td><td class="gold">${r.duration||0}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function showR4(result) {
+  _hideLoading();
+  const el = document.getElementById('rpt-results');
+  if (!result || !result.data) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد نتائج</div>'; return; }
+  if (result.mode === 'detail') {
+    if (!result.data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد إجازات لهذا الموظف في الفترة المحددة</div>'; return; }
+    el.innerHTML = `<div class="font-bold gold mb-3">${result.empName}</div><div class="overflow-x-auto"><table class="text-xs"><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الأيام</th><th>السبب</th><th>الحالة</th></tr></thead><tbody>${result.data.map(r=>`<tr><td><span class="badge badge-gold text-xs">${r.type}</span></td><td>${r.start}</td><td>${r.end}</td><td class="font-bold gold">${r.days}</td><td>${r.notes||'-'}</td><td><span class="badge ${r.status==='لم يباشر'?'badge-red':r.status==='تمت المباشرة'?'badge-green':'badge-blue'} text-xs">${r.status}</span></td></tr>`).join('')}</tbody></table></div>`;
+  } else {
+    if (!result.data.length) { el.innerHTML = '<div class="text-center text-slate-500 py-6">لا توجد بيانات</div>'; return; }
+    el.innerHTML = `<div class="overflow-x-auto"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>سنوية</th><th>مرضية</th><th>طارئة</th><th>أخرى</th><th>الإجمالي</th></tr></thead><tbody>${result.data.sort((a,b)=>b.total-a.total).map(r=>`<tr><td class="font-bold">${r.name}</td><td>${r.id}</td><td class="text-emerald-400">${r['سنوية']||0}</td><td class="text-amber-400">${r['مرضية']||0}</td><td class="text-red-400">${r['طارئة']||0}</td><td class="text-slate-400">${r['أخرى']||0}</td><td class="font-black gold text-base">${r.total}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+}
+
+function showR5(data) {
+  _hideLoading();
+  const el = document.getElementById('rpt-results');
+  if (!data) { el.innerHTML = '<div class="text-center text-slate-500 py-6">الموظف غير موجود</div>'; return; }
+  const e = data.employee, a = data.attendance;
+  el.innerHTML = `
+    <div class="space-y-4">
+      <div class="p-4 rounded-xl" style="background:rgba(197,160,89,.08);border:1px solid rgba(197,160,89,.2)">
+        <div class="text-xl font-black gold mb-1">${e.name}</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+          <div><span class="text-slate-400">الرقم: </span>${e.id}</div>
+          <div><span class="text-slate-400">المسمى: </span>${e.title||'-'}</div>
+          <div><span class="text-slate-400">الإدارة: </span>${e.dept||'-'}</div>
+          <div><span class="text-slate-400">الدرجة: </span>${e.grade||'-'}</div>
+          <div><span class="text-slate-400">الحالة: </span>${e.status}</div>
+          <div><span class="text-slate-400">المباشرة: </span>${e.hireDate||'-'}</div>
+          <div><span class="text-slate-400">الاستحقاق: </span>${e.dueDate||'-'}</div>
+          <div><span class="text-slate-400">الرصيد: </span><span class="text-emerald-400">${e.balance||0} يوم</span></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="p-3 rounded-xl text-center" style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15)"><div class="text-2xl font-black text-emerald-400">${a.present||0}</div><div class="text-xs text-slate-400">أيام حضور</div></div>
+        <div class="p-3 rounded-xl text-center" style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15)"><div class="text-2xl font-black text-red-400">${a.absent||0}</div><div class="text-xs text-slate-400">أيام غياب</div></div>
+        <div class="p-3 rounded-xl text-center" style="background:rgba(197,160,89,.06);border:1px solid rgba(197,160,89,.15)"><div class="text-2xl font-black gold">${data.totalLeaveDays||0}</div><div class="text-xs text-slate-400">أيام إجازة</div></div>
+        <div class="p-3 rounded-xl text-center" style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15)"><div class="text-2xl font-black text-sky-400">${data.totalPermMinutes||0}</div><div class="text-xs text-slate-400">دقائق أذونات</div></div>
+      </div>
+      ${data.leaves.length?`<div><div class="font-bold text-sm mb-2 gold">الإجازات (${data.year})</div><table class="text-xs"><thead><tr><th>النوع</th><th>من</th><th>إلى</th><th>الأيام</th><th>الحالة</th></tr></thead><tbody>${data.leaves.map(l=>`<tr><td>${l.type}</td><td>${l.start}</td><td>${l.end}</td><td>${l.days}</td><td>${l.status}</td></tr>`).join('')}</tbody></table></div>`:''}
+      ${data.permissions.length?`<div><div class="font-bold text-sm mb-2 gold">الأذونات (${data.year})</div><table class="text-xs"><thead><tr><th>التاريخ</th><th>النوع</th><th>خروج</th><th>عودة</th><th>مدة(د)</th></tr></thead><tbody>${data.permissions.map(p=>`<tr><td>${p.date}</td><td>${p.type}</td><td>${p.checkOut||'-'}</td><td>${p.checkIn||'-'}</td><td>${p.duration||0}</td></tr>`).join('')}</tbody></table></div>`:''}
+      ${data.documents.length?`<div><div class="font-bold text-sm mb-2 gold">الوثائق المحفوظة (${data.documents.length})</div><div class="flex flex-wrap gap-2">${data.documents.map(d=>`<span class="badge badge-gold text-xs">${d.type}</span>`).join('')}</div></div>`:''}
+    </div>`;
+}
+
+function exportBtns(key, data) {
+  return `<div class="flex gap-2 mt-3"><button onclick="exportToExcel('${key}')" class="btn-outline text-xs py-2 px-3"><i class="fas fa-file-excel ml-1"></i>تصدير Excel</button><button onclick="window.print()" class="btn-outline text-xs py-2 px-3"><i class="fas fa-print ml-1"></i>طباعة</button></div>`;
+}
+
+function exportToExcel(key) {
+  const data = window[key];
+  if (!data || !data.length) { toast('لا توجد بيانات','error'); return; }
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'تقرير');
+  XLSX.writeFile(wb, 'تقرير_' + new Date().getTime() + '.xlsx');
+}
+
+// ====== PRINT ======
+function openPrintReport(type) {
+  google.script.run.withSuccessHandler(html => {
+    const w = window.open('', '_blank', 'width=1200,height=800');
+    w.document.write(html);
+    w.document.close();
+  }).generateStaffListReport();
+}
+
+function openBonusReport() {
+  document.getElementById('print-bonus-picker').classList.toggle('hidden');
+}
+
+function generateBonus() {
+  const m = document.getElementById('bonus-month').value;
+  google.script.run.withSuccessHandler(html => {
+    const w = window.open('', '_blank', 'width=1200,height=800');
+    w.document.write(html);
+    w.document.close();
+  }).generatePrintableReport(m);
+}
+
+// ====== SETUP ======
+function initSheetsSetup() {
+  google.script.run.withSuccessHandler(res => toast(res.msg||'تم', 'success')).withFailureHandler(e=>toast(e.message,'error')).initNewSheets();
+}
+
+// ====== INIT ======
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard();
+  const today = new Date().toISOString().split('T')[0];
+  ['att-to','pf-to','r2-to','r3-to','r4-to'].forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
+  const d90 = new Date(); d90.setDate(d90.getDate()-90);
+  const d90s = d90.toISOString().split('T')[0];
+  ['att-from','pf-from','r2-from','r3-from','r4-from'].forEach(id => { const el=document.getElementById(id); if(el) el.value=d90s; });
+  const yearEl = document.getElementById('r5-year');
+  if (yearEl) yearEl.value = new Date().getFullYear();
+});
+</script>
+</body>
+</html>
