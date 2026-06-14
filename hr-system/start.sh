@@ -70,7 +70,7 @@ if [ $? -eq 0 ]; then
     echo "  ✅  النظام يعمل بنجاح!"
     echo "========================================="
     echo ""
-    echo "  🌐  الرابط المحلي:    http://localhost:3000"
+    echo "  🌐  الرابط المحلي:    http://localhost:3001"
     echo "  🌐  رابط الشبكة:     http://$LOCAL_IP:3000"
     echo ""
     echo "  👤  المستخدم:   admin"

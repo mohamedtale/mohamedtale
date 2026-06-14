@@ -30,7 +30,7 @@ services:
       DB_NAME: hr_system
       DB_USER: hr_user
       DB_PASSWORD: hr_password
-      PORT: 3000
+      PORT: 3001
       UPLOAD_DIR: /app/uploads
       MAX_FILE_SIZE: 52428800
       # غيّر هذا المفتاح قبل التشغيل:
@@ -40,7 +40,7 @@ services:
       - uploads:/app/uploads
       - ./frontend:/app/frontend
     ports:
-      - "3000:3000"
+      - "3001:3001"
     depends_on:
       db:
         condition: service_healthy
