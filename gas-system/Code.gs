@@ -61,12 +61,20 @@ const DataLayer = {
     const ss = getSpreadsheet();
     const sheets = ss.getSheets();
     const findS = (names) => sheets.find(s => names.includes(s.getName().trim()));
-
+    const findOrCreate = (names, headers) => {
+      let sh = findS(names);
+      if (!sh) {
+        sh = ss.insertSheet(names[0]);
+        if (headers) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+        sh.setFrozenRows(1);
+      }
+      return sh;
+    };
     return {
-      emp: findS(["الموظفين", "employees"]),
-      lev: findS(["الإجازات", "Vacations"]),
-      logs: findS(["سجل العمليات", "logs"]) || ss.insertSheet("سجل العمليات"),
-      holidays: findS(["العطلات", "holidays"]) || ss.insertSheet("العطلات")
+      emp: findOrCreate(["الموظفين", "employees"], ["الاسم","الرقم الوظيفي","كلمة السر","رصيد الإجازة","المؤهل","المسمى الوظيفي","الإدارة","القسم","المدير المباشر","تاريخ المباشرة","الدرجة","علاوة الدرجة","نوع العقد","نهاية العقد","موقع العمل","","","حالة العمل","ملاحظات إدارية","راتب قديم","","موعد الاستحقاق","الراتب الحالي","قرار الترقية","ملاحظات مالية"]),
+      lev: findOrCreate(["الإجازات", "Vacations"], ["الاسم","الرقم الوظيفي","نوع الإجازة","تاريخ البداية","تاريخ النهاية","تاريخ العودة","عدد الأيام","ملاحظات","الحالة"]),
+      logs: findOrCreate(["سجل العمليات", "logs"], ["التاريخ","المستخدم","العملية","التفاصيل"]),
+      holidays: findOrCreate(["العطلات", "holidays"], ["التاريخ","الوصف"])
     };
   },
   getRawData: function(sheetName) {

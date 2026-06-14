@@ -505,23 +505,27 @@ function switchTab(name) {
 
 // ====== DASHBOARD ======
 function loadDashboard() {
-  google.script.run.withSuccessHandler(data => {
-    if (!data) return;
-    document.getElementById('stat-total').textContent = data.total || 0;
-    document.getElementById('stat-active').textContent = data.active || 0;
-    document.getElementById('stat-onleave').textContent = data.onLeave || 0;
-    document.getElementById('stat-pending').textContent = data.pending || 0;
-    document.getElementById('stat-docs').textContent = data.totalDocs || 0;
-    document.getElementById('stat-expiring').textContent = data.expiring || 0;
-    if (data.pending > 0) {
-      document.getElementById('pending-badge').classList.remove('hidden');
-      document.getElementById('pending-count').textContent = data.pending;
-    }
-    renderRecentDocs(data.recentDocs || []);
-    renderExpiringList(data.expiringList || []);
-    renderDeptChart(data.deptStats || {});
-    renderStatusChart(data.statusStats || {});
-  }).getAdminDashboardStats();
+  google.script.run
+    .withSuccessHandler(data => {
+      if (!data) { toast('لا توجد بيانات من الخادم', 'error'); return; }
+      if (data.error) { toast('خطأ: ' + data.error, 'error'); return; }
+      document.getElementById('stat-total').textContent = data.total || 0;
+      document.getElementById('stat-active').textContent = data.active || 0;
+      document.getElementById('stat-onleave').textContent = data.onLeave || 0;
+      document.getElementById('stat-pending').textContent = data.pending || 0;
+      document.getElementById('stat-docs').textContent = data.totalDocs || 0;
+      document.getElementById('stat-expiring').textContent = data.expiring || 0;
+      if (data.pending > 0) {
+        document.getElementById('pending-badge').classList.remove('hidden');
+        document.getElementById('pending-count').textContent = data.pending;
+      }
+      renderRecentDocs(data.recentDocs || []);
+      renderExpiringList(data.expiringList || []);
+      renderDeptChart(data.deptStats || {});
+      renderStatusChart(data.statusStats || {});
+    })
+    .withFailureHandler(e => toast('خطأ في لوحة التحكم: ' + e.message, 'error'))
+    .getAdminDashboardStats();
 }
 
 function renderRecentDocs(docs) {
@@ -561,11 +565,15 @@ function renderStatusChart(data) {
 
 // ====== EMPLOYEES ======
 function loadEmployees() {
-  google.script.run.withSuccessHandler(data => {
-    allEmployees = data || [];
-    renderEmployeeTable(allEmployees);
-    populateDeptFilter(allEmployees);
-  }).withFailureHandler(e => toast('خطأ: ' + e.message, 'error')).report_GeneralEmployees({});
+  google.script.run
+    .withSuccessHandler(data => {
+      allEmployees = data || [];
+      renderEmployeeTable(allEmployees);
+      populateDeptFilter(allEmployees);
+      if (!data || !data.length) toast('لا يوجد موظفون في قاعدة البيانات', 'info');
+    })
+    .withFailureHandler(e => toast('خطأ في تحميل الموظفين: ' + e.message, 'error'))
+    .report_GeneralEmployees({});
 }
 
 function renderEmployeeTable(data) {
