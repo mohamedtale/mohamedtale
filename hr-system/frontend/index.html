@@ -214,7 +214,7 @@
         <div style="display:flex; align-items:center; gap:12px; margin-right:auto; margin-left:0;">
           <!-- Notification Bell -->
           <div style="position:relative;" id="notif-wrap">
-            <button id="notif-btn" onclick="toggleNotifications()"
+            <button id="notif-btn"
               style="position:relative;background:#f8f9fa;border:1.5px solid #dee2e6;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:18px;line-height:1;">
               🔔
               <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#c53030;color:white;
@@ -233,7 +233,7 @@
             </div>
           </div>
           <span id="header-user" style="font-size:13px; font-weight:600; color:#6c757d;"></span>
-          <button onclick="doLogout()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f8f9fa;border:1.5px solid #dee2e6;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:600;color:#0B4F6C;cursor:pointer;" title="تسجيل الخروج">
+          <button id="logout-btn" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#f8f9fa;border:1.5px solid #dee2e6;border-radius:8px;font-family:Cairo,sans-serif;font-size:13px;font-weight:600;color:#0B4F6C;cursor:pointer;" title="تسجيل الخروج">
             🚪 خروج
           </button>
         </div>
@@ -289,10 +289,10 @@
           badge.textContent = notes.length;
           badge.style.display = 'flex';
           list.innerHTML = notes.map(n => `
-            <a href="${n.link || '#'}" onclick="closeNotifications()"
+            <a href="${n.link || '#'}" data-close-notif="1"
                style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;
                       text-decoration:none;color:inherit;border-bottom:1px solid #f8f9fa;
-                      transition:background .15s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+                      transition:background .15s;">
               <span style="font-size:20px;">${n.icon}</span>
               <span style="font-size:13px;font-weight:600;color:#2d3748;line-height:1.5;">${n.text}</span>
             </a>`).join('');
@@ -315,7 +315,11 @@
 
     document.addEventListener('click', e => {
       if (!document.getElementById('notif-wrap')?.contains(e.target)) closeNotifications();
+      if (e.target.closest('[data-close-notif]')) closeNotifications();
     });
+
+    document.getElementById('notif-btn').addEventListener('click', toggleNotifications);
+    document.getElementById('logout-btn').addEventListener('click', doLogout);
 
     // Load notifications every 2 minutes
     setTimeout(() => { loadNotifications(); setInterval(loadNotifications, 2 * 60 * 1000); }, 3000);

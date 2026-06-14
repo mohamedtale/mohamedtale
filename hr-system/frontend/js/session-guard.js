@@ -17,7 +17,8 @@
     align-items: center; justify-content: center; gap: 20px;
     font-family: Cairo, sans-serif;
   `;
-  lockOverlay.innerHTML = `
+  // Build overlay DOM without inline handlers (CSP compliance)
+  lockOverlay.insertAdjacentHTML('beforeend', `
     <div style="text-align:center; color:white; margin-bottom:8px;">
       <div style="font-size:64px; margin-bottom:12px;">🔒</div>
       <div style="font-size:22px; font-weight:900; margin-bottom:6px;">الجلسة مقفلة</div>
@@ -30,18 +31,17 @@
         <input id="lock-password" type="password" placeholder="كلمة المرور"
                style="width:100%; padding:12px 14px; border-radius:10px; border:1.5px solid rgba(255,255,255,.2);
                       background:rgba(255,255,255,.08); color:white; font-family:Cairo,sans-serif;
-                      font-size:15px; outline:none;"
-               onkeydown="if(event.key==='Enter') unlockSession()">
+                      font-size:15px; outline:none;">
       </div>
       <div id="lock-error" style="color:#fc8181; font-size:13px; font-weight:600;
                                    margin-bottom:10px; display:none; text-align:center;"></div>
-      <button onclick="unlockSession()"
+      <button id="lock-unlock-btn"
               style="width:100%; padding:12px; background:linear-gradient(135deg,#0B4F6C,#00A8CC);
                      color:white; border:none; border-radius:10px; font-family:Cairo,sans-serif;
                      font-size:15px; font-weight:800; cursor:pointer;">
         فتح القفل
       </button>
-      <button onclick="doLogout()"
+      <button id="lock-logout-btn"
               style="width:100%; padding:10px; margin-top:10px; background:transparent;
                      color:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.15);
                      border-radius:10px; font-family:Cairo,sans-serif; font-size:13px; cursor:pointer;">
@@ -49,7 +49,7 @@
       </button>
     </div>
     <div id="lock-countdown" style="color:rgba(255,255,255,.4); font-size:12px;"></div>
-  `;
+  `);
 
   // Warn toast
   const warnToast = document.createElement('div');
@@ -67,6 +67,9 @@
   window.addEventListener('load', () => {
     document.body.appendChild(lockOverlay);
     document.body.appendChild(warnToast);
+    document.getElementById('lock-password').addEventListener('keydown', e => { if (e.key === 'Enter') window.unlockSession(); });
+    document.getElementById('lock-unlock-btn').addEventListener('click', () => window.unlockSession());
+    document.getElementById('lock-logout-btn').addEventListener('click', () => { if (window.doLogout) window.doLogout(); else { localStorage.clear(); window.location.replace('/login.html'); } });
   });
 
   // ── Timers ─────────────────────────────────────────────────────────────

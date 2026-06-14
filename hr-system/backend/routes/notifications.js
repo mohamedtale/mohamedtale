@@ -22,15 +22,10 @@ router.get('/', async (req, res, next) => {
       const pc = parseInt(perms.rows[0].count, 10);
       if (pc > 0) notes.push({ type: 'warning', icon: '🚪', text: `${pc} طلب إذن خروج معلق`, link: '#/permissions' });
 
-      // Eligible promotions
+      // Eligible promotions (grade_level >= 12 and grade_allowance_count >= 4)
       const promo = await db.query(
-        `SELECT COUNT(*) FROM allowances a
-         JOIN employees e ON a.employee_id=e.id
-         WHERE e.status='active' AND a.current_grade < 12
-           AND (
-             (a.current_grade = 10 AND a.allowances_count >= 5)
-             OR (a.current_grade <> 10 AND a.allowances_count >= 4)
-           )`
+        `SELECT COUNT(*) FROM employees
+         WHERE status='active' AND grade_level < 12 AND grade_allowance_count >= 4`
       );
       const prc = parseInt(promo.rows[0].count, 10);
       if (prc > 0) notes.push({ type: 'info', icon: '⭐', text: `${prc} موظف مستحق للترقية`, link: '#/allowances' });
