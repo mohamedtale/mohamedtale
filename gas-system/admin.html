@@ -564,11 +564,7 @@ function loadEmployees() {
   google.script.run.withSuccessHandler(data => {
     allEmployees = data || [];
     renderEmployeeTable(allEmployees);
-    populateDeptFilter(data);
-  }).getOrgStructure && google.script.run.withSuccessHandler(() => {}).getOrgStructure();
-  google.script.run.withSuccessHandler(data => {
-    allEmployees = data || [];
-    renderEmployeeTable(allEmployees);
+    populateDeptFilter(allEmployees);
   }).withFailureHandler(e => toast('خطأ: ' + e.message, 'error')).report_GeneralEmployees({});
 }
 
