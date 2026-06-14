@@ -73,8 +73,11 @@ const DataLayer = {
     return {
       emp: findOrCreate(["الموظفين", "employees"], ["الاسم","الرقم الوظيفي","كلمة السر","رصيد الإجازة","المؤهل","المسمى الوظيفي","الإدارة","القسم","المدير المباشر","تاريخ المباشرة","الدرجة","علاوة الدرجة","نوع العقد","نهاية العقد","موقع العمل","","","حالة العمل","ملاحظات إدارية","راتب قديم","","موعد الاستحقاق","الراتب الحالي","قرار الترقية","ملاحظات مالية"]),
       lev: findOrCreate(["الإجازات", "Vacations"], ["الاسم","الرقم الوظيفي","نوع الإجازة","تاريخ البداية","تاريخ النهاية","تاريخ العودة","عدد الأيام","ملاحظات","الحالة"]),
-      logs: findOrCreate(["سجل العمليات", "logs"], ["التاريخ","المستخدم","العملية","التفاصيل"]),
-      holidays: findOrCreate(["العطلات", "holidays"], ["التاريخ","الوصف"])
+      logs: findOrCreate(["سجل العمليات", "السجل", "logs"], ["التاريخ","المستخدم","العملية","التفاصيل"]),
+      holidays: findOrCreate(["العطلات", "holidays"], ["التاريخ","الوصف"]),
+      docs: findOrCreate(["الأرشيف"], null),
+      att:  findOrCreate(["الحضور_اليومي", "سجل الحضور"], null),
+      perms: findOrCreate(["أذونات_الخروج", "سجل الأذونات"], null)
     };
   },
   getRawData: function(sheetName) {
@@ -693,18 +696,26 @@ function updateDatabaseValue(row, col, val) {
 // ==================== ADDITIONS v2 - شؤون العاملين ====================
 
 const NEW_SHEETS_CFG = {
-  DOCS:  { name: "الأرشيف",        headers: ["معرف السجل","الرقم الوظيفي","الاسم","القسم","نوع المستند","اسم الملف","معرف Drive","رابط المعاينة","الحجم","تاريخ الوثيقة","تاريخ الانتهاء","ملاحظات","سري","أضيف بواسطة","تاريخ الإنشاء","محذوف"] },
-  ATT:   { name: "سجل الحضور",     headers: ["الرقم الوظيفي","الاسم","القسم","التاريخ","وقت الدخول","وقت الخروج","الحالة","مدة العمل (ساعة)"] },
-  PERMS: { name: "سجل الأذونات",   headers: ["المعرف","الرقم الوظيفي","الاسم","القسم","التاريخ","نوع الإذن","وقت الخروج","وقت العودة","المدة (دقيقة)","ملاحظات"] }
+  DOCS:  { name: "الأرشيف",          headers: ["معرف السجل","الرقم الوظيفي","الاسم","القسم","نوع المستند","اسم الملف","معرف Drive","رابط المعاينة","الحجم","تاريخ الوثيقة","تاريخ الانتهاء","ملاحظات","سري","أضيف بواسطة","تاريخ الإنشاء","محذوف"] },
+  ATT:   { name: "الحضور_اليومي",    headers: ["الرقم الوظيفي","الاسم","القسم","التاريخ","وقت الدخول","وقت الخروج","الحالة","مدة العمل (ساعة)"] },
+  PERMS: { name: "أذونات_الخروج",    headers: ["المعرف","الرقم الوظيفي","الاسم","القسم","التاريخ","نوع الإذن","وقت الخروج","وقت العودة","المدة (دقيقة)","ملاحظات"] }
 };
 
 let _rootFolderIdV2 = null;
 
 function _getNewSheet(key) {
+  const s = DataLayer.getSheets();
+  if (key === 'DOCS')  return s.docs  || _createSheet(key);
+  if (key === 'ATT')   return s.att   || _createSheet(key);
+  if (key === 'PERMS') return s.perms || _createSheet(key);
+  return _createSheet(key);
+}
+function _createSheet(key) {
   const ss = getSpreadsheet();
   const cfg = NEW_SHEETS_CFG[key];
-  let sh = ss.getSheetByName(cfg.name);
-  if (!sh) { sh = ss.insertSheet(cfg.name); sh.getRange(1,1,1,cfg.headers.length).setValues([cfg.headers]); sh.setFrozenRows(1); }
+  let sh = ss.insertSheet(cfg.name);
+  sh.getRange(1,1,1,cfg.headers.length).setValues([cfg.headers]);
+  sh.setFrozenRows(1);
   return sh;
 }
 
