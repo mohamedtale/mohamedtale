@@ -130,48 +130,91 @@ async function initDashboard() {
     showToast('تعذّر تحميل إحصائيات لوحة التحكم.', 'error');
   }
 
+  const user = JSON.parse(localStorage.getItem('hr_user') || '{}');
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'صباح الخير';
+    if (h < 17) return 'مساء الخير';
+    return 'مساء النور';
+  })();
+
   contentEl.innerHTML = `
-    <div class="page-header">
-      <h1 class="page-title">لوحة التحكم</h1>
-      <p class="page-date">${todayArabic}</p>
+    <div style="margin-bottom:28px;">
+      <h1 style="font-size:22px;font-weight:900;color:#0B2A3B;margin-bottom:4px;">${greeting}، ${user.full_name || 'مدير النظام'} 👋</h1>
+      <p style="font-size:13.5px;color:#64748B;">${todayArabic}</p>
     </div>
 
-    <div class="stats-grid">
-      <!-- إجمالي الموظفين -->
-      <div class="stat-card stat-card--turquoise">
-        <div class="stat-card__icon">👥</div>
-        <div class="stat-card__body">
-          <div class="stat-card__value">${stats.total_employees ?? 0}</div>
-          <div class="stat-card__label">إجمالي الموظفين</div>
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-bottom:28px;">
+
+      <div class="stat-card border-turquoise" style="cursor:pointer;" onclick="window.location.hash='#/employees'">
+        <div class="stat-icon" style="background:rgba(0,168,204,.1);color:#00A8CC;font-size:24px;">👥</div>
+        <div class="stat-info">
+          <div class="stat-value" id="dash-total">${stats.total_employees ?? 0}</div>
+          <div class="stat-label">إجمالي الموظفين</div>
         </div>
       </div>
 
-      <!-- إجازات معلقة -->
-      <div class="stat-card stat-card--gold">
-        <div class="stat-card__icon">📋</div>
-        <div class="stat-card__body">
-          <div class="stat-card__value">${stats.pending_leaves ?? 0}</div>
-          <div class="stat-card__label">إجازات معلقة</div>
+      <div class="stat-card border-warning" style="cursor:pointer;" onclick="window.location.hash='#/leaves'">
+        <div class="stat-icon bg-warning" style="font-size:24px;">📋</div>
+        <div class="stat-info">
+          <div class="stat-value" id="dash-leaves">${stats.pending_leaves ?? 0}</div>
+          <div class="stat-label">إجازات معلقة</div>
         </div>
       </div>
 
-      <!-- أذونات معلقة -->
-      <div class="stat-card stat-card--navy">
-        <div class="stat-card__icon">🚪</div>
-        <div class="stat-card__body">
-          <div class="stat-card__value">${stats.pending_permissions ?? 0}</div>
-          <div class="stat-card__label">أذونات معلقة</div>
+      <div class="stat-card border-navy" style="cursor:pointer;" onclick="window.location.hash='#/permissions'">
+        <div class="stat-icon bg-navy" style="font-size:24px;">🚪</div>
+        <div class="stat-info">
+          <div class="stat-value" id="dash-perms">${stats.pending_permissions ?? 0}</div>
+          <div class="stat-label">أذونات معلقة</div>
         </div>
       </div>
 
-      <!-- مرشحون للترقية -->
-      <div class="stat-card stat-card--green">
-        <div class="stat-card__icon">⭐</div>
-        <div class="stat-card__body">
-          <div class="stat-card__value">${stats.eligible_promotions ?? 0}</div>
-          <div class="stat-card__label">مرشحون للترقية</div>
+      <div class="stat-card border-gold" style="cursor:pointer;" onclick="window.location.hash='#/allowances'">
+        <div class="stat-icon bg-gold" style="font-size:24px;">⭐</div>
+        <div class="stat-info">
+          <div class="stat-value" id="dash-promo">${stats.eligible_promotions ?? 0}</div>
+          <div class="stat-label">مرشحون للترقية</div>
         </div>
       </div>
+
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;">
+
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header"><h3>🔗 روابط سريعة</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+          ${[
+            ['#/employees','👤','إضافة موظف جديد','btn-primary'],
+            ['#/leaves','📅','طلب إجازة','btn-outline'],
+            ['#/permissions','🚪','إذن خروج','btn-outline'],
+            ['#/attendance','📊','سجل الحضور','btn-outline'],
+            ['#/reports','📈','التقارير','btn-outline'],
+          ].map(([href,icon,label,cls]) =>
+            `<a href="${href}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:#F8FAFC;border:1.5px solid #E2E8F0;color:#1E293B;font-size:13.5px;font-weight:600;text-decoration:none;transition:all .18s ease;" onmouseover="this.style.background='#EFF6FF';this.style.borderColor='#00A8CC'" onmouseout="this.style.background='#F8FAFC';this.style.borderColor='#E2E8F0'">
+              <span style="font-size:18px;">${icon}</span> ${label}
+            </a>`
+          ).join('')}
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-header"><h3>📊 معلومات النظام</h3></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+          ${[
+            ['المستخدم الحالي', user.full_name || '—'],
+            ['الدور', user.role === 'admin' ? 'مدير النظام' : user.role === 'manager' ? 'مشرف' : 'موظف'],
+            ['آخر تحديث', new Date().toLocaleTimeString('ar-IQ')],
+          ].map(([label, value]) =>
+            `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;">
+              <span style="font-size:13px;color:#64748B;font-weight:500;">${label}</span>
+              <span style="font-size:13.5px;font-weight:700;color:#1E293B;">${value}</span>
+            </div>`
+          ).join('')}
+        </div>
+      </div>
+
     </div>`;
 }
 
