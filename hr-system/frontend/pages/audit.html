@@ -1,0 +1,143 @@
+<div class="page-header">
+  <h1 class="page-title">سجل العمليات</h1>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label style="font-size:12px;font-weight:700;color:#6c757d;display:block;margin-bottom:4px;">نوع العملية</label>
+      <select id="audit-action" class="form-select" style="min-width:140px;">
+        <option value="">الكل</option>
+        <option value="LOGIN">دخول</option>
+        <option value="LOGIN_FAIL">دخول فاشل</option>
+        <option value="LOGOUT">خروج</option>
+        <option value="CREATE">إضافة</option>
+        <option value="UPDATE">تعديل</option>
+        <option value="DELETE">حذف</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:700;color:#6c757d;display:block;margin-bottom:4px;">المستخدم</label>
+      <input type="text" id="audit-username" class="form-control" placeholder="اسم المستخدم" style="min-width:160px;">
+    </div>
+    <div>
+      <label style="font-size:12px;font-weight:700;color:#6c757d;display:block;margin-bottom:4px;">القسم</label>
+      <select id="audit-entity" class="form-select" style="min-width:140px;">
+        <option value="">الكل</option>
+        <option value="employees">الموظفين</option>
+        <option value="leaves">الإجازات</option>
+        <option value="permissions">الأذونات</option>
+        <option value="allowances">البدلات</option>
+        <option value="documents">الوثائق</option>
+        <option value="settings">الإعدادات</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="loadAudit()">🔍 بحث</button>
+    <button class="btn btn-secondary" onclick="resetAuditFilter()">إعادة تعيين</button>
+  </div>
+</div>
+
+<div class="card">
+  <div id="audit-stats" style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;"></div>
+  <div class="table-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الوقت</th>
+          <th>المستخدم</th>
+          <th>العملية</th>
+          <th>القسم</th>
+          <th>التفاصيل</th>
+          <th>عنوان IP</th>
+        </tr>
+      </thead>
+      <tbody id="audit-tbody">
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:#adb5bd;">جارٍ التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="audit-pagination" style="display:flex;justify-content:center;gap:8px;margin-top:16px;"></div>
+</div>
+
+<script>
+const ACTION_LABELS = {
+  LOGIN:      { label: 'دخول',        badge: 'badge--success' },
+  LOGIN_FAIL: { label: 'دخول فاشل',   badge: 'badge--danger'  },
+  LOGOUT:     { label: 'خروج',        badge: 'badge--secondary'},
+  CREATE:     { label: 'إضافة',       badge: 'badge--info'    },
+  UPDATE:     { label: 'تعديل',       badge: 'badge--warning' },
+  DELETE:     { label: 'حذف',         badge: 'badge--danger'  },
+};
+
+let auditOffset = 0;
+const AUDIT_LIMIT = 50;
+
+async function loadAudit(offset = 0) {
+  auditOffset = offset;
+  const action   = document.getElementById('audit-action').value;
+  const username = document.getElementById('audit-username').value.trim();
+  const entity   = document.getElementById('audit-entity').value;
+
+  const params = new URLSearchParams({ limit: AUDIT_LIMIT, offset });
+  if (action)   params.append('action', action);
+  if (username) params.append('username', username);
+  if (entity)   params.append('entity', entity);
+
+  const tbody = document.getElementById('audit-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#adb5bd;">جارٍ التحميل...</td></tr>';
+
+  try {
+    const data = await window.API.request('GET', `/api/audit-logs?${params}`);
+    if (!data?.data?.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#adb5bd;">لا توجد سجلات</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.data.map((r, i) => {
+      const a = ACTION_LABELS[r.action] || { label: r.action, badge: 'badge--secondary' };
+      const dt = new Date(r.created_at);
+      const dateStr = dt.toLocaleDateString('ar-IQ') + ' ' + dt.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+      return `<tr>
+        <td>${offset + i + 1}</td>
+        <td style="font-size:12px;white-space:nowrap;">${dateStr}</td>
+        <td><strong>${r.username || '—'}</strong></td>
+        <td><span class="badge ${a.badge}">${a.label}</span></td>
+        <td>${r.entity || '—'}</td>
+        <td style="font-size:12px;color:#6c757d;">${r.description || '—'}</td>
+        <td style="font-size:11px;color:#adb5bd;direction:ltr;">${r.ip_address || '—'}</td>
+      </tr>`;
+    }).join('');
+
+    renderAuditPagination(data.total);
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:#c53030;">${e.message}</td></tr>`;
+  }
+}
+
+function renderAuditPagination(total) {
+  const pages = Math.ceil(total / AUDIT_LIMIT);
+  const current = Math.floor(auditOffset / AUDIT_LIMIT);
+  const el = document.getElementById('audit-pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 0; i < pages; i++) {
+    html += `<button class="btn ${i === current ? 'btn-primary' : 'btn-secondary'}" style="min-width:36px;padding:6px 10px;" onclick="loadAudit(${i * AUDIT_LIMIT})">${i + 1}</button>`;
+  }
+  el.innerHTML = html;
+}
+
+function resetAuditFilter() {
+  document.getElementById('audit-action').value = '';
+  document.getElementById('audit-username').value = '';
+  document.getElementById('audit-entity').value = '';
+  loadAudit();
+}
+
+// Auto-expose request for direct API call
+if (!window.API.request) {
+  window.API.request = (m, p) => fetch(p, { headers: { Authorization: 'Bearer ' + localStorage.getItem('hr_token') } }).then(r => r.json());
+}
+
+loadAudit();
+</script>

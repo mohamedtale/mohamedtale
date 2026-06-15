@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف مستحقي الزيادة السنوية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0B4F6C;--accent:#00A8CC;--gold:#D4A843;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:24px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:#fff;border-radius:12px;padding:10px 18px;
+  margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:297mm;margin-left:auto;margin-right:auto;}
+.toolbar-label{font-size:11px;color:#999;font-weight:700;}
+.tbtn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;border:none;
+  font-size:11.5px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.tbtn-green{background:#E6F7F2;color:#0D7A55;border:1px solid #a7f3d0;}
+.tbtn-green:hover{background:#d1fae5;}
+.tbtn-blue{background:#E8F4FD;color:#0B4F6C;border:1px solid #BDD9EF;}
+.tbtn-blue:hover{background:#dbeafe;}
+.tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
+.tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.tdiv{width:1px;height:26px;background:#e2e8f0;margin:0 2px;}
+
+/* PAPER — landscape A4 */
+.paper{background:#fff;width:297mm;min-height:210mm;
+  margin:0 auto;padding:12mm 15mm 20mm;
+  box-shadow:0 6px 40px rgba(0,0,0,.22);
+  position:relative;overflow:hidden;}
+.paper::after{content:'💧';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-15deg);
+  font-size:260px;opacity:.025;pointer-events:none;z-index:0;}
+.paper.edit-mode [contenteditable]:hover{outline:1.5px dashed rgba(0,168,204,.5);border-radius:3px;background:rgba(0,168,204,.03);}
+.paper.edit-mode [contenteditable]:focus{outline:2px solid var(--accent);border-radius:3px;background:rgba(0,168,204,.07);}
+.edit-hint{display:none;position:absolute;top:8px;left:8px;background:var(--accent);
+  color:#fff;font-size:9px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.paper.edit-mode .edit-hint{display:block;}
+
+/* HEADER */
+.doc-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;padding-bottom:11px;border-bottom:3px double var(--primary);margin-bottom:14px;}
+.org-name{font-size:13px;font-weight:800;color:var(--primary);line-height:1.5;}
+.org-sub{font-size:10px;color:#555;margin-top:2px;}
+.org-mini{font-size:9px;color:#888;margin-top:2px;}
+.logo-ring{width:64px;height:64px;border-radius:50%;border:3px solid var(--primary);
+  background:linear-gradient(135deg,#E8F4FD,#fff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin:0 auto 3px;box-shadow:0 2px 8px rgba(11,79,108,.15);}
+.logo-txt{font-size:8px;color:#888;text-align:center;}
+.ref-side{text-align:left;}
+.ref-lines{display:flex;flex-direction:column;gap:7px;}
+.ref-line{font-size:10px;color:#555;display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.ref-line span{font-weight:700;color:var(--primary);}
+.ref-val{border-bottom:1.5px solid #b0c8d8;min-width:110px;padding-bottom:1px;font-size:10px;}
+
+/* TITLE */
+.doc-title{text-align:center;margin:10px 0 16px;position:relative;}
+.doc-title::before,.doc-title::after{content:'';position:absolute;top:50%;
+  width:18%;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold));}
+.doc-title::before{right:0;} .doc-title::after{left:0;transform:scaleX(-1);}
+.doc-title h1{font-size:15px;font-weight:800;color:var(--primary);
+  display:inline-block;padding:0 16px;background:#fff;
+  position:relative;z-index:1;border-bottom:2.5px solid var(--gold);padding-bottom:3px;}
+
+/* TABLE */
+.roster-wrap{position:relative;z-index:1;
+  border:1.5px solid var(--primary);border-radius:8px;overflow:hidden;margin-bottom:8px;}
+.roster-table{width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed;}
+.roster-table thead th{
+  background:linear-gradient(180deg,#0d5e7a,var(--primary));
+  color:#fff;font-weight:700;padding:10px 6px;text-align:center;
+  white-space:nowrap;border-left:1px solid rgba(255,255,255,.12);font-size:10.5px;}
+.roster-table thead th:last-child{border-left:none;}
+.roster-table tbody tr{border-bottom:1px solid #e0eaf0;}
+.roster-table tbody tr:last-child{border-bottom:none;}
+.roster-table tbody tr:nth-child(even) td{background:#f7fafc;}
+.roster-table tbody tr:hover td{background:#eaf4fb!important;}
+.roster-table tbody td{
+  padding:9px 7px;text-align:center;
+  border-left:1px solid #dde8f0;
+  font-size:10.5px;color:#1a2d3d;
+  overflow:hidden;white-space:nowrap;}
+.roster-table tbody td:last-child{border-left:none;}
+.roster-table tbody td.name-col{text-align:right;font-weight:700;font-size:11px;
+  color:var(--primary);padding-right:10px;white-space:normal;}
+.roster-table tbody td.notes-col{text-align:center;white-space:normal;}
+
+/* مرشح للترقية */
+.badge-promo{
+  display:inline-block;
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  color:#92400e;font-weight:800;font-size:10px;
+  padding:3px 10px;border-radius:12px;
+  border:1.5px solid #D4A843;white-space:nowrap;
+}
+
+/* زر حذف الصف */
+.row-del{display:none;width:20px;height:20px;border-radius:50%;
+  background:#fee2e2;border:none;color:#C0392B;
+  font-size:11px;cursor:pointer;align-items:center;justify-content:center;
+  font-weight:800;margin:0 auto;}
+.paper.edit-mode .row-del{display:flex;}
+
+/* زر إضافة صف */
+.add-row-btn{display:none;width:100%;padding:9px;
+  border:2px dashed #BDD9EF;border-radius:0 0 8px 8px;
+  background:#f8fbfd;color:#1A6E8E;
+  font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.add-row-btn:hover{background:#E8F4FD;}
+.paper.edit-mode .add-row-btn{display:block;}
+
+/* SIGNATURES */
+.sigs-wrap{margin-top:20px;}
+.sigs-grid{display:flex;gap:14px;flex-wrap:wrap;}
+.sig-box{flex:1;min-width:130px;border:1.5px solid #c5d5e0;border-radius:8px;
+  padding:12px 10px 8px;text-align:center;position:relative;
+  background:linear-gradient(180deg,#fafcfe,#fff);}
+.sig-title{font-size:10.5px;font-weight:700;color:var(--primary);margin-bottom:36px;}
+.sig-space{height:36px;border-bottom:1px solid #c5d5e0;margin:0 10px;}
+.sig-name{font-size:9.5px;color:#888;margin-top:6px;}
+.sig-del{display:none;position:absolute;top:5px;left:5px;
+  width:18px;height:18px;border-radius:50%;
+  background:#fee2e2;border:none;color:#C0392B;
+  font-size:10px;cursor:pointer;align-items:center;justify-content:center;font-weight:700;}
+.paper.edit-mode .sig-del{display:flex;}
+.add-sig-row{display:none;margin-top:10px;width:100%;padding:8px;
+  border:2px dashed #BDD9EF;border-radius:8px;
+  background:#f8fbfd;color:#1A6E8E;
+  font-size:11.5px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.add-sig-row:hover{background:#E8F4FD;}
+.paper.edit-mode .add-sig-row{display:block;}
+
+/* FOOTER */
+.doc-bottom{position:absolute;bottom:9mm;right:15mm;left:15mm;}
+.doc-footer-line{border-top:1px solid #ddd;padding-top:5px;
+  display:flex;justify-content:space-between;font-size:8px;color:#aaa;}
+
+@media print{
+  @page{size:A4 landscape;margin:10mm;}
+  body{background:white;padding:0;}
+  .toolbar{display:none;}
+  .paper{box-shadow:none;min-height:unset;width:100%;padding:0;}
+  .row-del,.add-row-btn,.add-sig-row,.sig-del,.edit-hint{display:none!important;}
+  .paper.edit-mode [contenteditable]:hover,
+  .paper.edit-mode [contenteditable]:focus{outline:none;background:transparent;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">🖊 أدوات:</span>
+  <button class="tbtn tbtn-green" id="editBtn" onclick="toggleEdit()">💾 إخفاء أدوات التعديل</button>
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-blue" onclick="addRow()">＋ إضافة موظف</button>
+  <button class="tbtn tbtn-blue" onclick="addSig()">＋ إضافة توقيع</button>
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-outline" onclick="window.print()">🖨️ طباعة</button>
+  <button class="tbtn tbtn-outline" onclick="window.print()">📄 تصدير PDF</button>
+</div>
+
+<!-- PAPER -->
+<div class="paper edit-mode" id="paper">
+  <div class="edit-hint">✏️ وضع التعديل</div>
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="org-name" contenteditable="true">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub" contenteditable="true">إدارة الموارد البشرية والتدريب</div>
+      <div class="org-mini" contenteditable="true">قسم شؤون الموظفين</div>
+    </div>
+    <div style="text-align:center">
+      <div class="logo-ring">💧</div>
+      <div class="logo-txt">الجهاز التنفيذي</div>
+    </div>
+    <div class="ref-side">
+      <div class="ref-lines">
+        <div class="ref-line">
+          <span>الرقم الإشاري :</span>
+          <span class="ref-val" contenteditable="true"></span>
+        </div>
+        <div class="ref-line">
+          <span>التاريخ :</span>
+          <span class="ref-val" contenteditable="true">11 / 06 / 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="doc-title">
+    <h1>كشف مستحقي الزيادة السنوية لشهر (<span contenteditable="true">يونيو</span>) لعام <span contenteditable="true">2026</span>م</h1>
+  </div>
+
+  <!-- TABLE -->
+  <div class="roster-wrap">
+    <table class="roster-table" id="rosterTable">
+      <thead>
+        <tr>
+          <th style="width:3.5%">ت</th>
+          <th style="width:20%">الأسـم الرباعي</th>
+          <th style="width:8%">الرقم الوظيفي</th>
+          <th style="width:14%">الدرجة السابقة</th>
+          <th style="width:14%">الدرجة الحالية</th>
+          <th style="width:11%">تاريخ الاستحقاق</th>
+          <th style="width:16%">ملاحظات</th>
+          <th style="width:3.5%"></th>
+        </tr>
+      </thead>
+      <tbody id="rosterBody">
+        <tr>
+          <td contenteditable="true">1</td>
+          <td class="name-col" contenteditable="true">م.علي محمد حسن الشاوش</td>
+          <td contenteditable="true">21260</td>
+          <td contenteditable="true">الخامسة عشر + 2</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">الخامسة عشر + 3</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+        <tr>
+          <td contenteditable="true">2</td>
+          <td class="name-col" contenteditable="true">محمود أبوبكر أحمد عبدالحفيظ</td>
+          <td contenteditable="true">21246</td>
+          <td contenteditable="true">السادسة + 3</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">السادسة + 4</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+        <tr>
+          <td contenteditable="true">3</td>
+          <td class="name-col" contenteditable="true">إبراهيم إمحمد مسعود مسعود</td>
+          <td contenteditable="true">21245</td>
+          <td contenteditable="true">السادسة + 3</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">السادسة + 4</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+        <tr>
+          <td contenteditable="true">4</td>
+          <td class="name-col" contenteditable="true">محمد علي الشريف الأسطى</td>
+          <td contenteditable="true">21244</td>
+          <td contenteditable="true">الخامسة + 3</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">الخامسة + 4</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+        <tr>
+          <td contenteditable="true">5</td>
+          <td class="name-col" contenteditable="true">عفاف خميس محمد زيدان</td>
+          <td contenteditable="true">21210</td>
+          <td contenteditable="true">الثانية عشر + 0</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">الثانية عشر + 1</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+        <tr>
+          <td contenteditable="true">6</td>
+          <td class="name-col" contenteditable="true">ونام بشر الطيب النعاس</td>
+          <td contenteditable="true">21209</td>
+          <td contenteditable="true">التاسعة + 0</td>
+          <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))">التاسعة + 1</td>
+          <td contenteditable="true">2026/05/01</td>
+          <td class="notes-col"></td>
+          <td><button class="row-del" onclick="delRow(this)">✕</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addRow()">＋ إضافة موظف</button>
+  </div>
+
+  <!-- SIGNATURES -->
+  <div class="sigs-wrap">
+    <div class="sigs-grid" id="sigsGrid">
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">إعداد / قسم شؤون العاملين</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">اعتماد / مدير إدارة الشؤون الإدارية</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">اعتماد / مدير عام الجهاز</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>
+      </div>
+    </div>
+    <button class="add-sig-row" onclick="addSig()">＋ إضافة خانة توقيع</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-bottom">
+    <div class="doc-footer-line">
+      <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+      <span>🏅 مرشح للترقية = من وصل عدد علاواته إلى الحد المحدد</span>
+      <span>صفحة 1 من 1</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let editMode = true;
+
+/* ══ استخراج رقم العلاوة من النص مثل "السادسة + 4" ══ */
+function extractAllowanceNum(text) {
+  const m = text.match(/\+\s*(\d+)/);
+  return m ? parseInt(m[1]) : -1;
+}
+
+/* ══ استخراج اسم الدرجة من النص ══ */
+function isTenthGrade(text) {
+  return /العاشرة/.test(text);
+}
+
+/* ══ حساب الحد حسب الدرجة ══ */
+function getThresholdForGrade(gradeText) {
+  return isTenthGrade(gradeText) ? 5 : 4;
+}
+
+/* ══ فحص صف واحد وتحديث خانة الملاحظات ══ */
+function checkRow(tr) {
+  const gradeCell = tr.querySelector('.grade-cur');
+  const notesCell = tr.querySelector('.notes-col');
+  if (!gradeCell || !notesCell) return;
+
+  const gradeText  = gradeCell.textContent;
+  const num        = extractAllowanceNum(gradeText);
+  const threshold  = getThresholdForGrade(gradeText);
+
+  if (num >= threshold) {
+    notesCell.innerHTML = `<span class="badge-promo">🏅 مرشح للترقية</span>`;
+  } else {
+    if (notesCell.querySelector('.badge-promo')) {
+      notesCell.innerHTML = '';
+    }
+  }
+}
+
+/* ══ فحص جميع الصفوف ══ */
+function checkAllRows() {
+  document.querySelectorAll('#rosterBody tr').forEach(tr => checkRow(tr));
+}
+
+/* ══ تشغيل عند التحميل ══ */
+window.addEventListener('load', checkAllRows);
+
+/* ══ وضع التعديل ══ */
+function toggleEdit() {
+  editMode = !editMode;
+  const paper = document.getElementById('paper');
+  const btn   = document.getElementById('editBtn');
+  if (editMode) {
+    paper.classList.add('edit-mode');
+    btn.textContent = '💾 إخفاء أدوات التعديل';
+    btn.className = 'tbtn tbtn-green';
+  } else {
+    paper.classList.remove('edit-mode');
+    btn.textContent = '✏️ إظهار أدوات التعديل';
+    btn.className = 'tbtn tbtn-outline';
+    toast('✅ جاهز للطباعة');
+  }
+}
+
+/* ══ إضافة صف ══ */
+function addRow() {
+  const tbody = document.getElementById('rosterBody');
+  const seq = tbody.rows.length + 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td contenteditable="true">${seq}</td>
+    <td class="name-col" contenteditable="true"></td>
+    <td contenteditable="true"></td>
+    <td contenteditable="true"></td>
+    <td class="grade-cur" contenteditable="true" oninput="checkRow(this.closest('tr'))"></td>
+    <td contenteditable="true"></td>
+    <td class="notes-col"></td>
+    <td><button class="row-del" onclick="delRow(this)">✕</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelector('.name-col').focus();
+  toast('✅ تمت إضافة صف');
+}
+
+/* ══ حذف صف ══ */
+function delRow(btn) {
+  const tbody = document.getElementById('rosterBody');
+  if (tbody.rows.length <= 1) { toast('⚠️ لا يمكن حذف آخر صف', true); return; }
+  if (confirm('حذف هذا الصف؟')) {
+    btn.closest('tr').remove();
+    Array.from(tbody.rows).forEach((r,i) => r.cells[0].textContent = i+1);
+    toast('🗑 تم الحذف');
+  }
+}
+
+/* ══ التوقيعات ══ */
+function addSig() {
+  const g = document.getElementById('sigsGrid');
+  const d = document.createElement('div');
+  d.className = 'sig-box';
+  d.innerHTML = `
+    <button class="sig-del" onclick="delSig(this)">✕</button>
+    <div class="sig-title" contenteditable="true">اسم الجهة</div>
+    <div class="sig-space"></div>
+    <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>`;
+  g.appendChild(d);
+  toast('✅ تمت إضافة خانة توقيع');
+}
+
+function delSig(btn) {
+  if (document.getElementById('sigsGrid').children.length <= 1) {
+    toast('⚠️ لا يمكن حذف آخر خانة', true); return;
+  }
+  if (confirm('حذف هذه الخانة؟')) { btn.closest('.sig-box').remove(); toast('🗑 تم الحذف'); }
+}
+
+function toast(msg, warn=false) {
+  let t = document.getElementById('_toast');
+  if (!t) { t=document.createElement('div'); t.id='_toast';
+    t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);padding:8px 20px;border-radius:20px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;z-index:9999;box-shadow:0 3px 14px rgba(0,0,0,.18);transition:opacity .4s;';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.background=warn?'#fee2e2':'#d1fae5';
+  t.style.color=warn?'#991b1b':'#065f46'; t.style.opacity='1';
+  clearTimeout(t._tid); t._tid=setTimeout(()=>t.style.opacity='0',2500);
+}
+</script>
+</body>
+</html>

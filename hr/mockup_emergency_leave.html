@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نموذج إجازة طارئة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0B4F6C;--accent:#00A8CC;--gold:#D4A843;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:28px;}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:#fff;border-radius:12px;padding:10px 18px;
+  margin-bottom:22px;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:210mm;margin-left:auto;margin-right:auto;
+}
+.toolbar-label{font-size:11px;color:#999;font-weight:700;padding-left:4px;}
+.tbtn{display:flex;align-items:center;gap:5px;padding:7px 15px;border-radius:8px;border:none;font-size:12px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.tbtn-green{background:#E6F7F2;color:#0D7A55;border:1px solid #a7f3d0;}
+.tbtn-green:hover{background:#d1fae5;}
+.tbtn-blue{background:#E8F4FD;color:#0B4F6C;border:1px solid #BDD9EF;}
+.tbtn-blue:hover{background:#dbeafe;}
+.tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
+.tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.tdiv{width:1px;height:26px;background:#e2e8f0;margin:0 2px;}
+
+/* PAPER */
+.paper{
+  background:#fff;
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto;
+  padding:15mm 17mm 20mm;
+  box-shadow:0 6px 40px rgba(0,0,0,.22);
+  position:relative;
+  overflow:hidden;
+}
+/* علامة مائية */
+.paper::after{
+  content:'💧';
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-15deg);
+  font-size:220px;opacity:.025;pointer-events:none;z-index:0;
+}
+
+/* وضع التعديل */
+.paper.edit-mode [contenteditable]:hover{outline:1.5px dashed rgba(0,168,204,.5);border-radius:3px;background:rgba(0,168,204,.03);}
+.paper.edit-mode [contenteditable]:focus{outline:2px solid var(--accent);border-radius:3px;background:rgba(0,168,204,.07);}
+.edit-hint{display:none;position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.paper.edit-mode .edit-hint{display:block;}
+
+/* ═══ HEADER ═══ */
+.doc-header{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:12px;
+  padding-bottom:14px;
+  border-bottom:3px double var(--primary);
+  margin-bottom:18px;
+}
+.org-side{}
+.org-name{font-size:13.5px;font-weight:800;color:var(--primary);line-height:1.4;}
+.org-dept{font-size:10px;color:#666;margin-top:3px;}
+.org-date{font-size:9.5px;color:#999;margin-top:6px;}
+.logo-mid{text-align:center;}
+.logo-ring{
+  width:72px;height:72px;border-radius:50%;
+  border:3px solid var(--primary);
+  background:linear-gradient(135deg,#E8F4FD,#fff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;margin:0 auto 4px;
+  box-shadow:0 2px 8px rgba(11,79,108,.15);
+}
+.logo-txt{font-size:8.5px;color:#888;}
+.ref-side{text-align:left;}
+.ref-box{
+  display:inline-block;
+  border:1.5px solid var(--primary);
+  border-radius:8px;padding:7px 14px;text-align:center;
+  background:linear-gradient(135deg,#E8F4FD,#fff);
+}
+.ref-lbl{font-size:8.5px;color:#888;margin-bottom:3px;}
+.ref-num{font-size:13px;font-weight:800;color:var(--primary);direction:ltr;}
+
+/* ═══ TITLE ═══ */
+.doc-title{
+  text-align:center;
+  margin:16px 0 20px;
+  position:relative;
+}
+.doc-title::before,.doc-title::after{
+  content:'';position:absolute;top:50%;width:26%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--gold));
+}
+.doc-title::before{right:0;}
+.doc-title::after{left:0;transform:scaleX(-1);}
+.doc-title h1{
+  font-size:18px;font-weight:800;color:var(--primary);
+  display:inline-block;
+  padding:0 18px;
+  background:#fff;
+  position:relative;z-index:1;
+  border-bottom:2.5px solid var(--gold);
+  padding-bottom:4px;
+}
+
+/* ═══ SECTION HEADER ═══ */
+.sec{
+  display:flex;align-items:center;gap:8px;
+  margin:16px 0 8px;
+}
+.sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--primary),transparent);}
+.sec-label{
+  font-size:10.5px;font-weight:800;color:#fff;
+  background:var(--primary);
+  padding:4px 14px;border-radius:20px;
+  white-space:nowrap;
+  letter-spacing:.3px;
+}
+.sec-line-l{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--primary));}
+
+/* ═══ FIELDS GRID ═══ */
+.fields{display:grid;gap:0;border:1.5px solid #c5d5e0;border-radius:8px;overflow:hidden;margin-bottom:4px;}
+.field-row{display:grid;border-bottom:1px solid #d8e4ec;}
+.field-row:last-child{border-bottom:none;}
+.field-row.cols1{grid-template-columns:28% 1fr;}
+.field-row.cols2{grid-template-columns:28% 1fr 28% 1fr;}
+.f-lbl{
+  background:linear-gradient(135deg,#e8f2f8,#f0f6fb);
+  color:var(--primary);font-size:11px;font-weight:700;
+  padding:9px 12px;
+  border-left:1px solid #c5d5e0;
+  display:flex;align-items:center;
+}
+.f-lbl:nth-child(3){border-right:1px solid #c5d5e0;}
+.f-val{
+  font-size:11.5px;color:#1a2d3d;
+  padding:9px 12px;
+  display:flex;align-items:center;
+}
+.f-val.bold{font-size:13px;font-weight:800;color:var(--primary);}
+.f-val.green{color:#0D7A55;font-weight:700;}
+.f-val.red{color:#C0392B;font-weight:700;}
+
+/* ═══ RESULT STRIP ═══ */
+.result-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  border:1.5px solid var(--primary);
+  border-radius:8px;
+  overflow:hidden;
+  margin:12px 0;
+  background:linear-gradient(135deg,#E8F4FD,#f7fbff);
+}
+.rs-item{
+  padding:10px 8px;text-align:center;
+  border-left:1px solid #c5d5e0;
+}
+.rs-item:last-child{border-left:none;}
+.rs-lbl{font-size:9px;color:#888;margin-bottom:5px;line-height:1.3;}
+.rs-val{font-size:15px;font-weight:800;color:var(--primary);}
+.rs-val.green{color:#0D7A55;}
+.rs-val.red{color:#C0392B;}
+.rs-val.sm{font-size:11.5px;}
+
+/* ═══ TEXT AREA FIELD ═══ */
+.text-field{
+  border:1.5px solid #c5d5e0;
+  border-radius:8px;
+  padding:10px 13px;
+  min-height:42px;
+  font-size:11.5px;
+  color:#333;
+  background:#fafcfe;
+  margin-bottom:4px;
+  line-height:1.8;
+}
+
+/* ═══ SIGNATURES ═══ */
+.sigs-wrap{margin-top:18px;}
+.sigs-grid{display:flex;gap:12px;flex-wrap:wrap;}
+.sig-box{
+  flex:1;min-width:130px;
+  border:1.5px solid #c5d5e0;
+  border-radius:8px;padding:12px 10px 8px;
+  text-align:center;position:relative;
+  background:linear-gradient(180deg,#fafcfe,#fff);
+}
+.sig-title{font-size:10.5px;font-weight:700;color:var(--primary);margin-bottom:32px;}
+.sig-space{height:32px;border-bottom:1px solid #c5d5e0;margin:0 10px;}
+.sig-name{font-size:9.5px;color:#888;margin-top:6px;}
+.sig-del{
+  display:none;
+  position:absolute;top:5px;left:5px;
+  width:18px;height:18px;border-radius:50%;
+  background:#fee2e2;border:none;color:#C0392B;
+  font-size:10px;cursor:pointer;
+  align-items:center;justify-content:center;font-weight:700;
+}
+.paper.edit-mode .sig-del{display:flex;}
+.add-sig-row{
+  display:none;
+  margin-top:10px;
+  width:100%;padding:8px;
+  border:2px dashed #BDD9EF;border-radius:8px;
+  background:#f8fbfd;color:#1A6E8E;
+  font-size:11.5px;font-family:'Cairo',sans-serif;font-weight:600;
+  cursor:pointer;transition:.15s;
+}
+.add-sig-row:hover{background:#E8F4FD;}
+.paper.edit-mode .add-sig-row{display:block;}
+
+/* ═══ ADVANCE NOTE ═══ */
+.advance-note{
+  display:none;
+  border-right:4px solid var(--primary);
+  border-radius:0 6px 6px 0;
+  padding:9px 14px;
+  background:#EEF6FB;
+  font-size:11px;font-weight:700;
+  color:var(--primary);
+  margin:12px 0 4px;
+  letter-spacing:.2px;
+}
+
+/* ═══ STAMP + FOOTER ═══ */
+.doc-bottom{
+  position:absolute;
+  bottom:12mm;right:17mm;left:17mm;
+}
+.stamp-sig-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;}
+.stamp-circle{
+  width:68px;height:68px;border:2px dashed #bbb;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#bbb;text-align:center;line-height:1.4;
+}
+.doc-footer-line{border-top:1px solid #ddd;padding-top:6px;display:flex;justify-content:space-between;font-size:8.5px;color:#aaa;}
+
+/* PRINT */
+@media print{
+  body{background:white;padding:0;}
+  .toolbar{display:none;}
+  .paper{box-shadow:none;min-height:unset;}
+  .paper.edit-mode [contenteditable]:hover,.paper.edit-mode [contenteditable]:focus{outline:none;background:transparent;}
+  .sig-del,.add-sig-row,.edit-hint{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">🖊 أدوات:</span>
+  <button class="tbtn tbtn-green" id="editBtn" onclick="toggleEdit()">💾 إخفاء أدوات التعديل</button>
+  <div class="tdiv"></div>
+  <span class="toolbar-label">التوقيعات:</span>
+  <button class="tbtn tbtn-blue" onclick="addSig()">＋ إضافة توقيع</button>
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-outline" onclick="window.print()">🖨️ طباعة</button>
+  <button class="tbtn tbtn-outline" onclick="window.print()">📄 تصدير PDF</button>
+</div>
+
+<!-- ═══ PAPER ═══ -->
+<div class="paper edit-mode" id="paper">
+  <div class="edit-hint">✏️ وضع التعديل</div>
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="org-side">
+      <div class="org-name" contenteditable="true">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-dept" contenteditable="true">إدارة شؤون الموظفين</div>
+      <div class="org-date">تاريخ الطباعة: <span contenteditable="true">10 / 06 / 2026</span></div>
+    </div>
+    <div class="logo-mid">
+      <div class="logo-ring">💧</div>
+      <div class="logo-txt">الجهاز التنفيذي</div>
+    </div>
+    <div class="ref-side">
+      <div class="ref-box">
+        <div class="ref-lbl">رقم الطلب</div>
+        <div class="ref-num" contenteditable="true">EM-2026-0047</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="doc-title">
+    <h1 contenteditable="true">طـلـب إجـازة طـارئـة</h1>
+  </div>
+
+  <!-- بيانات الموظف -->
+  <div class="sec"><div class="sec-line"></div><div class="sec-label">بيانات الموظف</div><div class="sec-line-l"></div></div>
+  <div class="fields">
+    <div class="field-row cols1">
+      <div class="f-lbl">الاسم الرباعي</div>
+      <div class="f-val bold" contenteditable="true">أحمد محمد سالم الورفلي</div>
+    </div>
+    <div class="field-row cols2">
+      <div class="f-lbl">الرقم الوظيفي</div>
+      <div class="f-val" contenteditable="true">EMP-0042</div>
+      <div class="f-lbl">المسمى الوظيفي</div>
+      <div class="f-val" contenteditable="true">مهندس حفر أول</div>
+    </div>
+    <div class="field-row cols1">
+      <div class="f-lbl">الإدارة / القسم / المكتب</div>
+      <div class="f-val" contenteditable="true">إدارة الحفر</div>
+    </div>
+  </div>
+
+  <!-- تفاصيل الإجازة الطارئة -->
+  <div class="sec"><div class="sec-line"></div><div class="sec-label">تفاصيل الإجازة الطارئة</div><div class="sec-line-l"></div></div>
+  <div class="fields">
+    <div class="field-row cols2">
+      <div class="f-lbl">تاريخ البداية</div>
+      <div class="f-val bold" contenteditable="true">10 / 06 / 2026</div>
+      <div class="f-lbl">تاريخ النهاية</div>
+      <div class="f-val bold" contenteditable="true">12 / 06 / 2026</div>
+    </div>
+    <div class="field-row cols2">
+      <div class="f-lbl">رصيد الإجازة الطارئة المتبقي</div>
+      <div class="f-val bold" contenteditable="true">12 يوماً</div>
+      <div class="f-lbl">رصيد الإجازة حتى سنة</div>
+      <div class="f-val" contenteditable="true">2026</div>
+    </div>
+  </div>
+
+  <!-- ملخص -->
+  <div class="result-strip">
+    <div class="rs-item">
+      <div class="rs-lbl">عدد الأيام المطلوبة</div>
+      <div class="rs-val" contenteditable="true">3 أيام</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-lbl">الحد الأقصى المسموح</div>
+      <div class="rs-val" style="color:#B7770D" contenteditable="true">12 يوماً</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-lbl">الرصيد المتبقي بعدها</div>
+      <div class="rs-val red" contenteditable="true">0 يوم</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-lbl">تاريخ العودة المتوقع</div>
+      <div class="rs-val sm" contenteditable="true">13 / 06 / 2026</div>
+    </div>
+  </div>
+
+  <!-- تبرير الإجازة الطارئة -->
+  <div class="sec"><div class="sec-line"></div><div class="sec-label">تبرير الإجازة الطارئة</div><div class="sec-line-l"></div></div>
+  <div class="text-field" style="min-height:90px" contenteditable="true"></div>
+
+  <!-- التوقيعات -->
+  <div class="sec"><div class="sec-line"></div><div class="sec-label">التوقيعات</div><div class="sec-line-l"></div></div>
+  <div class="sigs-wrap">
+    <div class="sigs-grid" id="sigsGrid">
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">توقيع الموظف</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">أحمد محمد الورفلي</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">اعتماد مدير القسم</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>
+      </div>
+      <div class="sig-box">
+        <button class="sig-del" onclick="delSig(this)">✕</button>
+        <div class="sig-title" contenteditable="true">اعتماد مدير شؤون الموظفين</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>
+      </div>
+    </div>
+    <button class="add-sig-row" onclick="addSig()">＋ إضافة خانة توقيع</button>
+  </div>
+
+  <!-- تنبيه دائم -->
+  <div class="advance-note" id="advanceNote" style="display:block">
+    ملاحظة: &nbsp; الإجازة الطارئة لا تتجاوز <strong>12 يوماً</strong> في السنة الواحدة.
+  </div>
+  <!-- تنبيه تجاوز الحد -->
+  <div id="overLimitNote" style="display:none;border-right:4px solid #C0392B;border-radius:0 6px 6px 0;padding:9px 14px;background:#fee2e2;font-size:11px;font-weight:700;color:#7B241C;margin:4px 0;">
+    ⚠️ تحذير: &nbsp; عدد الأيام المطلوبة يتجاوز الحد الأقصى المسموح به <strong>(12 يوماً)</strong>.
+  </div>
+
+  <!-- ختم وفوتر -->
+  <div class="doc-bottom">
+    <div class="stamp-sig-row">
+      <div class="stamp-circle">الختم<br>الرسمي</div>
+    </div>
+    <div class="doc-footer-line">
+      <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+      <span contenteditable="true">EM-2026-0047 · صفحة 1 من 1</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let editMode = true;
+
+function toggleEdit() {
+  editMode = !editMode;
+  const paper = document.getElementById('paper');
+  const btn   = document.getElementById('editBtn');
+  if (editMode) {
+    paper.classList.add('edit-mode');
+    btn.textContent = '💾 إخفاء أدوات التعديل';
+    btn.className = 'tbtn tbtn-green';
+  } else {
+    paper.classList.remove('edit-mode');
+    btn.textContent = '✏️ إظهار أدوات التعديل';
+    btn.className = 'tbtn tbtn-outline';
+    toast('✅ جاهز للطباعة');
+  }
+}
+
+function addSig() {
+  const g = document.getElementById('sigsGrid');
+  const d = document.createElement('div');
+  d.className = 'sig-box';
+  d.innerHTML = `
+    <button class="sig-del" onclick="delSig(this)">✕</button>
+    <div class="sig-title" contenteditable="true">اسم الجهة</div>
+    <div class="sig-space"></div>
+    <div class="sig-name" contenteditable="true">الاسم والتوقيع</div>`;
+  g.appendChild(d);
+  toast('✅ تمت إضافة خانة توقيع');
+}
+
+function delSig(btn) {
+  if (document.getElementById('sigsGrid').children.length <= 1) {
+    toast('⚠️ لا يمكن حذف آخر خانة', true); return;
+  }
+  if (confirm('حذف هذه الخانة؟')) { btn.closest('.sig-box').remove(); toast('🗑 تم الحذف'); }
+}
+
+function checkNote() {
+  const el = document.querySelector('.result-strip .rs-val');
+  const n  = parseInt((el?.textContent||'').match(/\d+/)?.[0]||0);
+  document.getElementById('overLimitNote').style.display = n > 12 ? 'block' : 'none';
+}
+document.addEventListener('input', checkNote);
+window.addEventListener('load', checkNote);
+
+function toast(msg, warn=false) {
+  let t = document.getElementById('_toast');
+  if (!t) { t=document.createElement('div'); t.id='_toast'; t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);padding:8px 20px;border-radius:20px;font-family:Cairo,sans-serif;font-size:12px;font-weight:700;z-index:9999;box-shadow:0 3px 14px rgba(0,0,0,.18);transition:opacity .4s;'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.background=warn?'#fee2e2':'#d1fae5'; t.style.color=warn?'#991b1b':'#065f46'; t.style.opacity='1';
+  clearTimeout(t._tid); t._tid=setTimeout(()=>t.style.opacity='0',2500);
+}
+</script>
+</body>
+</html>

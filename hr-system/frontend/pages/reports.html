@@ -1,0 +1,416 @@
+<style>
+@media print {
+  body > *:not(.active-print-area),
+  .no-print {
+    display: none !important;
+  }
+  .print-area {
+    display: none !important;
+  }
+  .active-print-area {
+    display: block !important;
+    width: 100%;
+  }
+  .print-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 1rem;
+  }
+  .print-header h2 {
+    margin: 0 0 .25rem;
+    font-size: 1.3rem;
+  }
+  .print-header p {
+    margin: 0;
+    font-size: .9rem;
+    color: #444;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+  }
+  th, td {
+    border: 1px solid #333;
+    padding: .4rem .6rem;
+    text-align: right;
+  }
+  th {
+    background: #e5e7eb;
+    font-weight: bold;
+  }
+  tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+  .dept-header td {
+    background: #d1d5db !important;
+    font-weight: bold;
+    font-size: .95rem;
+  }
+}
+</style>
+
+<!-- ===== PAGE HEADER ===== -->
+<div class="card no-print">
+  <div class="card-title mb-0"><span class="icon">📊</span> التقارير</div>
+</div>
+
+<!-- ===== CARD 1: كشف الكادر الوظيفي ===== -->
+<div class="card no-print">
+  <div class="card-title"><span class="icon">👥</span> كشف الكادر الوظيفي</div>
+  <p style="color:#555;margin-bottom:1rem;">
+    يعرض هذا الكشف جميع موظفي الجهاز مرتبين حسب الأقسام مع بياناتهم الوظيفية الكاملة.
+  </p>
+  <button class="btn btn-primary" onclick="printStaffRoster()">🖨️ تحميل وطباعة</button>
+</div>
+
+<!-- Print Area 1 -->
+<div class="print-area" id="print-staff">
+  <div class="print-header">
+    <h2>الجهاز التنفيذي لحفر وصيانة آبار المياه</h2>
+    <p>كشف الكادر الوظيفي</p>
+    <p id="staff-print-date"></p>
+  </div>
+  <table id="staff-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>الاسم</th>
+        <th>الرقم الوظيفي</th>
+        <th>القسم</th>
+        <th>الدرجة</th>
+        <th>المرتبة</th>
+        <th>تاريخ التعيين</th>
+        <th>الحالة</th>
+      </tr>
+    </thead>
+    <tbody id="staff-tbody">
+      <tr><td colspan="8" style="text-align:center">جارٍ التحميل...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== CARD 2: كشف بدلات التنقل ===== -->
+<div class="card no-print">
+  <div class="card-title"><span class="icon">🚗</span> كشف بدلات التنقل</div>
+  <div class="form-row" style="align-items:flex-end;">
+    <div class="form-group">
+      <label class="form-label">الشهر</label>
+      <select id="allowances-month" class="form-control">
+        <option value="1">يناير</option>
+        <option value="2">فبراير</option>
+        <option value="3">مارس</option>
+        <option value="4">أبريل</option>
+        <option value="5">مايو</option>
+        <option value="6">يونيو</option>
+        <option value="7">يوليو</option>
+        <option value="8">أغسطس</option>
+        <option value="9">سبتمبر</option>
+        <option value="10">أكتوبر</option>
+        <option value="11">نوفمبر</option>
+        <option value="12">ديسمبر</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">السنة</label>
+      <input type="number" id="allowances-year" class="form-control" style="max-width:110px;" min="2000" max="2100">
+    </div>
+    <div class="form-group">
+      <button class="btn btn-primary" onclick="printAllowancesReport()">🖨️ تحميل وطباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print Area 2 -->
+<div class="print-area" id="print-allowances">
+  <div class="print-header">
+    <h2>الجهاز التنفيذي لحفر وصيانة آبار المياه</h2>
+    <p>كشف بدلات التنقل</p>
+    <p id="allowances-print-date"></p>
+  </div>
+  <table id="allowances-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>الموظف</th>
+        <th>الدرجة قبل</th>
+        <th>البدل قبل</th>
+        <th>الدرجة بعد</th>
+        <th>البدل بعد</th>
+        <th>مرشح للترقية</th>
+      </tr>
+    </thead>
+    <tbody id="allowances-tbody">
+      <tr><td colspan="7" style="text-align:center">جارٍ التحميل...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== CARD 3: كشف التغييرات الشهرية ===== -->
+<div class="card no-print">
+  <div class="card-title"><span class="icon">📅</span> كشف التغييرات الشهرية</div>
+  <div class="form-row" style="align-items:flex-end;">
+    <div class="form-group">
+      <label class="form-label">الشهر</label>
+      <select id="changes-month" class="form-control">
+        <option value="1">يناير</option>
+        <option value="2">فبراير</option>
+        <option value="3">مارس</option>
+        <option value="4">أبريل</option>
+        <option value="5">مايو</option>
+        <option value="6">يونيو</option>
+        <option value="7">يوليو</option>
+        <option value="8">أغسطس</option>
+        <option value="9">سبتمبر</option>
+        <option value="10">أكتوبر</option>
+        <option value="11">نوفمبر</option>
+        <option value="12">ديسمبر</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">السنة</label>
+      <input type="number" id="changes-year" class="form-control" style="max-width:110px;" min="2000" max="2100">
+    </div>
+    <div class="form-group">
+      <button class="btn btn-primary" onclick="printChangesReport()">🖨️ تحميل وطباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print Area 3 -->
+<div class="print-area" id="print-changes">
+  <div class="print-header">
+    <h2>الجهاز التنفيذي لحفر وصيانة آبار المياه</h2>
+    <p>كشف التغييرات الشهرية</p>
+    <p id="changes-print-date"></p>
+  </div>
+  <table id="changes-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>الموظف</th>
+        <th>الدرجة</th>
+        <th>البدل</th>
+        <th>تاريخ الاستحقاق</th>
+      </tr>
+    </thead>
+    <tbody id="changes-tbody">
+      <tr><td colspan="5" style="text-align:center">جارٍ التحميل...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+  function initReports() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // Allowances selectors
+    document.getElementById('allowances-month').value = month;
+    document.getElementById('allowances-year').value = year;
+
+    // Changes selectors
+    document.getElementById('changes-month').value = month;
+    document.getElementById('changes-year').value = year;
+  }
+
+  // ---------- STAFF ROSTER ----------
+  async function loadStaffRoster() {
+    const tbody = document.getElementById('staff-tbody');
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">جارٍ التحميل...</td></tr>';
+    document.getElementById('staff-print-date').textContent = 'تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-LY');
+
+    try {
+      const data = await window.API.reports.getStaffRoster();
+      const employees = Array.isArray(data) ? data : (data.employees || []);
+
+      if (!employees.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">لا توجد بيانات</td></tr>';
+        return;
+      }
+
+      // Group by department
+      const byDept = {};
+      employees.forEach(emp => {
+        const dept = emp.department || emp.dept_name || 'غير محدد';
+        if (!byDept[dept]) byDept[dept] = [];
+        byDept[dept].push(emp);
+      });
+
+      let counter = 1;
+      let html = '';
+      Object.keys(byDept).sort().forEach(dept => {
+        html += `<tr class="dept-header"><td colspan="8">${escapeHtml(dept)}</td></tr>`;
+        byDept[dept].forEach(emp => {
+          const status = emp.status === 'active' ? 'نشط' : emp.status === 'suspended' ? 'موقوف' : (emp.status || '-');
+          const hireDate = emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('ar-LY') : '-';
+          html += `
+            <tr>
+              <td>${counter++}</td>
+              <td>${escapeHtml(emp.full_name || '-')}</td>
+              <td>${escapeHtml(emp.employee_number || '-')}</td>
+              <td>${escapeHtml(dept)}</td>
+              <td>${escapeHtml(String(emp.grade || emp.degree || '-'))}</td>
+              <td>${escapeHtml(String(emp.rank || emp.rank_name || '-'))}</td>
+              <td>${hireDate}</td>
+              <td>${status}</td>
+            </tr>`;
+        });
+      });
+
+      tbody.innerHTML = html;
+    } catch (err) {
+      console.error('فشل تحميل كشف الكادر:', err);
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;">فشل تحميل البيانات</td></tr>';
+      throw err;
+    }
+  }
+
+  async function printStaffRoster() {
+    try {
+      await loadStaffRoster();
+      activatePrint('print-staff');
+    } catch (err) {
+      alert('فشل تحميل البيانات. يرجى المحاولة مجدداً.');
+    }
+  }
+
+  // ---------- ALLOWANCES REPORT ----------
+  async function loadAllowancesReport() {
+    const month = document.getElementById('allowances-month').value;
+    const year = document.getElementById('allowances-year').value;
+    const tbody = document.getElementById('allowances-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">جارٍ التحميل...</td></tr>';
+    document.getElementById('allowances-print-date').textContent =
+      `${MONTHS_AR[parseInt(month) - 1]} ${year} — تاريخ الطباعة: ${new Date().toLocaleDateString('ar-LY')}`;
+
+    try {
+      const data = await window.API.reports.getAllowances(parseInt(year), parseInt(month));
+      const rows = Array.isArray(data) ? data : (data.employees || data.rows || []);
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center">لا توجد بيانات لهذا الشهر</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map((row, i) => {
+        const promoted = row.promotion_candidate ? 'نعم' : 'لا';
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(row.full_name || row.employee_name || '-')}</td>
+            <td>${escapeHtml(String(row.grade_before ?? row.prev_grade ?? '-'))}</td>
+            <td>${escapeHtml(String(row.allowance_before ?? row.prev_allowance ?? '-'))}</td>
+            <td>${escapeHtml(String(row.grade_after ?? row.new_grade ?? '-'))}</td>
+            <td>${escapeHtml(String(row.allowance_after ?? row.new_allowance ?? '-'))}</td>
+            <td>${promoted}</td>
+          </tr>`;
+      }).join('');
+    } catch (err) {
+      console.error('فشل تحميل كشف البدلات:', err);
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">فشل تحميل البيانات</td></tr>';
+      throw err;
+    }
+  }
+
+  async function printAllowancesReport() {
+    try {
+      await loadAllowancesReport();
+      activatePrint('print-allowances');
+    } catch (err) {
+      alert('فشل تحميل البيانات. يرجى المحاولة مجدداً.');
+    }
+  }
+
+  // ---------- CHANGES REPORT ----------
+  async function loadChangesReport() {
+    const month = document.getElementById('changes-month').value;
+    const year = document.getElementById('changes-year').value;
+    const tbody = document.getElementById('changes-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">جارٍ التحميل...</td></tr>';
+    document.getElementById('changes-print-date').textContent =
+      `${MONTHS_AR[parseInt(month) - 1]} ${year} — تاريخ الطباعة: ${new Date().toLocaleDateString('ar-LY')}`;
+
+    try {
+      const data = await window.API.reports.getChanges(parseInt(year), parseInt(month));
+      const rows = Array.isArray(data) ? data : (data.employees || data.rows || []);
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">لا توجد تغييرات لهذا الشهر</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map((row, i) => {
+        const dueDate = row.due_date || row.effective_date
+          ? new Date(row.due_date || row.effective_date).toLocaleDateString('ar-LY')
+          : '-';
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(row.full_name || row.employee_name || '-')}</td>
+            <td>${escapeHtml(String(row.grade ?? row.degree ?? '-'))}</td>
+            <td>${escapeHtml(String(row.allowance ?? row.transport_allowance ?? '-'))}</td>
+            <td>${dueDate}</td>
+          </tr>`;
+      }).join('');
+    } catch (err) {
+      console.error('فشل تحميل كشف التغييرات:', err);
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">فشل تحميل البيانات</td></tr>';
+      throw err;
+    }
+  }
+
+  async function printChangesReport() {
+    try {
+      await loadChangesReport();
+      activatePrint('print-changes');
+    } catch (err) {
+      alert('فشل تحميل البيانات. يرجى المحاولة مجدداً.');
+    }
+  }
+
+  // ---------- PRINT HELPER ----------
+  function activatePrint(divId) {
+    // Remove active class from all print areas
+    document.querySelectorAll('.print-area').forEach(el => el.classList.remove('active-print-area'));
+
+    // Activate the target
+    const target = document.getElementById(divId);
+    if (target) target.classList.add('active-print-area');
+
+    window.print();
+
+    // Clean up after print dialog closes
+    const cleanup = () => {
+      document.querySelectorAll('.print-area').forEach(el => el.classList.remove('active-print-area'));
+    };
+
+    if (window.onafterprint !== undefined) {
+      const prev = window.onafterprint;
+      window.onafterprint = () => {
+        cleanup();
+        if (typeof prev === 'function') prev();
+        window.onafterprint = prev;
+      };
+    } else {
+      setTimeout(cleanup, 2000);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  initReports();
+})();
+</script>

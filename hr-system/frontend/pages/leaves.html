@@ -1,0 +1,393 @@
+<!-- Page Header -->
+<div class="d-flex justify-between align-center mb-2">
+  <h2 style="font-size:20px;font-weight:800;color:var(--navy);">الإجازات</h2>
+  <button class="btn btn-primary" onclick="openAddLeave()">+ إضافة إجازة</button>
+</div>
+
+<!-- Emergency leave alert -->
+<div id="emergency-alert" class="alert alert-warning" style="display:none;">
+  ⚠️ الإجازة الطارئة: تم استخدام <strong id="emergency-used">0</strong> يوم من أصل <strong id="emergency-max">12</strong> — المتبقي: <strong id="emergency-remaining">12</strong> يوم
+</div>
+
+<!-- Tabs -->
+<div class="tabs" id="leave-tabs">
+  <button class="tab-btn active" data-tab="all"       onclick="switchLeaveTab('all')">كل الإجازات</button>
+  <button class="tab-btn"        data-tab="annual"    onclick="switchLeaveTab('annual')">إجازة سنوية</button>
+  <button class="tab-btn"        data-tab="emergency" onclick="switchLeaveTab('emergency')">إجازة طارئة</button>
+  <button class="tab-btn"        data-tab="sick"      onclick="switchLeaveTab('sick')">إجازة مرضية</button>
+</div>
+
+<!-- Leaves table -->
+<div class="card" style="padding:0;overflow:hidden;">
+  <div class="table-wrapper">
+    <table id="leaves-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الموظف</th>
+          <th>نوع الإجازة</th>
+          <th>من</th>
+          <th>إلى</th>
+          <th>عدد الأيام</th>
+          <th>السبب</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="leaves-body">
+        <tr><td colspan="9" class="text-center" style="padding:40px;color:var(--gray-400);">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Leave Modal -->
+<div id="leave-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="leave-modal-title">إضافة إجازة</h3>
+      <button class="modal-close" onclick="closeLeaveModal()">×</button>
+    </div>
+    <div style="padding:0 4px;">
+      <form id="leave-form" onsubmit="saveLeave(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>الموظف *</label>
+            <select id="leave-emp" name="employee_id" required>
+              <option value="">اختر موظفاً</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>نوع الإجازة *</label>
+            <select id="leave-type" name="leave_type" required>
+              <option value="annual">سنوية</option>
+              <option value="emergency">طارئة</option>
+              <option value="sick">مرضية</option>
+              <option value="hajj">حج</option>
+              <option value="maternity">أمومة</option>
+              <option value="study">دراسية</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>من تاريخ *</label>
+            <input type="date" id="leave-start" name="start_date" required oninput="calcLeaveDays()">
+          </div>
+          <div class="form-group">
+            <label>إلى تاريخ *</label>
+            <input type="date" id="leave-end" name="end_date" required oninput="calcLeaveDays()">
+          </div>
+          <div class="form-group">
+            <label>عدد الأيام</label>
+            <input type="number" id="leave-days" name="days_count" min="1" readonly style="background:var(--gray-50);">
+          </div>
+          <div class="form-group">
+            <label>الحالة</label>
+            <select id="leave-status" name="status">
+              <option value="pending">معلق</option>
+              <option value="approved">معتمد</option>
+              <option value="rejected">مرفوض</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>السبب</label>
+            <textarea id="leave-reason" name="reason" rows="2" placeholder="اختياري..."></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeLeaveModal()">إلغاء</button>
+      <button type="submit" form="leave-form" class="btn btn-primary">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let allLeaves   = [];
+  let allEmps     = [];
+  let currentTab  = 'all';
+  let emergencyMax = 12;
+
+  // Leave type Arabic labels
+  const LEAVE_TYPE_LABELS = {
+    annual:    'سنوية',
+    emergency: 'طارئة',
+    sick:      'مرضية',
+    hajj:      'حج',
+    maternity: 'أمومة',
+    study:     'دراسية',
+  };
+
+  async function initLeaves() {
+    try {
+      const [leavesRes, empsRes, settingsRes] = await Promise.all([
+        api.leaves.list(),
+        api.employees.list(),
+        api.settings.get().catch(function() { return {}; })
+      ]);
+
+      allLeaves = Array.isArray(leavesRes) ? leavesRes : (leavesRes.leaves || leavesRes.data || []);
+      allEmps   = Array.isArray(empsRes)   ? empsRes   : (empsRes.employees || empsRes.data || []);
+
+      // Emergency max from settings
+      if (settingsRes && settingsRes.emergency_leave_max != null) {
+        emergencyMax = Number(settingsRes.emergency_leave_max);
+      } else if (settingsRes && settingsRes.max_emergency_leave != null) {
+        emergencyMax = Number(settingsRes.max_emergency_leave);
+      }
+
+      // Populate employee select in modal
+      populateEmpSelect();
+
+      updateEmergencyAlert();
+      renderLeaves(getFilteredLeaves());
+    } catch (err) {
+      console.error(err);
+      document.getElementById('leaves-body').innerHTML =
+        '<tr><td colspan="9" style="text-align:center;color:var(--red);padding:30px;">فشل تحميل البيانات: ' + escHtml(err.message || '') + '</td></tr>';
+      showToast('فشل تحميل بيانات الإجازات', 'error');
+    }
+  }
+
+  function populateEmpSelect() {
+    const sel = document.getElementById('leave-emp');
+    sel.innerHTML = '<option value="">اختر موظفاً</option>';
+    allEmps
+      .filter(function(e) { return e.status !== 'inactive'; })
+      .forEach(function(emp) {
+        const opt = document.createElement('option');
+        opt.value = emp.id;
+        opt.textContent = (emp.emp_number || emp.employee_number ? (emp.emp_number || emp.employee_number) + ' - ' : '') + (emp.full_name || '');
+        sel.appendChild(opt);
+      });
+  }
+
+  function getEmpName(empId) {
+    if (!empId) return '-';
+    const emp = allEmps.find(function(e) { return String(e.id) === String(empId); });
+    return emp ? (emp.full_name || '-') : '-';
+  }
+
+  function updateEmergencyAlert() {
+    const thisYear = new Date().getFullYear();
+    const usedDays = allLeaves
+      .filter(function(l) {
+        return l.leave_type === 'emergency' &&
+               l.status !== 'rejected' &&
+               l.start_date && new Date(l.start_date).getFullYear() === thisYear;
+      })
+      .reduce(function(sum, l) { return sum + (Number(l.days_count) || 0); }, 0);
+
+    const remaining = Math.max(0, emergencyMax - usedDays);
+
+    document.getElementById('emergency-used').textContent      = usedDays;
+    document.getElementById('emergency-max').textContent       = emergencyMax;
+    document.getElementById('emergency-remaining').textContent = remaining;
+
+    const alertEl = document.getElementById('emergency-alert');
+    alertEl.style.display = '';
+    if (remaining === 0) {
+      alertEl.className = 'alert alert-error';
+    } else if (remaining <= 3) {
+      alertEl.className = 'alert alert-warning';
+    } else {
+      alertEl.className = 'alert alert-info';
+    }
+  }
+
+  function getFilteredLeaves() {
+    if (currentTab === 'all') return allLeaves;
+    return allLeaves.filter(function(l) { return l.leave_type === currentTab; });
+  }
+
+  function statusBadge(status) {
+    var map = {
+      approved: ['badge-green', 'معتمد'],
+      pending:  ['badge-gold',  'معلق'],
+      rejected: ['badge-red',   'مرفوض'],
+    };
+    var pair = map[status] || ['badge-gray', status || '-'];
+    return '<span class="badge ' + pair[0] + '">' + pair[1] + '</span>';
+  }
+
+  function renderLeaves(leaves) {
+    const tbody = document.getElementById('leaves-body');
+    if (!leaves || leaves.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div><p>لا توجد إجازات</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = leaves.map(function(l, i) {
+      const empName    = getEmpName(l.employee_id);
+      const typeLbl    = LEAVE_TYPE_LABELS[l.leave_type] || l.leave_type || '-';
+      const startDate  = l.start_date ? formatDate(l.start_date) : '-';
+      const endDate    = l.end_date   ? formatDate(l.end_date)   : '-';
+      const days       = l.days_count != null ? l.days_count : '-';
+      const reason     = escHtml(l.reason || '-');
+      const isPending  = l.status === 'pending';
+
+      return '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td style="font-weight:600;">' + escHtml(empName) + '</td>' +
+        '<td>' + typeLbl + '</td>' +
+        '<td>' + startDate + '</td>' +
+        '<td>' + endDate + '</td>' +
+        '<td style="font-weight:700;">' + days + '</td>' +
+        '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + reason + '">' + reason + '</td>' +
+        '<td>' + statusBadge(l.status) + '</td>' +
+        '<td>' +
+          '<div class="btn-group" style="justify-content:center;">' +
+            (isPending ? '<button class="btn btn-sm btn-success" onclick="approveLeave(' + l.id + ')">✔ اعتماد</button>' : '') +
+            (isPending ? '<button class="btn btn-sm btn-danger"  onclick="rejectLeave(' + l.id + ')">✖ رفض</button>'   : '') +
+            '<button class="btn btn-sm btn-outline" onclick="deleteLeave(' + l.id + ')">🗑 حذف</button>' +
+          '</div>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function switchLeaveTab(tab) {
+    currentTab = tab;
+    // Update tab button states
+    document.querySelectorAll('#leave-tabs .tab-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    renderLeaves(getFilteredLeaves());
+  }
+
+  function openAddLeave() {
+    document.getElementById('leave-modal-title').textContent = 'إضافة إجازة';
+    document.getElementById('leave-form').reset();
+    document.getElementById('leave-days').value   = '';
+    document.getElementById('leave-status').value = 'pending';
+    document.getElementById('leave-modal').classList.add('open');
+  }
+
+  function closeLeaveModal() {
+    document.getElementById('leave-modal').classList.remove('open');
+  }
+
+  function calcLeaveDays() {
+    const start = document.getElementById('leave-start').value;
+    const end   = document.getElementById('leave-end').value;
+    if (start && end) {
+      const startTs = new Date(start).getTime();
+      const endTs   = new Date(end).getTime();
+      if (endTs >= startTs) {
+        const days = Math.round((endTs - startTs) / 86400000) + 1;
+        document.getElementById('leave-days').value = days;
+      } else {
+        document.getElementById('leave-days').value = '';
+      }
+    }
+  }
+
+  async function saveLeave(e) {
+    e.preventDefault();
+
+    const startVal = document.getElementById('leave-start').value;
+    const endVal   = document.getElementById('leave-end').value;
+    const daysVal  = document.getElementById('leave-days').value;
+
+    if (new Date(endVal) < new Date(startVal)) {
+      showToast('تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية', 'error');
+      return;
+    }
+
+    const data = {
+      employee_id: document.getElementById('leave-emp').value,
+      leave_type:  document.getElementById('leave-type').value,
+      start_date:  startVal,
+      end_date:    endVal,
+      days_count:  daysVal ? Number(daysVal) : null,
+      reason:      document.getElementById('leave-reason').value.trim() || null,
+      status:      document.getElementById('leave-status').value,
+    };
+
+    const submitBtn = document.querySelector('button[form="leave-form"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'جاري الحفظ...'; }
+
+    try {
+      await api.leaves.create(data);
+      showToast('تم إضافة الإجازة بنجاح', 'success');
+      closeLeaveModal();
+      await reloadLeaves();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل الحفظ: ' + (err.message || 'خطأ غير معروف'), 'error');
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'حفظ'; }
+    }
+  }
+
+  async function approveLeave(id) {
+    if (!confirm('هل تريد اعتماد هذه الإجازة؟')) return;
+    try {
+      await api.leaves.approve(id);
+      showToast('تم اعتماد الإجازة', 'success');
+      await reloadLeaves();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل الاعتماد: ' + (err.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function rejectLeave(id) {
+    const reason = prompt('سبب الرفض (اختياري):') || '';
+    if (reason === null) return; // user cancelled prompt
+    try {
+      await api.leaves.reject(id, reason);
+      showToast('تم رفض الإجازة', 'success');
+      await reloadLeaves();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل الرفض: ' + (err.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function deleteLeave(id) {
+    if (!confirm('هل أنت متأكد من حذف هذه الإجازة؟')) return;
+    try {
+      await api.leaves.delete(id);
+      showToast('تم حذف الإجازة', 'success');
+      await reloadLeaves();
+    } catch (err) {
+      console.error(err);
+      showToast('فشل الحذف: ' + (err.message || 'خطأ'), 'error');
+    }
+  }
+
+  async function reloadLeaves() {
+    try {
+      const res = await api.leaves.list();
+      allLeaves = Array.isArray(res) ? res : (res.leaves || res.data || []);
+      updateEmergencyAlert();
+      renderLeaves(getFilteredLeaves());
+    } catch (err) {
+      showToast('فشل تحديث القائمة', 'error');
+    }
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Close modal on overlay click
+  document.getElementById('leave-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeLeaveModal();
+  });
+
+  // Expose to global scope for inline handlers
+  window.switchLeaveTab  = switchLeaveTab;
+  window.openAddLeave    = openAddLeave;
+  window.closeLeaveModal = closeLeaveModal;
+  window.calcLeaveDays   = calcLeaveDays;
+  window.saveLeave       = saveLeave;
+  window.approveLeave    = approveLeave;
+  window.rejectLeave     = rejectLeave;
+  window.deleteLeave     = deleteLeave;
+
+  initLeaves();
+})();
+</script>

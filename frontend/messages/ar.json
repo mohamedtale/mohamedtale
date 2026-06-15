@@ -1,0 +1,377 @@
+{
+  "common": {
+    "loading": "جاري التحميل...",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "print": "طباعة",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "submit": "إرسال",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "review": "مراجعة",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "name": "الاسم",
+    "description": "الوصف",
+    "notes": "ملاحظات",
+    "actions": "الإجراءات",
+    "details": "التفاصيل",
+    "total": "الإجمالي",
+    "all": "الكل",
+    "none": "لا يوجد",
+    "error": "خطأ",
+    "success": "نجاح",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "required": "مطلوب",
+    "optional": "اختياري",
+    "exportPDF": "تصدير PDF",
+    "exportExcel": "تصدير Excel",
+    "viewAll": "عرض الكل",
+    "noData": "لا توجد بيانات"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "map": "خريطة الآبار",
+    "wells": "إدارة الآبار",
+    "reports": "التقارير",
+    "workflows": "سير العمل",
+    "users": "إدارة المستخدمين",
+    "logs": "سجل العمليات",
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج",
+    "profile": "الملف الشخصي"
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "logout": "تسجيل الخروج",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "loginButton": "دخول",
+    "loginTitle": "الجهاز التنفيذي لحفر وصيانة الآبار",
+    "loginSubtitle": "وزارة الموارد المائية - ليبيا",
+    "loginWelcome": "مرحباً بك في النظام",
+    "invalidCredentials": "بيانات الدخول غير صحيحة",
+    "demoCredentials": "بيانات تجريبية",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "changePassword": "تغيير كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalWells": "إجمالي الآبار",
+    "activeWells": "الآبار النشطة",
+    "maintenanceWells": "تحت الصيانة",
+    "drillingWells": "قيد الحفر",
+    "inactiveWells": "الآبار المتوقفة",
+    "recentReports": "أحدث التقارير",
+    "recentWorkflows": "أحدث طلبات سير العمل",
+    "wellsByStatus": "الآبار حسب الحالة",
+    "wellsByRegion": "الآبار حسب المنطقة",
+    "waterQualityStats": "إحصائيات جودة المياه",
+    "monthlyDrilling": "الحفر الشهري",
+    "welcomeMessage": "نظام إدارة آبار المياه"
+  },
+  "wells": {
+    "title": "إدارة الآبار",
+    "addWell": "إضافة بئر جديد",
+    "wellCode": "رمز البئر",
+    "wellName": "اسم البئر",
+    "wellType": "نوع البئر",
+    "status": "الحالة",
+    "region": "المنطقة",
+    "municipality": "البلدية",
+    "depth": "العمق (م)",
+    "diameter": "القطر (مم)",
+    "waterLevel": "مستوى المياه (م)",
+    "dischargeRate": "معدل التدفق (م³/س)",
+    "waterQuality": "جودة المياه",
+    "ec": "الموصلية الكهربائية (مايكروسيمنز)",
+    "ph": "درجة الحموضة",
+    "tds": "المواد الصلبة الذائبة (ملغم/ل)",
+    "drillingDate": "تاريخ الحفر",
+    "lastMaintenance": "آخر صيانة",
+    "nextMaintenance": "الصيانة القادمة",
+    "contractor": "المقاول",
+    "contractNumber": "رقم العقد",
+    "latitude": "خط العرض",
+    "longitude": "خط الطول",
+    "wellTypes": {
+      "artesian": "ارتوازي",
+      "semi_artesian": "شبه ارتوازي",
+      "drilled": "محفور",
+      "dug": "منقور",
+      "spring": "نبع"
+    },
+    "statuses": {
+      "active": "نشط",
+      "inactive": "متوقف",
+      "under_maintenance": "تحت الصيانة",
+      "drilling": "قيد الحفر",
+      "suspended": "معلق",
+      "abandoned": "مهجور"
+    },
+    "qualityLevels": {
+      "excellent": "ممتاز",
+      "good": "جيد",
+      "acceptable": "مقبول",
+      "poor": "سيئ"
+    },
+    "maintenance": "سجل الصيانة",
+    "noWells": "لا توجد آبار مسجلة",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا البئر؟",
+    "wellDetails": "تفاصيل البئر",
+    "coordinates": "الإحداثيات",
+    "technicalData": "البيانات الفنية",
+    "waterAnalysis": "تحليل المياه"
+  },
+  "map": {
+    "title": "خريطة الآبار",
+    "subtitle": "خريطة تفاعلية لمواقع آبار المياه",
+    "wellsCount": "عدد الآبار",
+    "clickToView": "انقر للتفاصيل",
+    "legend": "المفتاح",
+    "satelliteView": "عرض القمر الصناعي",
+    "mapView": "عرض الخريطة",
+    "clusterView": "عرض مجمّع",
+    "filterByStatus": "تصفية حسب الحالة",
+    "filterByRegion": "تصفية حسب المنطقة"
+  },
+  "reports": {
+    "title": "التقارير",
+    "addReport": "إضافة تقرير",
+    "reportType": "نوع التقرير",
+    "reportDate": "تاريخ التقرير",
+    "periodStart": "بداية الفترة",
+    "periodEnd": "نهاية الفترة",
+    "section": "القسم",
+    "summary": "الملخص",
+    "content": "المحتوى",
+    "reportTypes": {
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "annual": "سنوي",
+      "technical": "تقني",
+      "maintenance": "صيانة"
+    },
+    "statuses": {
+      "draft": "مسودة",
+      "submitted": "مُقدّم",
+      "under_review": "قيد المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض"
+    },
+    "noReports": "لا توجد تقارير",
+    "approve": "اعتماد التقرير",
+    "reject": "رفض التقرير"
+  },
+  "workflows": {
+    "title": "سير العمل",
+    "addWorkflow": "إضافة طلب",
+    "workflowType": "نوع الطلب",
+    "priority": "الأولوية",
+    "assignedTo": "مُسند إلى",
+    "submittedBy": "مُقدّم من",
+    "dueDate": "تاريخ الاستحقاق",
+    "steps": "خطوات المعالجة",
+    "priorities": {
+      "low": "منخفض",
+      "normal": "عادي",
+      "high": "عالي",
+      "urgent": "عاجل"
+    },
+    "statuses": {
+      "submitted": "مُقدّم",
+      "under_review": "قيد المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "returned": "مُعاد"
+    },
+    "actions": {
+      "review": "مراجعة",
+      "approve": "اعتماد",
+      "reject": "رفض",
+      "return": "إعادة",
+      "comment": "تعليق"
+    },
+    "addComment": "إضافة تعليق",
+    "noWorkflows": "لا توجد طلبات"
+  },
+  "users": {
+    "title": "إدارة المستخدمين",
+    "addUser": "إضافة مستخدم",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "fullNameAr": "الاسم الكامل (عربي)",
+    "fullNameEn": "الاسم الكامل (إنجليزي)",
+    "role": "الدور",
+    "section": "القسم",
+    "lastLogin": "آخر دخول",
+    "roles": {
+      "system_admin": "مدير النظام",
+      "department_manager": "مدير القسم",
+      "section_head": "رئيس الوحدة",
+      "employee": "موظف"
+    },
+    "sections": {
+      "wells_map": "خريطة الآبار",
+      "technical_reports": "التقارير الفنية",
+      "weekly_followup": "المتابعة الأسبوعية",
+      "water_soil_db": "قاعدة بيانات المياه والتربة",
+      "well_rock_design": "تصميم الآبار والصخور",
+      "contracts": "العقود والإشعارات"
+    },
+    "deactivate": "تعطيل الحساب",
+    "activate": "تفعيل الحساب",
+    "noUsers": "لا يوجد مستخدمون"
+  },
+  "logs": {
+    "title": "سجل العمليات",
+    "user": "المستخدم",
+    "action": "الإجراء",
+    "entityType": "نوع الكيان",
+    "entityId": "معرف الكيان",
+    "ipAddress": "عنوان IP",
+    "timestamp": "التوقيت",
+    "noLogs": "لا توجد سجلات"
+  },
+  "sections": {
+    "wellsMap": "خريطة الآبار والتخصيص",
+    "technicalReports": "نظام التقارير الفنية",
+    "weeklyFollowup": "المتابعة الأسبوعية والصيانة",
+    "waterSoilDB": "قاعدة بيانات المياه والتربة",
+    "wellRockDesign": "تصميم الآبار والصخور",
+    "contracts": "إدارة العقود والإشعارات"
+  },
+  "public": {
+    "nav": {
+      "home": "الرئيسية",
+      "about": "عن الجهاز",
+      "projects": "المشاريع",
+      "achievements": "الإنجازات",
+      "news": "الأخبار",
+      "contact": "اتصل بنا",
+      "staffLogin": "دخول الموظفين"
+    },
+    "hero": {
+      "titleAr": "الجهاز التنفيذي لحفر وصيانة آبار المياه",
+      "titleEn": "Executive Authority for Drilling & Maintaining Water Wells",
+      "tagline": "نحفر الآبار لنضمن المياه لكل مواطن ليبي — خبرة تمتد لأكثر من ثلاثة عقود",
+      "cta": {
+        "projects": "استعرض مشاريعنا",
+        "contact": "تواصل معنا"
+      }
+    },
+    "stats": {
+      "title": "إنجازاتنا بالأرقام",
+      "wellsDrilled": "بئر محفور",
+      "projectsCompleted": "مشروع منجز",
+      "governoratesCovered": "محافظة مغطاة",
+      "yearsExperience": "سنة خبرة"
+    },
+    "projects": {
+      "title": "أبرز مشاريعنا",
+      "subtitle": "نفذنا مئات المشاريع عبر كامل أرجاء ليبيا",
+      "viewAll": "عرض جميع المشاريع",
+      "status": {
+        "completed": "مكتمل",
+        "ongoing": "جارٍ",
+        "planned": "مخطط"
+      },
+      "wells": "بئر",
+      "allProjects": "جميع المشاريع",
+      "filterAll": "الكل",
+      "filterCompleted": "مكتمل",
+      "filterOngoing": "جارٍ",
+      "noProjects": "لا توجد مشاريع"
+    },
+    "map": {
+      "title": "مواقع آبار المياه",
+      "subtitle": "خريطة تفاعلية لجميع الآبار المحفورة عبر ليبيا",
+      "wellName": "اسم البئر",
+      "status": "الحالة",
+      "region": "المنطقة",
+      "depth": "العمق"
+    },
+    "news": {
+      "title": "أخبار وإعلانات",
+      "subtitle": "آخر أخبار الجهاز ومستجداته",
+      "viewAll": "عرض جميع الأخبار",
+      "readMore": "اقرأ المزيد",
+      "allNews": "جميع الأخبار",
+      "category": {
+        "news": "خبر",
+        "announcement": "إعلان",
+        "event": "فعالية"
+      }
+    },
+    "gallery": {
+      "title": "معرض الصور",
+      "subtitle": "لقطات من مشاريعنا الميدانية"
+    },
+    "contact": {
+      "title": "تواصل معنا",
+      "subtitle": "نحن هنا للإجابة على استفساراتكم",
+      "address": "طرابلس، ليبيا",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "hours": "ساعات العمل",
+      "hoursValue": "الأحد – الخميس: 8:00 ص – 3:00 م",
+      "form": {
+        "name": "الاسم الكامل",
+        "email": "البريد الإلكتروني",
+        "subject": "الموضوع",
+        "message": "الرسالة",
+        "send": "إرسال الرسالة",
+        "success": "تم إرسال رسالتك بنجاح"
+      }
+    },
+    "about": {
+      "title": "عن الجهاز",
+      "subtitle": "تاريخ وأهداف الجهاز التنفيذي لحفر وصيانة آبار المياه",
+      "mission": "المهمة",
+      "missionText": "ضمان توفير المياه الجوفية لجميع المواطنين الليبيين عبر حفر وصيانة آبار المياه بكفاءة عالية واستدامة بيئية.",
+      "vision": "الرؤية",
+      "visionText": "أن نكون الجهاز الرائد في تحقيق الأمن المائي لليبيا بتقنيات حديثة وكوادر وطنية متخصصة.",
+      "values": "القيم",
+      "history": "نبذة تاريخية",
+      "historyText": "تأسس الجهاز التنفيذي لحفر وصيانة آبار المياه في تسعينيات القرن الماضي ليكون الذراع التنفيذي لوزارة الموارد المائية في ليبيا. على مدار أكثر من ثلاثة عقود، نجح الجهاز في حفر وصيانة مئات الآبار عبر كامل أرجاء البلاد، مما أسهم في توفير المياه لملايين المواطنين في المدن والأرياف والمناطق النائية.",
+      "structure": "الهيكل التنظيمي",
+      "departments": "الأقسام الرئيسية"
+    },
+    "achievements": {
+      "title": "الإنجازات والإحصاءات",
+      "subtitle": "رحلة من الإنجازات على مدار عقود",
+      "overview": "نظرة عامة",
+      "byRegion": "حسب المنطقة",
+      "byYear": "حسب السنة",
+      "wellsDrilled": "إجمالي الآبار المحفورة",
+      "maintenanceOps": "عمليات الصيانة",
+      "waterVolume": "حجم المياه المستخرجة (م³/يوم)",
+      "regions": "المناطق المخدومة"
+    },
+    "footer": {
+      "description": "الجهاز التنفيذي لحفر وصيانة آبار المياه - الذراع التنفيذي لوزارة الموارد المائية في ليبيا.",
+      "quickLinks": "روابط سريعة",
+      "contactInfo": "معلومات التواصل",
+      "address": "طرابلس، ليبيا",
+      "copyright": "© {year} الجهاز التنفيذي لحفر وصيانة آبار المياه. جميع الحقوق محفوظة."
+    }
+  }
+}

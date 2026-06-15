@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة النماذج المطبوعة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#0B4F6C; --accent:#00A8CC; --gold:#D4A843;
+  --border:#2c2c2c; --light:#f5f5f5;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Cairo',sans-serif; background:#e5e5e5; direction:rtl; padding:30px; }
+
+/* TABS */
+.tabs { display:flex; gap:10px; margin-bottom:24px; justify-content:center; flex-wrap:wrap; }
+.tab { padding:8px 20px; border-radius:20px; border:1.5px solid #ccc; background:#fff; font-size:12px; font-family:'Cairo',sans-serif; cursor:pointer; color:#555; transition:.2s; }
+.tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+.form-page { display:none; }
+.form-page.active { display:block; }
+
+/* PRINT PAPER */
+.paper {
+  background:#fff;
+  width:210mm;
+  min-height:297mm;
+  margin:0 auto;
+  padding:14mm 16mm;
+  box-shadow:0 4px 30px rgba(0,0,0,.2);
+  position:relative;
+}
+
+/* WATERMARK */
+.paper::before {
+  content:'💧';
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  font-size:200px;
+  opacity:.03;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* HEADER */
+.doc-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:3px solid var(--primary);
+  padding-bottom:12px;
+  margin-bottom:16px;
+}
+.org-block { text-align:right; }
+.org-block .org-main { font-size:13px; font-weight:800; color:var(--primary); }
+.org-block .org-sub { font-size:10px; color:#555; margin-top:2px; }
+.logo-center { text-align:center; }
+.logo-circle {
+  width:70px; height:70px; border-radius:50%;
+  border:3px solid var(--primary);
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; margin:0 auto 4px;
+}
+.logo-center span { font-size:9px; color:#777; }
+.doc-ref { text-align:left; }
+.doc-ref .ref-box {
+  border:1.5px solid var(--primary);
+  border-radius:6px; padding:6px 10px;
+  text-align:center;
+}
+.doc-ref .ref-label { font-size:9px; color:#777; }
+.doc-ref .ref-val { font-size:12px; font-weight:700; color:var(--primary); margin-top:2px; }
+
+/* FORM TITLE */
+.doc-title {
+  text-align:center;
+  margin:14px 0;
+}
+.doc-title h1 {
+  font-size:16px; font-weight:800; color:var(--primary);
+  display:inline-block;
+  border-bottom:2px solid var(--gold);
+  padding-bottom:4px;
+}
+
+/* INFO TABLE */
+.info-table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+.info-table td {
+  border:1.5px solid #bbb;
+  padding:7px 10px;
+  font-size:11.5px;
+  vertical-align:middle;
+}
+.info-table .lbl {
+  background:#f0f4f8;
+  color:var(--primary);
+  font-weight:700;
+  width:22%;
+  white-space:nowrap;
+}
+.info-table .val { width:28%; color:#222; }
+.info-table .val.filled { font-weight:600; }
+
+/* SECTION HEADER */
+.sec-header {
+  background:var(--primary);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  padding:5px 10px;
+  margin:12px 0 0;
+  border-radius:4px 4px 0 0;
+}
+
+/* DETAILS TABLE */
+.det-table { width:100%; border-collapse:collapse; margin-bottom:14px; }
+.det-table td {
+  border:1.5px solid #bbb;
+  padding:7px 10px;
+  font-size:11.5px;
+}
+.det-table .lbl { background:#f0f4f8; font-weight:700; color:var(--primary); width:30%; }
+.det-table .val { color:#222; }
+.det-table .val.big { font-size:13px; font-weight:700; color:var(--primary); }
+
+/* NOTES BOX */
+.notes-box {
+  border:1.5px solid #bbb;
+  border-radius:4px;
+  padding:10px;
+  min-height:50px;
+  font-size:11px;
+  color:#555;
+  margin-bottom:14px;
+  background:#fafafa;
+}
+
+/* SIGNATURES */
+.sigs {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin-top:20px;
+}
+.sig-box {
+  border:1.5px solid #bbb;
+  border-radius:6px;
+  padding:10px;
+  text-align:center;
+}
+.sig-title { font-size:10px; font-weight:700; color:var(--primary); margin-bottom:30px; }
+.sig-line { border-top:1px solid #bbb; margin-top:8px; padding-top:5px; font-size:9.5px; color:#777; }
+
+/* STAMP AREA */
+.stamp-area {
+  position:absolute;
+  left:16mm;
+  bottom:40mm;
+  width:60px; height:60px;
+  border:2px dashed #bbb;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; color:#bbb; text-align:center;
+}
+
+/* FOOTER LINE */
+.doc-footer {
+  position:absolute;
+  bottom:10mm; right:16mm; left:16mm;
+  border-top:1px solid #ccc;
+  padding-top:5px;
+  display:flex;
+  justify-content:space-between;
+  font-size:8.5px;
+  color:#999;
+}
+
+/* RESULT BOX */
+.result-box {
+  border:2px solid var(--primary);
+  border-radius:6px;
+  padding:10px 14px;
+  margin:12px 0;
+  display:flex;
+  gap:20px;
+  align-items:center;
+}
+.result-item { text-align:center; flex:1; }
+.result-item .r-label { font-size:9px; color:#777; }
+.result-item .r-val { font-size:14px; font-weight:800; color:var(--primary); margin-top:2px; }
+.result-divider { width:1px; background:#ddd; align-self:stretch; }
+
+/* APPROVAL BAR */
+.approval-bar {
+  display:flex;
+  border:1.5px solid #bbb;
+  border-radius:6px;
+  overflow:hidden;
+  margin-bottom:14px;
+}
+.ap-item { flex:1; padding:8px 10px; text-align:center; border-left:1px solid #bbb; }
+.ap-item:last-child { border-left:none; }
+.ap-label { font-size:9px; color:#777; margin-bottom:4px; }
+.ap-status { font-size:11px; font-weight:700; }
+.ap-status.approved { color:#0D7A55; }
+.ap-status.pending { color:#B7770D; }
+.ap-status.waiting { color:#aaa; }
+
+@media print {
+  body { background:white; padding:0; }
+  .tabs { display:none; }
+  .form-page { display:block !important; page-break-after:always; }
+  .paper { box-shadow:none; margin:0; }
+}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('leave-print')">🏖️ طلب إجازة</div>
+  <div class="tab" onclick="show('perm-print')">🚪 إذن خروج</div>
+  <div class="tab" onclick="show('att-print')">📊 تقرير حضور شهري</div>
+</div>
+
+<!-- ══ LEAVE PRINT ══ -->
+<div class="form-page active" id="leave-print">
+<div class="paper">
+
+  <div class="doc-header">
+    <div class="org-block">
+      <div class="org-main">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub">إدارة شؤون الموظفين</div>
+      <div class="org-sub" style="margin-top:4px;color:#888">تاريخ الطباعة: 10 / 06 / 2026</div>
+    </div>
+    <div class="logo-center">
+      <div class="logo-circle">💧</div>
+      <span>الجهاز التنفيذي</span>
+    </div>
+    <div class="doc-ref">
+      <div class="ref-box">
+        <div class="ref-label">رقم الطلب</div>
+        <div class="ref-val">LV-2026-0318</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-title">
+    <h1>طلب إجازة</h1>
+  </div>
+
+  <!-- Employee Info -->
+  <div class="sec-header">بيانات الموظف</div>
+  <table class="info-table">
+    <tr>
+      <td class="lbl">الاسم الرباعي</td>
+      <td class="val filled" colspan="3">أحمد محمد سالم الورفلي</td>
+    </tr>
+    <tr>
+      <td class="lbl">الرقم الوظيفي</td>
+      <td class="val filled">EMP-0042</td>
+      <td class="lbl">الرقم الوطني</td>
+      <td class="val filled">119850312547</td>
+    </tr>
+    <tr>
+      <td class="lbl">المسمى الوظيفي</td>
+      <td class="val filled">مهندس حفر أول</td>
+      <td class="lbl">الإدارة / القسم</td>
+      <td class="val filled">إدارة الحفر</td>
+    </tr>
+    <tr>
+      <td class="lbl">الدرجة الوظيفية</td>
+      <td class="val filled">الدرجة السابعة</td>
+      <td class="lbl">نوع التعاقد</td>
+      <td class="val filled">مستمر</td>
+    </tr>
+  </table>
+
+  <!-- Leave Details -->
+  <div class="sec-header">تفاصيل الإجازة</div>
+  <table class="det-table">
+    <tr>
+      <td class="lbl">نوع الإجازة</td>
+      <td class="val big">سنوية</td>
+      <td class="lbl">رصيد الإجازة قبل الطلب</td>
+      <td class="val big">22 يوم</td>
+    </tr>
+    <tr>
+      <td class="lbl">تاريخ البداية</td>
+      <td class="val">15 / 06 / 2026</td>
+      <td class="lbl">تاريخ النهاية</td>
+      <td class="val">22 / 06 / 2026</td>
+    </tr>
+  </table>
+
+  <div class="result-box">
+    <div class="result-item">
+      <div class="r-label">عدد الأيام المطلوبة</div>
+      <div class="r-val">6 أيام</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">بعد استثناء العطل الرسمية</div>
+      <div class="r-val" style="color:#0D7A55">6 أيام فعلية</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">الرصيد المتبقي بعد الإجازة</div>
+      <div class="r-val" style="color:#C0392B">16 يوم</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">تاريخ العودة المتوقع</div>
+      <div class="r-val" style="font-size:11px">23 / 06 / 2026</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="sec-header">سبب الإجازة / ملاحظات</div>
+  <div class="notes-box">إجازة سنوية اعتيادية</div>
+
+  <!-- Approval flow -->
+  <div class="sec-header">مسار الاعتماد</div>
+  <div class="approval-bar">
+    <div class="ap-item">
+      <div class="ap-label">تقديم الطلب</div>
+      <div class="ap-status approved">✅ مقدَّم</div>
+      <div style="font-size:9px;color:#aaa;margin-top:3px">10/06/2026</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">مدير القسم</div>
+      <div class="ap-status pending">⏳ قيد المراجعة</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">شؤون الموظفين</div>
+      <div class="ap-status waiting">— في الانتظار</div>
+    </div>
+    <div class="ap-item">
+      <div class="ap-label">القرار النهائي</div>
+      <div class="ap-status waiting">— في الانتظار</div>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="sigs">
+    <div class="sig-box">
+      <div class="sig-title">توقيع الموظف</div>
+      <div class="sig-line">أحمد محمد الورفلي</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">اعتماد مدير القسم</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">اعتماد مدير شؤون الموظفين</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+  </div>
+
+  <div class="stamp-area">الختم<br>الرسمي</div>
+
+  <div class="doc-footer">
+    <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+    <span>LV-2026-0318 · صفحة 1 من 1</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ PERMISSION PRINT ══ -->
+<div class="form-page" id="perm-print">
+<div class="paper">
+
+  <div class="doc-header">
+    <div class="org-block">
+      <div class="org-main">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub">إدارة شؤون الموظفين</div>
+      <div class="org-sub" style="margin-top:4px;color:#888">تاريخ الطباعة: 10 / 06 / 2026</div>
+    </div>
+    <div class="logo-center">
+      <div class="logo-circle">💧</div>
+      <span>الجهاز التنفيذي</span>
+    </div>
+    <div class="doc-ref">
+      <div class="ref-box">
+        <div class="ref-label">رقم الإذن</div>
+        <div class="ref-val">PM-2026-0091</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-title">
+    <h1>إذن خروج</h1>
+  </div>
+
+  <div class="sec-header">بيانات الموظف</div>
+  <table class="info-table">
+    <tr>
+      <td class="lbl">الاسم الرباعي</td>
+      <td class="val filled" colspan="3">خالد عبدالله سالم الزيداني</td>
+    </tr>
+    <tr>
+      <td class="lbl">الرقم الوظيفي</td>
+      <td class="val filled">EMP-0115</td>
+      <td class="lbl">المسمى الوظيفي</td>
+      <td class="val filled">حارس أمن</td>
+    </tr>
+    <tr>
+      <td class="lbl">الإدارة / القسم</td>
+      <td class="val filled">قسم الأمن</td>
+      <td class="lbl">نوع الموظف</td>
+      <td class="val filled">غفارة</td>
+    </tr>
+  </table>
+
+  <div class="sec-header">تفاصيل الإذن</div>
+  <table class="det-table">
+    <tr>
+      <td class="lbl">تاريخ الإذن</td>
+      <td class="val big">10 / 06 / 2026</td>
+      <td class="lbl">سبب الخروج</td>
+      <td class="val big">طبي</td>
+    </tr>
+    <tr>
+      <td class="lbl">وقت الخروج</td>
+      <td class="val big">10:30 صباحاً</td>
+      <td class="lbl">وقت العودة</td>
+      <td class="val big">12:00 ظهراً</td>
+    </tr>
+  </table>
+
+  <div class="result-box">
+    <div class="result-item">
+      <div class="r-label">مدة الإذن</div>
+      <div class="r-val">1 ساعة 30 دقيقة</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">عدد الأذونات هذا الشهر</div>
+      <div class="r-val" style="color:#B7770D">1 من 2</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">الأذونات المتبقية</div>
+      <div class="r-val" style="color:#0D7A55">إذن واحد</div>
+    </div>
+  </div>
+
+  <div class="sec-header">ملاحظات</div>
+  <div class="notes-box">مراجعة طبية</div>
+
+  <div class="sigs" style="margin-top:40px">
+    <div class="sig-box">
+      <div class="sig-title">توقيع الموظف</div>
+      <div class="sig-line">خالد الزيداني</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">المسؤول المباشر</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">شؤون الموظفين</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+  </div>
+
+  <div class="stamp-area">الختم<br>الرسمي</div>
+
+  <div class="doc-footer">
+    <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+    <span>PM-2026-0091 · صفحة 1 من 1</span>
+  </div>
+
+</div>
+</div>
+
+<!-- ══ ATTENDANCE PRINT ══ -->
+<div class="form-page" id="att-print">
+<div class="paper">
+
+  <div class="doc-header">
+    <div class="org-block">
+      <div class="org-main">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub">إدارة شؤون الموظفين</div>
+    </div>
+    <div class="logo-center">
+      <div class="logo-circle">💧</div>
+    </div>
+    <div class="doc-ref">
+      <div class="ref-box">
+        <div class="ref-label">الفترة</div>
+        <div class="ref-val">يونيو 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-title">
+    <h1>تقرير الحضور والانصراف الشهري</h1>
+  </div>
+
+  <div class="sec-header">بيانات الموظف</div>
+  <table class="info-table">
+    <tr>
+      <td class="lbl">الاسم</td>
+      <td class="val filled" colspan="3">أحمد محمد سالم الورفلي</td>
+    </tr>
+    <tr>
+      <td class="lbl">الرقم الوظيفي</td>
+      <td class="val filled">EMP-0042</td>
+      <td class="lbl">الإدارة</td>
+      <td class="val filled">إدارة الحفر</td>
+    </tr>
+    <tr>
+      <td class="lbl">وقت الدوام</td>
+      <td class="val filled">08:30 – 14:30</td>
+      <td class="lbl">نوع الموظف</td>
+      <td class="val filled">إداري</td>
+    </tr>
+  </table>
+
+  <div class="sec-header">ملخص الشهر</div>
+  <div class="result-box" style="gap:10px">
+    <div class="result-item">
+      <div class="r-label">أيام الحضور</div>
+      <div class="r-val" style="color:#0D7A55">18</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">أيام الغياب</div>
+      <div class="r-val" style="color:#C0392B">2</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">أيام الإجازة</div>
+      <div class="r-val" style="color:#1A6E8E">6</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">أيام العطل</div>
+      <div class="r-val" style="color:#777">4</div>
+    </div>
+    <div class="result-divider"></div>
+    <div class="result-item">
+      <div class="r-label">إجمالي ساعات العمل</div>
+      <div class="r-val" style="font-size:11px">108 ساعة</div>
+    </div>
+  </div>
+
+  <!-- Daily table -->
+  <div class="sec-header">تفاصيل أيام الشهر</div>
+  <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px">
+    <thead>
+      <tr style="background:var(--primary);color:#fff">
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">اليوم</th>
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">التاريخ</th>
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">وقت الحضور</th>
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">وقت الانصراف</th>
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">ساعات العمل</th>
+        <th style="padding:6px 4px;border:1px solid #0B4F6C;text-align:center">الحالة</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:#E6F7F2"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الأحد</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">01/06</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">08:25</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">14:32</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">6:07</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#0D7A55;font-weight:700">حضور</td></tr>
+      <tr><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الإثنين</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">02/06</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">08:45</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">14:30</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">5:45</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#B7770D;font-weight:700">تأخر</td></tr>
+      <tr style="background:#E6F7F2"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الثلاثاء</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">03/06</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">08:30</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">14:30</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">6:00</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#0D7A55;font-weight:700">حضور</td></tr>
+      <tr><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الأربعاء</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">04/06</td><td colspan="3" style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#C0392B">—</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#C0392B;font-weight:700">غياب</td></tr>
+      <tr style="background:#E8F4FD"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الخميس</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">05/06</td><td colspan="3" style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#1A6E8E">إجازة سنوية</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#1A6E8E;font-weight:700">إجازة</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">الجمعة</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">06/06</td><td colspan="3" style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">—</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">عطلة</td></tr>
+      <tr style="background:#f5f5f5"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">السبت</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">07/06</td><td colspan="3" style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">—</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#aaa">عطلة</td></tr>
+      <tr style="background:#E6F7F2"><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">الأحد</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">08/06</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">08:28</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">14:30</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center">6:02</td><td style="padding:5px 4px;border:1px solid #ddd;text-align:center;color:#0D7A55;font-weight:700">حضور</td></tr>
+      <tr><td colspan="6" style="padding:4px;border:1px solid #ddd;text-align:center;color:#aaa;font-size:9px">... تستمر بقية أيام الشهر ...</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sigs">
+    <div class="sig-box">
+      <div class="sig-title">توقيع الموظف</div>
+      <div class="sig-line">أحمد محمد الورفلي</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">مسؤول الحضور</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-title">مدير شؤون الموظفين</div>
+      <div class="sig-line">الاسم والتوقيع</div>
+    </div>
+  </div>
+
+  <div class="stamp-area">الختم<br>الرسمي</div>
+
+  <div class="doc-footer">
+    <span>نظام إدارة شؤون الموظفين — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+    <span>يونيو 2026 · EMP-0042</span>
+  </div>
+
+</div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.form-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

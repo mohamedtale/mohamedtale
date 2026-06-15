@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>معاينة النماذج</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:#0B4F6C; --primary2:#1A6E8E; --accent:#00A8CC;
+  --gold:#D4A843; --bg:#F0F4F8; --surface:#FFFFFF; --surface2:#F7FAFC;
+  --border:#DDE3ED; --text:#1A2D3D; --text2:#4A6278; --text3:#8AA0B4;
+  --green:#0D7A55; --green-bg:#E6F7F2;
+  --red:#C0392B; --red-bg:#FDECEA;
+  --yellow:#B7770D; --yellow-bg:#FEF6E4;
+  --blue-bg:#E8F4FD;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);direction:rtl;padding:30px;}
+
+h2{font-size:14px;color:var(--text3);margin-bottom:20px;text-align:center;font-weight:500;}
+
+/* TABS */
+.tabs{display:flex;gap:10px;margin-bottom:30px;justify-content:center;flex-wrap:wrap;}
+.tab{padding:8px 20px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-family:'Cairo',sans-serif;cursor:pointer;color:var(--text2);transition:.2s;}
+.tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.tab:hover:not(.active){border-color:var(--accent);color:var(--accent);}
+
+.form-page{display:none;}
+.form-page.active{display:block;}
+
+/* MODAL */
+.modal-backdrop{background:rgba(11,79,108,.45);backdrop-filter:blur(4px);border-radius:16px;padding:30px;margin-bottom:30px;}
+.modal{background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(11,79,108,.25);max-width:600px;margin:0 auto;overflow:hidden;}
+.modal-header{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:15px;font-weight:700;color:#fff;}
+.modal-header .close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-start;}
+
+/* FORM ELEMENTS */
+.form-group{margin-bottom:18px;}
+.form-row{display:grid;gap:14px;margin-bottom:18px;}
+.form-row.cols2{grid-template-columns:1fr 1fr;}
+.form-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+label{display:block;font-size:11.5px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+label .req{color:var(--red);margin-right:2px;}
+label .auto{font-size:10px;color:var(--accent);font-weight:500;margin-right:6px;}
+
+input,select,textarea{
+  width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);
+  background:var(--surface2);font-size:13px;font-family:'Cairo',sans-serif;
+  color:var(--text);outline:none;transition:.2s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(0,168,204,.1);}
+input[readonly]{background:var(--blue-bg);color:var(--primary);border-color:#BDD9EF;cursor:default;}
+textarea{resize:vertical;min-height:80px;}
+
+/* Employee lookup */
+.emp-lookup{position:relative;}
+.emp-lookup input{padding-left:40px;}
+.emp-lookup .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text3);}
+.emp-card{background:linear-gradient(135deg,var(--blue-bg),#fff);border:1.5px solid #BDD9EF;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-top:8px;}
+.emp-av{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.emp-info{flex:1;}
+.emp-info strong{font-size:13px;color:var(--primary);display:block;}
+.emp-info span{font-size:11px;color:var(--text3);}
+.emp-badge{padding:3px 9px;background:var(--green-bg);color:var(--green);border-radius:20px;font-size:10.5px;font-weight:700;}
+
+/* Balance bar */
+.balance-bar{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
+.balance-bar .bal-title{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.bal-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.bal-label{font-size:12px;color:var(--text2);}
+.bal-val{font-size:13px;font-weight:700;color:var(--primary);}
+.bal-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:3px;}
+.bal-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--primary));}
+
+/* Duration pill */
+.duration-pill{display:inline-flex;align-items:center;gap:6px;background:var(--yellow-bg);border:1px solid #F0C060;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--yellow);font-weight:700;margin-bottom:18px;}
+
+/* Buttons */
+.btn{padding:9px 20px;border-radius:9px;border:none;font-size:13px;font-family:'Cairo',sans-serif;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.2s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary2);}
+.btn-outline{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1.5px solid #FECACA;}
+
+/* Section divider */
+.form-section{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px;padding-bottom:6px;border-bottom:1.5px solid var(--blue-bg);}
+
+/* Select styled */
+select option{font-family:'Cairo',sans-serif;}
+
+/* Tag */
+.field-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9.5px;font-weight:700;margin-right:4px;}
+.field-tag.auto{background:var(--blue-bg);color:var(--primary2);}
+.field-tag.calc{background:var(--green-bg);color:var(--green);}
+</style>
+</head>
+<body>
+
+<h2>معاينة نماذج النظام — اضغط على النموذج الذي تريد رؤيته</h2>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('leave')">🏖️ طلب إجازة</div>
+  <div class="tab" onclick="show('perm')">🚪 إذن خروج</div>
+  <div class="tab" onclick="show('att')">🕐 إدخال حضور يدوي</div>
+  <div class="tab" onclick="show('promo')">⭐ إضافة علاوة</div>
+  <div class="tab" onclick="show('doc')">📁 رفع وثيقة</div>
+</div>
+
+<!-- ══ LEAVE FORM ══ -->
+<div class="form-page active" id="leave">
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🏖️ طلب إجازة جديدة</h3>
+        <button class="close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Employee Lookup -->
+        <div class="form-group">
+          <label><span class="req">*</span> الرقم الوظيفي</label>
+          <div class="emp-lookup">
+            <input type="text" value="EMP-0042" placeholder="أدخل الرقم الوظيفي...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <!-- Auto-filled card -->
+          <div class="emp-card">
+            <div class="emp-av">أ</div>
+            <div class="emp-info">
+              <strong>أحمد محمد الورفلي</strong>
+              <span>مهندس حفر أول · إدارة الحفر · درجة 7</span>
+            </div>
+            <span class="emp-badge">إداري</span>
+          </div>
+        </div>
+
+        <!-- Balance -->
+        <div class="balance-bar">
+          <div class="bal-title">رصيد الإجازات الحالي</div>
+          <div class="bal-row"><span class="bal-label">سنوية</span><span class="bal-val">22 يوم</span></div>
+          <div class="bal-track"><div class="bal-fill" style="width:73%"></div></div>
+          <div class="bal-row" style="margin-top:8px"><span class="bal-label">مرضية</span><span class="bal-val">45 يوم</span></div>
+          <div class="bal-track"><div class="bal-fill" style="width:50%;background:linear-gradient(90deg,#10B981,#059669)"></div></div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> نوع الإجازة</label>
+            <select>
+              <option>سنوية</option>
+              <option>مرضية</option>
+              <option>طارئة</option>
+              <option>أمومة</option>
+              <option>حج</option>
+              <option>دراسية</option>
+              <option>بدون راتب</option>
+            </select>
+          </div>
+          <div>
+            <label>سبب الإجازة</label>
+            <input type="text" placeholder="اختياري">
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> تاريخ البداية</label>
+            <input type="date" value="2026-06-15">
+          </div>
+          <div>
+            <label><span class="req">*</span> تاريخ النهاية</label>
+            <input type="date" value="2026-06-22">
+          </div>
+        </div>
+
+        <!-- Auto-calculated duration -->
+        <div class="duration-pill">📅 عدد الأيام المحسوبة: <strong>6 أيام</strong> (بعد استثناء العطل)</div>
+
+        <div class="form-group">
+          <label>مرفق طبي (للإجازة المرضية)</label>
+          <input type="file" accept=".pdf,image/*">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">✅ تقديم الطلب</button>
+        <button class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PERMISSION FORM ══ -->
+<div class="form-page" id="perm">
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🚪 إذن خروج جديد</h3>
+        <button class="close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label><span class="req">*</span> الرقم الوظيفي</label>
+          <div class="emp-lookup">
+            <input type="text" value="EMP-0115" placeholder="أدخل الرقم الوظيفي...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <div class="emp-card">
+            <div class="emp-av" style="background:linear-gradient(135deg,#065F46,#059669)">خ</div>
+            <div class="emp-info">
+              <strong>خالد عبدالله الزيداني</strong>
+              <span>حارس أمن · الأمن · درجة 4</span>
+            </div>
+            <span style="padding:3px 9px;background:#FEF6E4;color:#B7770D;border-radius:20px;font-size:10.5px;font-weight:700;">استخدم 1 من 2</span>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> تاريخ الإذن</label>
+            <input type="date" value="2026-06-10">
+          </div>
+          <div>
+            <label><span class="req">*</span> سبب الإذن</label>
+            <select>
+              <option>شخصي</option>
+              <option>طبي</option>
+              <option>عمل رسمي</option>
+              <option>طارئ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> وقت الخروج</label>
+            <input type="time" value="10:30">
+          </div>
+          <div>
+            <label><span class="req">*</span> وقت العودة</label>
+            <input type="time" value="12:00">
+          </div>
+        </div>
+
+        <div class="duration-pill">⏱ مدة الإذن المحسوبة: <strong>1 ساعة و 30 دقيقة</strong></div>
+
+        <div class="form-group">
+          <label>ملاحظة</label>
+          <input type="text" placeholder="اختياري">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">✅ حفظ الإذن</button>
+        <button class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ATTENDANCE FORM ══ -->
+<div class="form-page" id="att">
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🕐 إدخال حضور يدوي</h3>
+        <button class="close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label><span class="req">*</span> الرقم الوظيفي</label>
+          <div class="emp-lookup">
+            <input type="text" value="EMP-0078" placeholder="أدخل الرقم الوظيفي...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <div class="emp-card">
+            <div class="emp-av" style="background:linear-gradient(135deg,#BE185D,#EC4899)">ف</div>
+            <div class="emp-info">
+              <strong>فاطمة علي المنتصر</strong>
+              <span>مدير قسم · الشؤون الإدارية · دوام: 08:30 – 14:30</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> تاريخ الحضور</label>
+            <input type="date" value="2026-06-10">
+          </div>
+          <div>
+            <label>الحالة</label>
+            <select>
+              <option>حضور</option>
+              <option>غياب</option>
+              <option>إجازة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> وقت الحضور</label>
+            <input type="time" value="08:30">
+          </div>
+          <div>
+            <label><span class="req">*</span> وقت الانصراف</label>
+            <input type="time" value="14:30">
+          </div>
+        </div>
+
+        <div class="duration-pill">⏱ ساعات العمل: <strong>6 ساعات</strong></div>
+
+        <div class="form-group">
+          <label><span class="req">*</span> سبب الإدخال اليدوي</label>
+          <input type="text" placeholder="مثال: عطل في جهاز البصمة">
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">✅ حفظ</button>
+        <button class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROMOTION FORM ══ -->
+<div class="form-page" id="promo">
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>⭐ إضافة علاوة</h3>
+        <button class="close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label><span class="req">*</span> الرقم الوظيفي</label>
+          <div class="emp-lookup">
+            <input type="text" value="EMP-0042" placeholder="أدخل الرقم الوظيفي...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <div class="emp-card">
+            <div class="emp-av">أ</div>
+            <div class="emp-info">
+              <strong>أحمد محمد الورفلي</strong>
+              <span>درجة 7 · علاوة 3 من 4 · موعد الاستحقاق: مارس 2026</span>
+            </div>
+            <span class="emp-badge">مرشح ✅</span>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> تاريخ العلاوة</label>
+            <input type="date" value="2026-06-10">
+          </div>
+          <div>
+            <label>العلاوة الجديدة <span class="field-tag calc">تلقائي</span></label>
+            <input type="text" value="علاوة 4 من 4" readonly>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>رقم القرار الإداري</label>
+          <input type="text" placeholder="مثال: ق.م / 2026 / 145">
+        </div>
+
+        <div class="form-group">
+          <label>ملاحظات</label>
+          <textarea placeholder="أي ملاحظات إضافية..."></textarea>
+        </div>
+
+        <div style="background:var(--yellow-bg);border:1px solid #F0C060;border-radius:10px;padding:10px 14px;font-size:12px;color:var(--yellow);font-weight:600;">
+          ⚠️ بعد هذه العلاوة سيصبح الموظف مرشحاً للترقية إلى درجة 8
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">✅ حفظ العلاوة</button>
+        <button class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DOCUMENT FORM ══ -->
+<div class="form-page" id="doc">
+  <div class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📁 رفع وثيقة جديدة</h3>
+        <button class="close">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label><span class="req">*</span> الرقم الوظيفي</label>
+          <div class="emp-lookup">
+            <input type="text" value="EMP-0203" placeholder="أدخل الرقم الوظيفي...">
+            <span class="search-icon">🔍</span>
+          </div>
+          <div class="emp-card">
+            <div class="emp-av" style="background:linear-gradient(135deg,#7C2D12,#EA580C)">س</div>
+            <div class="emp-info">
+              <strong>سعاد إبراهيم المبروك</strong>
+              <span>محاسب · المالية · درجة 6</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row cols2">
+          <div>
+            <label><span class="req">*</span> نوع الوثيقة</label>
+            <select>
+              <option>جواز سفر</option>
+              <option>بطاقة هوية</option>
+              <option>عقد عمل</option>
+              <option>شهادة علمية</option>
+              <option>رخصة قيادة</option>
+              <option>قرار إداري</option>
+              <option>أخرى</option>
+            </select>
+          </div>
+          <div>
+            <label><span class="req">*</span> وصف المستند</label>
+            <input type="text" placeholder="مثال: عقد عمل 2024">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>تاريخ الإصدار</label>
+          <input type="date">
+        </div>
+
+        <!-- Upload area -->
+        <div style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;background:var(--surface2);cursor:pointer;transition:.2s;" onmouseover="this.style.borderColor='#00A8CC'" onmouseout="this.style.borderColor='#DDE3ED'">
+          <div style="font-size:28px;margin-bottom:8px;">📎</div>
+          <div style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:4px;">اسحب الملف هنا أو اضغط للاختيار</div>
+          <div style="font-size:11px;color:var(--text3);">PDF فقط · الحد الأقصى 50 ميجابايت</div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">✅ رفع الوثيقة</button>
+        <button class="btn btn-outline">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.form-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

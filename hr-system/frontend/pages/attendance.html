@@ -1,0 +1,267 @@
+<div class="card no-print" dir="rtl">
+  <!-- Page Header -->
+  <div class="d-flex justify-between align-center mb-2">
+    <h2 style="font-size:20px; font-weight:800; color:var(--navy)">📋 الحضور والغياب</h2>
+  </div>
+
+  <!-- Controls -->
+  <div class="card" style="background:var(--gray-50); box-shadow:none; margin-bottom:16px;">
+    <div class="search-bar" style="flex-wrap:wrap; gap:12px; margin-bottom:0; align-items:flex-end;">
+      <div class="form-group" style="flex:1; min-width:120px;">
+        <label>الشهر</label>
+        <select id="att-grid-month">
+          <option value="1">يناير</option><option value="2">فبراير</option>
+          <option value="3">مارس</option><option value="4">أبريل</option>
+          <option value="5">مايو</option><option value="6">يونيو</option>
+          <option value="7">يوليو</option><option value="8">أغسطس</option>
+          <option value="9">سبتمبر</option><option value="10">أكتوبر</option>
+          <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1; min-width:110px;">
+        <label>السنة</label>
+        <select id="att-grid-year"></select>
+      </div>
+      <div class="form-group" style="min-width:120px;">
+        <label style="visibility:hidden;">تحميل</label>
+        <button class="btn btn-turquoise" onclick="loadAttendance()">🔍 تحميل</button>
+      </div>
+      <div class="form-group" style="min-width:130px;">
+        <label style="visibility:hidden;">حفظ</label>
+        <button class="btn btn-success" id="att-save-btn" onclick="saveAttendance()" style="display:none;">💾 حفظ الكل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="d-flex gap-2 mb-2" style="flex-wrap:wrap; font-size:13px; font-weight:600;">
+    <span style="background:#d4edda; color:#155724; padding:4px 12px; border-radius:20px;">P حاضر</span>
+    <span style="background:#f8d7da; color:#721c24; padding:4px 12px; border-radius:20px;">A غائب</span>
+    <span style="background:var(--turquoise-light); color:#004d5e; padding:4px 12px; border-radius:20px;">L إجازة</span>
+    <span style="background:#fff3cd; color:#856404; padding:4px 12px; border-radius:20px;">E إذن خروج</span>
+  </div>
+
+  <!-- Grid Container -->
+  <div id="att-grid-container">
+    <div class="empty-state"><div class="icon">📋</div><p>اختر الشهر والسنة ثم اضغط تحميل</p></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let attendanceData = {};  // { "empId_YYYY-MM-DD": status }
+  let employeesList = [];
+
+  const STATUS_COLORS = {
+    'P': '#d4edda',
+    'A': '#f8d7da',
+    'L': 'var(--turquoise-light)',
+    'E': '#fff3cd',
+    '': '#ffffff'
+  };
+
+  async function initAttendance() {
+    const now = new Date();
+    document.getElementById('att-grid-month').value = now.getMonth() + 1;
+    const yearSel = document.getElementById('att-grid-year');
+    yearSel.innerHTML = '';
+    for (let y = now.getFullYear() + 1; y >= now.getFullYear() - 3; y--) {
+      yearSel.innerHTML += `<option value="${y}" ${y === now.getFullYear() ? 'selected' : ''}>${y}</option>`;
+    }
+
+    try {
+      const data = await window.API.employees.getAll({ status: 'active' });
+      employeesList = Array.isArray(data) ? data : (data.data || []);
+    } catch (err) {
+      showToast('فشل تحميل بيانات الموظفين', 'error');
+    }
+  }
+
+  async function loadAttendance() {
+    const month = parseInt(document.getElementById('att-grid-month').value);
+    const year = parseInt(document.getElementById('att-grid-year').value);
+    const container = document.getElementById('att-grid-container');
+    container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+    attendanceData = {};
+
+    try {
+      const records = await window.API.attendance.getAll({ month, year });
+      const list = Array.isArray(records) ? records : (records.data || []);
+
+      // Build attendanceData map from existing records
+      list.forEach(r => {
+        if (!r.employee_id || !r.attendance_date) return;
+        const dateStr = (r.attendance_date || '').slice(0, 10);
+        const key = `${r.employee_id}_${dateStr}`;
+        // Map status field to P/A/L/E
+        let status = '';
+        if (r.status === 'present' || r.status === 'P') status = 'P';
+        else if (r.status === 'absent' || r.status === 'A') status = 'A';
+        else if (r.status === 'leave' || r.status === 'L') status = 'L';
+        else if (r.status === 'permission' || r.status === 'E') status = 'E';
+        else if (r.is_absent) status = 'A';
+        else if (r.entry_time) status = 'P';
+        attendanceData[key] = status;
+      });
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+      renderGrid(employeesList, year, month, daysInMonth, attendanceData);
+      document.getElementById('att-save-btn').style.display = 'inline-flex';
+    } catch (err) {
+      container.innerHTML = `<div class="alert alert-error">فشل تحميل بيانات الحضور: ${err.message || ''}</div>`;
+    }
+  }
+
+  function renderGrid(emps, year, month, daysInMonth, attMap) {
+    const container = document.getElementById('att-grid-container');
+    if (!emps.length) {
+      container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>لا يوجد موظفون</p></div>`;
+      return;
+    }
+
+    // Build day headers
+    const dayHeaders = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      dayHeaders.push(`<th style="min-width:48px; font-size:12px; padding:6px 4px;">${d}</th>`);
+    }
+
+    // Build rows
+    const rows = emps.map(emp => {
+      const empName = emp.full_name || emp.name || '';
+      let countP = 0, countA = 0, countL = 0, countE = 0;
+
+      const cells = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const key = `${emp.id}_${dateStr}`;
+        const val = attMap[key] || '';
+        const bg = STATUS_COLORS[val] || '#ffffff';
+
+        if (val === 'P') countP++;
+        else if (val === 'A') countA++;
+        else if (val === 'L') countL++;
+        else if (val === 'E') countE++;
+
+        cells.push(`
+          <td style="padding:2px; background:${bg};" data-key="${key}">
+            <select
+              style="width:52px; font-size:11px; font-weight:600; padding:3px 2px; border:1px solid var(--gray-200); border-radius:4px; background:${bg}; font-family:Cairo,sans-serif; text-align:center; cursor:pointer;"
+              onchange="onAttChange(this, '${key}')"
+            >
+              <option value="" ${!val ? 'selected' : ''}>-</option>
+              <option value="P" ${val==='P' ? 'selected' : ''}>P حاضر</option>
+              <option value="A" ${val==='A' ? 'selected' : ''}>A غائب</option>
+              <option value="L" ${val==='L' ? 'selected' : ''}>L إجازة</option>
+              <option value="E" ${val==='E' ? 'selected' : ''}>E إذن</option>
+            </select>
+          </td>`);
+      }
+
+      return `
+        <tr>
+          <td style="font-weight:600; white-space:nowrap; padding:8px 12px; text-align:right; position:sticky; right:0; background:white; z-index:1; box-shadow:2px 0 4px rgba(0,0,0,0.06);">${empName}</td>
+          ${cells.join('')}
+          <td style="font-weight:700; color:#155724; background:#d4edda;">${countP}</td>
+          <td style="font-weight:700; color:#721c24; background:#f8d7da;">${countA}</td>
+          <td style="font-weight:700; color:#004d5e; background:var(--turquoise-light);">${countL}</td>
+          <td style="font-weight:700; color:#856404; background:#fff3cd;">${countE}</td>
+        </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="table-wrapper" style="overflow-x:auto;">
+        <table style="min-width:${80 + daysInMonth * 58 + 160}px; font-size:13px; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="position:sticky; right:0; z-index:2; background:var(--navy); white-space:nowrap; padding:10px 14px; min-width:140px;">الموظف</th>
+              ${dayHeaders.join('')}
+              <th style="background:#28a745; min-width:52px;">P</th>
+              <th style="background:#dc3545; min-width:52px;">A</th>
+              <th style="background:var(--turquoise); min-width:52px;">L</th>
+              <th style="background:#fd7e14; min-width:52px;">E</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  function onAttChange(selectEl, key) {
+    const val = selectEl.value;
+    attendanceData[key] = val;
+    const bg = STATUS_COLORS[val] || '#ffffff';
+    selectEl.style.background = bg;
+    selectEl.closest('td').style.background = bg;
+
+    // Update summary counts for the row
+    const row = selectEl.closest('tr');
+    updateRowSummary(row);
+  }
+
+  function updateRowSummary(row) {
+    const selects = row.querySelectorAll('select');
+    let p = 0, a = 0, l = 0, e = 0;
+    selects.forEach(s => {
+      if (s.value === 'P') p++;
+      else if (s.value === 'A') a++;
+      else if (s.value === 'L') l++;
+      else if (s.value === 'E') e++;
+    });
+    const summaries = row.querySelectorAll('td:nth-last-child(-n+4)');
+    if (summaries.length >= 4) {
+      summaries[0].textContent = p;
+      summaries[1].textContent = a;
+      summaries[2].textContent = l;
+      summaries[3].textContent = e;
+    }
+  }
+
+  async function saveAttendance() {
+    const month = parseInt(document.getElementById('att-grid-month').value);
+    const year = parseInt(document.getElementById('att-grid-year').value);
+    const btn = document.getElementById('att-save-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جارٍ الحفظ...';
+
+    const requests = [];
+    Object.entries(attendanceData).forEach(([key, status]) => {
+      if (!status) return; // skip empty/unknown
+      const [empId, dateStr] = key.split('_');
+      if (!empId || !dateStr) return;
+
+      if (status === 'A') return; // Absent = no fingerprint
+
+      let time;
+      if (status === 'P') time = '08:00';
+      else if (status === 'L') time = '08:00';
+      else if (status === 'E') time = '08:00';
+
+      requests.push(
+        window.API.attendance.logFingerprint({
+          employee_id: parseInt(empId),
+          attendance_date: dateStr,
+          time,
+          status  // pass status so backend knows the type
+        }).catch(err => ({ error: err.message }))
+      );
+    });
+
+    try {
+      await Promise.all(requests);
+      showToast(`تم حفظ بيانات الحضور بنجاح (${requests.length} سجل)`, 'success');
+    } catch (err) {
+      showToast('حدث خطأ أثناء الحفظ: ' + (err.message || ''), 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 حفظ الكل';
+    }
+  }
+
+  // Expose to inline handlers
+  window.loadAttendance = loadAttendance;
+  window.saveAttendance = saveAttendance;
+  window.onAttChange = onAttChange;
+
+  initAttendance();
+})();
+</script>

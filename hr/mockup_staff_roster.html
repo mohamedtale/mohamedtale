@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف الموظفين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#0B4F6C;--accent:#00A8CC;--gold:#D4A843;
+  --gm:#1B5E20;--gm-light:#E8F5E9;
+  --office:#1A237E;--office-light:#E8EAF6;
+  --dept:#E65100;--dept-light:#FFF3E0;
+  --sec:#37474F;--sec-light:#ECEFF1;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#c8d4de;direction:rtl;padding:20px;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:#fff;border-radius:12px;padding:10px 18px;
+  margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  max-width:297mm;margin-left:auto;margin-right:auto;}
+.toolbar-label{font-size:11px;color:#999;font-weight:700;}
+.tbtn{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;
+  border:none;font-size:11.5px;font-family:'Cairo',sans-serif;font-weight:600;cursor:pointer;transition:.15s;}
+.tbtn-outline{background:#f8fafc;color:#4A6278;border:1px solid #DDE3ED;}
+.tbtn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.tbtn-blue{background:#E8F4FD;color:#0B4F6C;border:1px solid #BDD9EF;}
+.tbtn-blue:hover{background:#dbeafe;}
+.tdiv{width:1px;height:26px;background:#e2e8f0;margin:0 2px;}
+.finput{padding:6px 12px;border-radius:8px;border:1px solid #DDE3ED;
+  font-family:'Cairo',sans-serif;font-size:11.5px;color:#333;outline:none;min-width:180px;}
+.finput:focus{border-color:var(--accent);}
+
+/* ── PANEL OVERLAY ── */
+.panel-overlay{display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.35);align-items:center;justify-content:center;}
+.panel-overlay.open{display:flex;}
+.panel-box{background:#fff;border-radius:14px;padding:22px 28px;
+  box-shadow:0 8px 40px rgba(0,0,0,.25);min-width:340px;max-width:500px;width:90%;}
+.panel-box h3{font-size:14px;font-weight:800;color:var(--primary);
+  margin-bottom:16px;border-bottom:2px solid #e0eaf0;padding-bottom:10px;}
+.cols-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
+.col-toggle{display:flex;align-items:center;gap:8px;padding:7px 10px;
+  border-radius:8px;cursor:pointer;border:1.5px solid #e0eaf0;transition:.15s;
+  font-size:12px;font-weight:600;color:#334155;}
+.col-toggle:hover{border-color:var(--accent);background:#f0f9ff;}
+.col-toggle input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;}
+.panel-actions{display:flex;gap:8px;justify-content:flex-end;}
+.btn-apply{background:var(--primary);color:#fff;border:none;padding:8px 20px;
+  border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-apply:hover{background:#0a3f58;}
+.btn-cancel{background:#f1f5f9;color:#475569;border:1px solid #e0eaf0;padding:8px 16px;
+  border-radius:8px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+
+/* ── WIDTH PANEL ── */
+.width-row{display:flex;align-items:center;gap:10px;padding:6px 0;
+  border-bottom:1px solid #f0f4f7;}
+.width-row:last-child{border-bottom:none;}
+.width-lbl{font-size:11.5px;font-weight:700;color:var(--primary);min-width:130px;flex-shrink:0;}
+.width-slider{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent) var(--pct,50%),#e0eaf0 var(--pct,50%));
+  outline:none;cursor:pointer;}
+.width-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;
+  border-radius:50%;background:var(--primary);cursor:pointer;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.width-val{font-size:11px;font-weight:700;color:var(--primary);
+  min-width:38px;text-align:center;background:#EEF6FB;
+  border-radius:6px;padding:2px 6px;}
+
+/* ── PAPER landscape A4 ── */
+.paper{background:#fff;width:297mm;min-height:210mm;margin:0 auto;
+  padding:12mm 14mm 18mm;box-shadow:0 6px 40px rgba(0,0,0,.22);
+  position:relative;overflow:hidden;}
+.paper::after{content:'💧';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-15deg);
+  font-size:260px;opacity:.025;pointer-events:none;z-index:0;}
+
+/* ── HEADER ── */
+.doc-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;padding-bottom:12px;border-bottom:3px double var(--primary);margin-bottom:14px;}
+.org-name{font-size:13px;font-weight:800;color:var(--primary);line-height:1.5;}
+.org-sub{font-size:10px;color:#555;margin-top:2px;}
+.org-date{font-size:9px;color:#999;margin-top:5px;}
+.logo-ring{width:64px;height:64px;border-radius:50%;border:3px solid var(--primary);
+  background:linear-gradient(135deg,#E8F4FD,#fff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin:0 auto 3px;box-shadow:0 2px 8px rgba(11,79,108,.15);}
+.logo-txt{font-size:8px;color:#888;text-align:center;}
+.stats-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.stat-badge{background:linear-gradient(135deg,#E8F4FD,#f7fbff);
+  border:1.5px solid #BDD9EF;border-radius:8px;padding:4px 10px;text-align:center;}
+.stat-lbl{font-size:7.5px;color:#888;}
+.stat-val{font-size:13px;font-weight:800;color:var(--primary);}
+
+/* ── TITLE ── */
+.doc-title{text-align:center;margin:8px 0 12px;position:relative;}
+.doc-title::before,.doc-title::after{content:'';position:absolute;top:50%;
+  width:20%;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold));}
+.doc-title::before{right:0;} .doc-title::after{left:0;transform:scaleX(-1);}
+.doc-title h1{font-size:15px;font-weight:800;color:var(--primary);
+  display:inline-block;padding:0 16px;background:#fff;
+  position:relative;z-index:1;border-bottom:2.5px solid var(--gold);padding-bottom:3px;}
+
+/* ── TABLE ── */
+.roster-wrap{overflow-x:auto;position:relative;z-index:1;
+  border:1.5px solid #c8d8e4;border-radius:10px;overflow:hidden;}
+#rosterTable{width:100%;border-collapse:collapse;font-size:9.5px;table-layout:fixed;}
+
+/* رأس الجدول */
+#rosterTable thead th{
+  background:linear-gradient(180deg,#0d5e7a,var(--primary));
+  color:#fff;font-weight:700;
+  padding:10px 6px;text-align:center;white-space:nowrap;
+  border-left:1px solid rgba(255,255,255,.12);
+  cursor:pointer;user-select:none;position:relative;
+  letter-spacing:.2px;font-size:9.5px;}
+#rosterTable thead th:last-child{border-left:none;}
+#rosterTable thead th:hover{background:linear-gradient(180deg,#1a7a9e,#0d5e7a);}
+#rosterTable thead th .sort-icon{font-size:8px;margin-right:2px;opacity:.45;}
+#rosterTable thead th.sort-asc .sort-icon::after{content:'▲';opacity:1;color:var(--gold);}
+#rosterTable thead th.sort-desc .sort-icon::after{content:'▼';opacity:1;color:var(--gold);}
+#rosterTable thead th .sort-icon::after{content:'⇅';}
+#rosterTable thead th.drag-over{background:#1a7a9e;outline:2px dashed rgba(255,255,255,.6);}
+#rosterTable thead th.dragging{opacity:.35;}
+
+/* صفوف البيانات */
+#rosterTable tbody td{
+  padding:9px 6px;text-align:center;
+  border-left:1px solid #e4edf3;
+  border-bottom:1px solid #edf2f6;
+  font-size:9.5px;color:#243447;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  transition:background .1s;}
+#rosterTable tbody td:last-child{border-left:none;}
+#rosterTable tbody td.name-col{
+  text-align:right;padding-right:10px;font-weight:700;
+  font-size:10px;color:var(--primary);}
+#rosterTable tbody tr:nth-child(even) td{background:#f7fafc;}
+#rosterTable tbody tr:hover td{background:#eaf4fb!important;}
+
+/* خط أسفل كل مجموعة */
+#rosterTable tbody tr.last-in-group td{border-bottom:2px solid #c8d8e4!important;}
+
+/* ── صفوف المجموعات ── */
+.group-row td{padding:0!important;border:none!important;}
+.group-inner{display:flex;align-items:center;gap:8px;padding:8px 12px;font-weight:700;font-size:10px;
+  border-bottom:1.5px solid #d8e6ee;}
+.drag-handle{cursor:grab;font-size:15px;opacity:.35;flex-shrink:0;transition:.15s;}
+.drag-handle:hover{opacity:.8;}
+.group-row.dragging-row{opacity:.3;}
+.group-row.drag-target-row td{border-top:2.5px solid var(--accent)!important;}
+.toggle-btn{
+  background:none;border:1.5px solid currentColor;border-radius:5px;
+  width:19px;height:19px;font-size:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:'Cairo',sans-serif;font-weight:800;line-height:1;transition:.15s;}
+.toggle-btn:hover{background:rgba(0,0,0,.07);}
+.group-count{
+  font-size:8.5px;font-weight:600;
+  background:rgba(11,79,108,.1);color:var(--primary);
+  padding:1px 7px;border-radius:10px;margin-right:2px;}
+
+/* ── مستوى المدير العام ── */
+.row-gm td{background:#eef4f8!important;}
+.row-gm .group-inner{color:var(--primary);font-size:11px;border-bottom:2px solid #b8cdd8!important;}
+.row-gm .toggle-btn{color:var(--primary);border-color:#a0bece;}
+/* ── مستوى المكاتب ── */
+.row-office td{background:#f4f8fb!important;}
+.row-office .group-inner{color:var(--primary);padding-right:22px;}
+.row-office .toggle-btn{color:var(--primary);border-color:#a0bece;}
+/* ── مستوى الإدارات ── */
+.row-dept td{background:#f4f8fb!important;}
+.row-dept .group-inner{color:var(--primary);padding-right:22px;}
+.row-dept .toggle-btn{color:var(--primary);border-color:#a0bece;}
+/* ── مستوى الأقسام ── */
+.row-sec td{background:#f9fbfc!important;}
+.row-sec .group-inner{color:#556677;padding-right:40px;font-size:9.5px;}
+.row-sec .toggle-btn{color:#6688aa;border-color:#aabbcc;}
+
+/* البادج */
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:8.5px;font-weight:700;}
+.badge-green{background:#d1fae5;color:#065f46;}
+.badge-blue{background:#dbeafe;color:#1e40af;}
+.badge-gold{background:#fef3c7;color:#92400e;}
+.badge-gray{background:#f1f5f9;color:#475569;}
+.badge-red{background:#fee2e2;color:#991b1b;}
+.due-soon{color:#D97706;font-weight:700;}
+.low-bal{color:#C0392B;font-weight:700;}
+
+/* FOOTER */
+.doc-bottom{position:absolute;bottom:8mm;right:14mm;left:14mm;}
+.doc-footer-line{border-top:1px solid #ddd;padding-top:5px;
+  display:flex;justify-content:space-between;font-size:7.5px;color:#aaa;}
+
+/* مخفي */
+.col-hidden{display:none!important;}
+
+@media print{
+  @page{size:A4 landscape;margin:10mm;}
+  body{background:white;padding:0;}
+  .toolbar,.panel-overlay{display:none!important;}
+  .paper{box-shadow:none;min-height:unset;width:100%;padding:0;}
+  #rosterTable tbody tr:hover td{background:inherit;}
+  .drag-handle,.toggle-btn{display:none!important;}
+  #rosterTable thead th{cursor:default;}
+}
+</style>
+</head>
+<body>
+
+<!-- COLUMNS PANEL -->
+<div class="panel-overlay" id="colsPanel">
+  <div class="panel-box">
+    <h3>👁 إظهار / إخفاء الأعمدة</h3>
+    <div class="cols-grid" id="colsGrid"></div>
+    <div class="panel-actions">
+      <button class="btn-cancel" onclick="closePanel('colsPanel')">إلغاء</button>
+      <button class="btn-apply" onclick="applyColumns()">✅ تطبيق</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIDTH PANEL -->
+<div class="panel-overlay" id="widthPanel">
+  <div class="panel-box" style="min-width:420px;max-width:600px;">
+    <h3>↔ التحكم في سمك الأعمدة</h3>
+    <div id="widthGrid" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;max-height:55vh;overflow-y:auto;padding-left:4px;"></div>
+    <div class="panel-actions">
+      <button class="btn-cancel" onclick="resetWidths()">↺ إعادة الضبط</button>
+      <button class="btn-cancel" onclick="closePanel('widthPanel')">إغلاق</button>
+      <button class="btn-apply" onclick="applyWidths()">✅ تطبيق</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">🔍</span>
+  <input class="finput" id="searchInput" type="text" placeholder="ابحث بالاسم أو الرقم الوظيفي..." oninput="renderTable()">
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-blue" onclick="openColsPanel()">👁 الأعمدة</button>
+  <button class="tbtn tbtn-blue" onclick="openWidthPanel()">↔ سمك الأعمدة</button>
+  <button class="tbtn tbtn-outline" onclick="expandAll(true)">📂 فتح الكل</button>
+  <button class="tbtn tbtn-outline" onclick="expandAll(false)">📁 طي الكل</button>
+  <div class="tdiv"></div>
+  <button class="tbtn tbtn-outline" onclick="window.print()">🖨️ طباعة</button>
+  <button class="tbtn tbtn-outline" onclick="window.print()">📄 PDF</button>
+</div>
+
+<!-- PAPER -->
+<div class="paper">
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div>
+      <div class="org-name">الجهاز التنفيذي لحفر وصيانة آبار المياه</div>
+      <div class="org-sub">إدارة الموارد البشرية والتدريب</div>
+      <div class="org-date">قسم شؤون الموظفين</div>
+      <div class="org-date">تاريخ الإصدار: 11 / 06 / 2026</div>
+    </div>
+    <div style="text-align:center">
+      <div class="logo-ring">💧</div>
+      <div class="logo-txt">الجهاز التنفيذي</div>
+    </div>
+    <div>
+      <div class="org-date" style="text-align:left;">إدارة الموارد البشرية والتدريب</div>
+    </div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="doc-title"><h1>كـشـف بـأسـمـاء الـمـوظـفـيـن</h1></div>
+
+  <!-- TABLE -->
+  <div class="roster-wrap">
+    <table id="rosterTable">
+      <thead><tr id="headerRow"></tr></thead>
+      <tbody id="rosterBody"></tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-bottom">
+    <div class="doc-footer-line">
+      <span>نظام إدارة الموارد البشرية والتدريب — الجهاز التنفيذي لحفر وصيانة آبار المياه</span>
+      <span>👤 مدير عام &nbsp;|&nbsp; 🏢 مكتب &nbsp;|&nbsp; 🏗 إدارة &nbsp;|&nbsp; 📂 قسم</span>
+      <span>صفحة 1 من 1</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   بيانات الهيكل التنظيمي
+══════════════════════════════════════ */
+const orgData = {
+  gm: {
+    name:'محمد سالم الورفلي', empId:'EMP-001', natId:'100100001001',
+    gender:'ذكر', birthDate:'15/03/1970', edu:'دكتوراه هندسة',
+    title:'مدير عام', contract:'تعيين', startDate:'01/01/2005',
+    grade:'الدرجة 14', allowDate:'01/01/2027', leaveBalance:60, status:'نشط'
+  },
+  units: [
+    { id:'office-hr', type:'office', name:'مكتب شؤون الموظفين', collapsed:false,
+      employees:[
+        { name:'فاطمة علي المنتصر', empId:'EMP-031', natId:'319100031558', gender:'أنثى', birthDate:'20/05/1988', edu:'بكالوريوس إدارة', title:'رئيس مكتب', contract:'تعيين', startDate:'02/01/2020', grade:'الدرجة 6', allowDate:'01/01/2027', leaveBalance:30, status:'نشط' },
+        { name:'خالد عمر البشير', empId:'EMP-018', natId:'210300018441', gender:'ذكر', birthDate:'10/11/1985', edu:'دبلوم إدارة', title:'موظف إداري', contract:'عقد دائم', startDate:'15/07/2015', grade:'الدرجة 5', allowDate:'01/08/2026', leaveBalance:8, status:'نشط' },
+      ], sections:[]
+    },
+    { id:'office-audit', type:'office', name:'مكتب المراجعة الداخلية', collapsed:false,
+      employees:[
+        { name:'عمر خليفة البرعصي', empId:'EMP-011', natId:'708200011995', gender:'ذكر', birthDate:'08/02/1975', edu:'بكالوريوس محاسبة', title:'مراجع أول', contract:'عقد دائم', startDate:'08/02/2008', grade:'الدرجة 8', allowDate:'01/02/2027', leaveBalance:55, status:'نشط' },
+      ], sections:[]
+    },
+    { id:'dept-drill', type:'dept', name:'إدارة الحفر', collapsed:false,
+      employees:[
+        { name:'أحمد محمد الورفلي', empId:'EMP-042', natId:'118200042317', gender:'ذكر', birthDate:'05/07/1982', edu:'بكالوريوس هندسة', title:'مدير إدارة الحفر', contract:'تعيين', startDate:'01/03/2018', grade:'الدرجة 7', allowDate:'01/03/2027', leaveBalance:42, status:'نشط' },
+      ],
+      sections:[
+        { id:'sec-drill-n', name:'قسم الحفر الشمالي', collapsed:false, employees:[
+          { name:'عبدالرحمن يوسف الطاهر', empId:'EMP-055', natId:'422300055774', gender:'ذكر', birthDate:'05/06/1990', edu:'دبلوم حفر', title:'مشغّل حفّارة', contract:'عقد مؤقت', startDate:'05/06/2023', grade:'الدرجة 4', allowDate:'01/07/2027', leaveBalance:10, status:'نشط' },
+        ]},
+        { id:'sec-drill-s', name:'قسم الحفر الجنوبي', collapsed:false, employees:[
+          { name:'سالم عبدالله الفيتوري', empId:'EMP-023', natId:'512000023886', gender:'ذكر', birthDate:'20/04/1978', edu:'بكالوريوس هندسة', title:'مهندس حفر', contract:'تعيين', startDate:'20/04/2012', grade:'الدرجة 10', allowDate:'01/05/2026', leaveBalance:45, status:'إجازة' },
+        ]},
+      ]
+    },
+    { id:'dept-maint', type:'dept', name:'إدارة الصيانة', collapsed:false,
+      employees:[
+        { name:'نورة محمد الزروق', empId:'EMP-039', natId:'619900039112', gender:'أنثى', birthDate:'03/11/1992', edu:'بكالوريوس هندسة مدنية', title:'مدير إدارة الصيانة', contract:'تعيين', startDate:'03/11/2019', grade:'الدرجة 7', allowDate:'01/12/2026', leaveBalance:28, status:'نشط' },
+      ],
+      sections:[
+        { id:'sec-maint-w', name:'قسم صيانة الآبار', collapsed:false, employees:[
+          { name:'محمد إبراهيم القذافي', empId:'EMP-007', natId:'107900007223', gender:'ذكر', birthDate:'10/09/1980', edu:'بكالوريوس ميكانيك', title:'فني صيانة أول', contract:'تعيين', startDate:'10/09/2010', grade:'الدرجة 9', allowDate:'01/10/2026', leaveBalance:60, status:'نشط' },
+        ]},
+      ]
+    },
+    { id:'dept-finance', type:'dept', name:'إدارة المالية', collapsed:false,
+      employees:[],
+      sections:[
+        { id:'sec-budget', name:'قسم الميزانية', collapsed:false, employees:[
+          { name:'عائشة محمد الدرسي', empId:'EMP-062', natId:'819900062334', gender:'أنثى', birthDate:'12/06/1991', edu:'بكالوريوس محاسبة', title:'محاسب', contract:'تعيين', startDate:'12/06/2021', grade:'الدرجة 5', allowDate:'01/06/2027', leaveBalance:20, status:'نشط' },
+        ]},
+      ]
+    },
+  ]
+};
+
+/* ══════════════════════════════════════
+   تعريف الأعمدة
+══════════════════════════════════════ */
+const ALL_COLS = [
+  { key:'seq',          label:'م',                      locked:true,  w:'3%'  },
+  { key:'name',         label:'الاسم الرباعي',           locked:true,  w:'15%' },
+  { key:'empId',        label:'الرقم الوظيفي',           locked:false, w:'7%'  },
+  { key:'natId',        label:'الرقم الوطني',            locked:false, w:'9%'  },
+  { key:'gender',       label:'الجنس',                   locked:false, w:'5%'  },
+  { key:'birthDate',    label:'تاريخ الميلاد',           locked:false, w:'7%'  },
+  { key:'age',          label:'العمر',                   locked:false, w:'4%'  },
+  { key:'edu',          label:'المؤهل العلمي',           locked:false, w:'9%'  },
+  { key:'title',        label:'المسمى الوظيفي',          locked:false, w:'11%' },
+  { key:'contract',     label:'نوع التعاقد',             locked:false, w:'7%'  },
+  { key:'startDate',    label:'تاريخ المباشرة',          locked:false, w:'7%'  },
+  { key:'grade',        label:'الدرجة',                  locked:false, w:'6%'  },
+  { key:'allowDate',    label:'استحقاق العلاوة',         locked:false, w:'7%'  },
+  { key:'leaveBalance', label:'رصيد الإجازة',            locked:false, w:'5%'  },
+  { key:'status',       label:'الحالة',                  locked:false, w:'5%'  },
+];
+
+let colOrder   = ALL_COLS.map(c => c.key);
+let hiddenCols = new Set();
+let sortState  = { key:null, dir:'asc' };
+let dragSrcCol = null;
+let dragSrcUnit = null;
+let dragSrcSec  = null;
+
+/* ══════════════════════════════════════
+   مساعدات
+══════════════════════════════════════ */
+function calcAge(bd) {
+  if (!bd) return '—';
+  const [d,m,y] = bd.split('/').map(Number);
+  const today = new Date(2026,5,11);
+  const b = new Date(y,m-1,d);
+  let age = today.getFullYear()-b.getFullYear();
+  if (today.getMonth()-b.getMonth()<0||(today.getMonth()-b.getMonth()===0&&today.getDate()<b.getDate())) age--;
+  return age+' سنة';
+}
+
+function dateToNum(str) {
+  if (!str||str==='—') return 0;
+  const [d,m,y] = str.split('/').map(Number);
+  return y*10000+m*100+d;
+}
+
+function getCellHTML(emp, key, seq) {
+  const v = key==='seq'? seq
+    : key==='age'? calcAge(emp.birthDate)
+    : (emp[key]??'—');
+  if (key==='contract') {
+    const map={'تعيين':'badge-blue','عقد دائم':'badge-gold','عقد مؤقت':'badge-gray'};
+    return `<span class="badge ${map[v]||'badge-gray'}">${v}</span>`;
+  }
+  if (key==='status') {
+    const map={'نشط':'badge-green','إجازة':'badge-red','موقوف':'badge-gray'};
+    return `<span class="badge ${map[v]||'badge-gray'}">${v}</span>`;
+  }
+  if (key==='leaveBalance') {
+    const n = parseInt(v);
+    return `<span class="${n<15?'low-bal':''}">${n} يوم</span>`;
+  }
+  if (key==='allowDate') {
+    const num = dateToNum(v);
+    const now = dateToNum('11/06/2026');
+    const soon = dateToNum('11/09/2026');
+    return `<span class="${num<=soon&&num>=now?'due-soon':''}">${v}</span>`;
+  }
+  return v;
+}
+
+function visibleCols() {
+  return colOrder.filter(k => !hiddenCols.has(k));
+}
+
+function countUnitEmps(unit) {
+  let n = unit.employees.length;
+  (unit.sections||[]).forEach(s => n += s.employees.length);
+  return n;
+}
+
+function totalEmployees() {
+  let n = 1; // GM
+  orgData.units.forEach(u => n += countUnitEmps(u));
+  return n;
+}
+
+/* ══════════════════════════════════════
+   بناء رأس الجدول
+══════════════════════════════════════ */
+function buildHeader() {
+  const tr = document.getElementById('headerRow');
+  tr.innerHTML = '';
+  const vis = visibleCols();
+  vis.forEach((key, i) => {
+    const col = ALL_COLS.find(c=>c.key===key);
+    const th = document.createElement('th');
+    th.dataset.key = key;
+    th.dataset.idx = i;
+    th.draggable = !col.locked;
+    const dir = sortState.key===key ? (sortState.dir==='asc'?'sort-asc':'sort-desc') : '';
+    th.className = dir;
+    th.style.width = col.w || 'auto';
+    th.innerHTML = `<span class="sort-icon"></span>${col.label}`;
+    // sort
+    th.addEventListener('click', () => toggleSort(key));
+    // col drag
+    if (!col.locked) {
+      th.addEventListener('dragstart', e => { dragSrcCol=key; th.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+      th.addEventListener('dragend',   () => { dragSrcCol=null; th.classList.remove('dragging'); document.querySelectorAll('th.drag-over').forEach(x=>x.classList.remove('drag-over')); });
+      th.addEventListener('dragover',  e => { e.preventDefault(); th.classList.add('drag-over'); });
+      th.addEventListener('dragleave', () => th.classList.remove('drag-over'));
+      th.addEventListener('drop',      e => { e.preventDefault(); th.classList.remove('drag-over'); swapCols(dragSrcCol, key); });
+    }
+    tr.appendChild(th);
+  });
+}
+
+function swapCols(src, dst) {
+  if (!src||src===dst) return;
+  const si = colOrder.indexOf(src), di = colOrder.indexOf(dst);
+  if (si<0||di<0) return;
+  colOrder.splice(si,1); colOrder.splice(di,0,src);
+  renderTable();
+}
+
+function toggleSort(key) {
+  if (sortState.key===key) sortState.dir = sortState.dir==='asc'?'desc':'asc';
+  else { sortState.key=key; sortState.dir='asc'; }
+  renderTable();
+}
+
+/* ══════════════════════════════════════
+   بناء الجدول
+══════════════════════════════════════ */
+function renderTable() {
+  buildHeader();
+  const tbody = document.getElementById('rosterBody');
+  tbody.innerHTML = '';
+  const vis = visibleCols();
+  const colCount = vis.length;
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  let seq = 0, shown = 0;
+
+  function empMatchesSearch(emp) {
+    if (!search) return true;
+    return emp.name.toLowerCase().includes(search) || emp.empId.toLowerCase().includes(search);
+  }
+
+  function sortEmps(arr) {
+    if (!sortState.key) return arr;
+    return [...arr].sort((a,b) => {
+      let va = sortState.key==='age'? parseInt(calcAge(a.birthDate)) : (a[sortState.key]??'');
+      let vb = sortState.key==='age'? parseInt(calcAge(b.birthDate)) : (b[sortState.key]??'');
+      if (['startDate','allowDate','birthDate'].includes(sortState.key)) { va=dateToNum(va+''); vb=dateToNum(vb+''); }
+      if (sortState.key==='leaveBalance') { va=parseInt(va||0); vb=parseInt(vb||0); }
+      if (va<vb) return sortState.dir==='asc'?-1:1;
+      if (va>vb) return sortState.dir==='asc'?1:-1;
+      return 0;
+    });
+  }
+
+  function makeEmpRow(emp, indent) {
+    if (!empMatchesSearch(emp)) return false;
+    seq++;
+    shown++;
+    const tr = document.createElement('tr');
+    vis.forEach((key,i) => {
+      const td = document.createElement('td');
+      if (key==='name') { td.className='name-col'; td.style.paddingRight=(indent*12+6)+'px'; }
+      td.innerHTML = getCellHTML(emp, key, seq);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+    return true;
+  }
+
+  function makeGroupRow(label, type, id, parentId, count, dragable) {
+    const tr = document.createElement('tr');
+    tr.className = `group-row row-${type}`;
+    tr.dataset.id = id;
+    if (parentId) tr.dataset.parentId = parentId;
+    const td = document.createElement('td');
+    td.setAttribute('colspan', colCount);
+    const icons = {'gm':'👤','office':'🏢','dept':'🏗','sec':'📂'};
+    const unit = findUnit(id, type);
+    const collapsed = unit ? unit.collapsed : false;
+    td.innerHTML = `<div class="group-inner">
+      ${dragable?`<span class="drag-handle" title="اسحب لإعادة الترتيب">⠿</span>`:''}
+      <button class="toggle-btn" onclick="toggleCollapse('${id}','${type}','${parentId||''}')">${collapsed?'+':'−'}</button>
+      ${icons[type]||''} <strong>${label}</strong>
+      <span class="group-count">(${count} موظف)</span>
+    </div>`;
+    tr.appendChild(td);
+
+    if (dragable) {
+      tr.draggable = true;
+      tr.addEventListener('dragstart', e => {
+        dragSrcUnit = { id, type, parentId };
+        tr.classList.add('dragging-row');
+        e.dataTransfer.effectAllowed='move';
+        e.stopPropagation();
+      });
+      tr.addEventListener('dragend', () => {
+        dragSrcUnit = null; dragSrcSec = null;
+        tr.classList.remove('dragging-row');
+        document.querySelectorAll('.drag-target-row').forEach(x=>x.classList.remove('drag-target-row'));
+      });
+      tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-target-row'); });
+      tr.addEventListener('dragleave', () => tr.classList.remove('drag-target-row'));
+      tr.addEventListener('drop', e => {
+        e.preventDefault(); e.stopPropagation();
+        tr.classList.remove('drag-target-row');
+        if (!dragSrcUnit || dragSrcUnit.id===id) return;
+        reorderUnit(dragSrcUnit, id, type, parentId);
+      });
+    }
+    return tr;
+  }
+
+  function findUnit(id, type, parentId) {
+    if (type==='sec') {
+      for (const u of orgData.units) {
+        const s = (u.sections||[]).find(s=>s.id===id);
+        if (s) return s;
+      }
+    }
+    return orgData.units.find(u=>u.id===id);
+  }
+
+  /* ── المدير العام ── */
+  const gmCount = empMatchesSearch(orgData.gm) ? 1 : 0;
+  tbody.appendChild(makeGroupRow('المدير العام','gm','gm','',1,false));
+  if (empMatchesSearch(orgData.gm)) makeEmpRow(orgData.gm, 0);
+
+  /* ── المكاتب والإدارات ── */
+  orgData.units.forEach(unit => {
+    const empCount = countUnitEmps(unit);
+    const groupTr = makeGroupRow(unit.name, unit.type, unit.id, '', empCount, true);
+    tbody.appendChild(groupTr);
+
+    if (!unit.collapsed) {
+      sortEmps(unit.employees).forEach(emp => makeEmpRow(emp, 1));
+
+      (unit.sections||[]).forEach(sec => {
+        const secTr = makeGroupRow(sec.name, 'sec', sec.id, unit.id, sec.employees.length, true);
+        tbody.appendChild(secTr);
+        if (!sec.collapsed) {
+          sortEmps(sec.employees).forEach(emp => makeEmpRow(emp, 2));
+        }
+      });
+    }
+  });
+
+}
+
+/* ══════════════════════════════════════
+   طي / فتح المجموعات
+══════════════════════════════════════ */
+function toggleCollapse(id, type, parentId) {
+  if (type==='sec') {
+    for (const u of orgData.units) {
+      const s = (u.sections||[]).find(s=>s.id===id);
+      if (s) { s.collapsed=!s.collapsed; break; }
+    }
+  } else {
+    const u = orgData.units.find(u=>u.id===id);
+    if (u) u.collapsed=!u.collapsed;
+  }
+  renderTable();
+}
+
+function expandAll(open) {
+  orgData.units.forEach(u => {
+    u.collapsed = !open;
+    (u.sections||[]).forEach(s => s.collapsed = !open);
+  });
+  renderTable();
+}
+
+/* ══════════════════════════════════════
+   إعادة ترتيب الوحدات
+══════════════════════════════════════ */
+function reorderUnit(src, targetId, targetType, targetParentId) {
+  if (src.type==='sec' && targetType==='sec') {
+    // إعادة ترتيب الأقسام داخل نفس الإدارة
+    for (const u of orgData.units) {
+      const secs = u.sections||[];
+      const si = secs.findIndex(s=>s.id===src.id);
+      const ti = secs.findIndex(s=>s.id===targetId);
+      if (si>=0 && ti>=0) {
+        const [moved] = secs.splice(si,1);
+        secs.splice(ti,0,moved);
+        break;
+      }
+    }
+  } else if ((src.type==='office'||src.type==='dept') && (targetType==='office'||targetType==='dept')) {
+    // إعادة ترتيب المكاتب والإدارات
+    const si = orgData.units.findIndex(u=>u.id===src.id);
+    const ti = orgData.units.findIndex(u=>u.id===targetId);
+    if (si>=0 && ti>=0) {
+      const [moved] = orgData.units.splice(si,1);
+      orgData.units.splice(ti,0,moved);
+    }
+  }
+  renderTable();
+}
+
+/* ══════════════════════════════════════
+   إظهار / إخفاء الأعمدة
+══════════════════════════════════════ */
+function openColsPanel() {
+  const grid = document.getElementById('colsGrid');
+  grid.innerHTML = '';
+  ALL_COLS.forEach(col => {
+    const label = document.createElement('label');
+    label.className='col-toggle';
+    if (col.locked) label.style.opacity='0.5';
+    label.innerHTML=`<input type="checkbox" data-key="${col.key}"
+      ${!hiddenCols.has(col.key)?'checked':''} ${col.locked?'disabled':''}>
+      ${col.label}`;
+    grid.appendChild(label);
+  });
+  document.getElementById('colsPanel').classList.add('open');
+}
+
+function applyColumns() {
+  hiddenCols.clear();
+  document.querySelectorAll('#colsGrid input[type=checkbox]').forEach(cb => {
+    if (!cb.checked) hiddenCols.add(cb.dataset.key);
+  });
+  closePanel('colsPanel');
+  renderTable();
+}
+
+function closePanel(id) { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('colsPanel').addEventListener('click', function(e){ if(e.target===this) closePanel('colsPanel'); });
+
+/* ══════════════════════════════════════
+   التحكم في سمك الأعمدة
+══════════════════════════════════════ */
+// colWidths: key → px value (null = use default %)
+let colWidths = {};
+
+function openWidthPanel() {
+  const grid = document.getElementById('widthGrid');
+  grid.innerHTML = '';
+  ALL_COLS.forEach(col => {
+    if (hiddenCols.has(col.key)) return;
+    // احسب العرض الحالي بالبكسل
+    const th = document.querySelector(`#headerRow th[data-key="${col.key}"]`);
+    const currentPx = th ? Math.round(th.offsetWidth) : 80;
+    const stored = colWidths[col.key] || currentPx;
+    const min = 30, max = 250;
+    const pct = Math.round(((stored-min)/(max-min))*100);
+
+    const row = document.createElement('div');
+    row.className = 'width-row';
+    row.innerHTML = `
+      <span class="width-lbl">${col.label}</span>
+      <input type="range" class="width-slider" id="ws_${col.key}"
+        min="${min}" max="${max}" value="${stored}"
+        style="--pct:${pct}%"
+        oninput="updateWidthVal('${col.key}',this.value,${min},${max})">
+      <span class="width-val" id="wv_${col.key}">${stored}px</span>`;
+    grid.appendChild(row);
+  });
+  document.getElementById('widthPanel').classList.add('open');
+}
+
+function updateWidthVal(key, val, min, max) {
+  document.getElementById('wv_'+key).textContent = val+'px';
+  const pct = Math.round(((val-min)/(max-min))*100);
+  document.getElementById('ws_'+key).style.setProperty('--pct', pct+'%');
+}
+
+function applyWidths() {
+  ALL_COLS.forEach(col => {
+    const inp = document.getElementById('ws_'+col.key);
+    if (inp) colWidths[col.key] = parseInt(inp.value);
+  });
+  applyWidthsToTable();
+  closePanel('widthPanel');
+}
+
+function applyWidthsToTable() {
+  Object.entries(colWidths).forEach(([key, px]) => {
+    const th = document.querySelector(`#headerRow th[data-key="${key}"]`);
+    if (th) { th.style.width = px+'px'; th.style.minWidth = px+'px'; }
+  });
+}
+
+function resetWidths() {
+  colWidths = {};
+  ALL_COLS.forEach(col => {
+    const inp = document.getElementById('ws_'+col.key);
+    if (inp) {
+      const defPx = Math.round((parseFloat(col.w||'7%')/100)*1100);
+      inp.value = defPx;
+      updateWidthVal(col.key, defPx, 30, 250);
+    }
+  });
+}
+
+document.getElementById('widthPanel').addEventListener('click', function(e){ if(e.target===this) closePanel('widthPanel'); });
+
+/* ══════════════════════════════════════
+   تشغيل أولي
+══════════════════════════════════════ */
+renderTable();
+</script>
+</body>
+</html>

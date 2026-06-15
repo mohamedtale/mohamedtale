@@ -1,0 +1,329 @@
+<div class="page-header">
+  <h2>بدل التنقل والترقيات</h2>
+</div>
+
+<!-- Month/Year Selector -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex gap-2 align-center">
+      <div class="form-group" style="margin-bottom:0">
+        <label>الشهر</label>
+        <select id="all-month-sel" class="form-control">
+          <option value="1">يناير</option><option value="2">فبراير</option>
+          <option value="3">مارس</option><option value="4">أبريل</option>
+          <option value="5">مايو</option><option value="6">يونيو</option>
+          <option value="7">يوليو</option><option value="8">أغسطس</option>
+          <option value="9">سبتمبر</option><option value="10">أكتوبر</option>
+          <option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>السنة</label>
+        <select id="all-year-sel" class="form-control"></select>
+      </div>
+      <div style="padding-top:22px">
+        <button class="btn btn-primary" onclick="loadAllowanceRoster()">تحميل الكشف</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Roster Section -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-between align-center">
+    <h3>كشف بدل التنقل الشهري</h3>
+    <button class="btn btn-success" onclick="approveRoster()" id="approve-roster-btn" style="display:none">✓ اعتماد الكشف</button>
+  </div>
+  <div class="card-body">
+    <div id="roster-status-alert"></div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الموظف</th>
+            <th>الدرجة قبل</th>
+            <th>البدل قبل</th>
+            <th>الدرجة بعد</th>
+            <th>البدل بعد</th>
+            <th>تاريخ الاستحقاق</th>
+            <th>مرشح للترقية</th>
+            <th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody id="roster-body">
+          <tr><td colspan="9" class="text-center text-muted">اختر الشهر والسنة ثم اضغط تحميل</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Eligible Promotions Section -->
+<div class="card">
+  <div class="card-header">
+    <h3>الموظفون المرشحون للترقية</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الموظف</th>
+            <th>الرقم الوظيفي</th>
+            <th>الدرجة الحالية</th>
+            <th>عدد البدلات</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="promotions-body">
+          <tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Promotion Modal -->
+<div id="promote-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>ترقية موظف</h3>
+      <button class="modal-close" onclick="document.getElementById('promote-modal').classList.add('hidden')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>الموظف</label>
+        <input type="text" id="promote-emp-name" class="form-control" readonly>
+        <input type="hidden" id="promote-emp-id">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الدرجة الحالية</label>
+          <input type="text" id="promote-current-grade" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label>الدرجة الجديدة *</label>
+          <select id="promote-new-grade" class="form-control" required></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>رقم القرار *</label>
+          <input type="text" id="promote-decision-num" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>تاريخ القرار *</label>
+          <input type="date" id="promote-decision-date" class="form-control" required>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('promote-modal').classList.add('hidden')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePromotion()">تنفيذ الترقية</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let rosterData = null;
+let eligibleEmployees = [];
+
+async function initAllowances() {
+  const now = new Date();
+  document.getElementById('all-month-sel').value = now.getMonth() + 1;
+
+  const yearSel = document.getElementById('all-year-sel');
+  yearSel.innerHTML = '';
+  for (let y = now.getFullYear() + 1; y >= now.getFullYear() - 3; y--) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if (y === now.getFullYear()) opt.selected = true;
+    yearSel.appendChild(opt);
+  }
+
+  // Populate grade options for promotion modal
+  const newGradeSel = document.getElementById('promote-new-grade');
+  newGradeSel.innerHTML = '<option value="">اختر الدرجة</option>';
+  for (let i = 1; i <= 14; i++) {
+    newGradeSel.innerHTML += `<option value="${i}">${i}</option>`;
+  }
+
+  await Promise.all([loadAllowanceRoster(), loadEligiblePromotions()]);
+}
+
+async function loadAllowanceRoster() {
+  const month = document.getElementById('all-month-sel').value;
+  const year = document.getElementById('all-year-sel').value;
+  const tbody = document.getElementById('roster-body');
+  const statusAlert = document.getElementById('roster-status-alert');
+  tbody.innerHTML = '<tr><td colspan="9" class="text-center">جاري التحميل...</td></tr>';
+
+  try {
+    const data = await window.API.allowances.getRoster(year, month);
+    rosterData = data;
+
+    const items = data.items || [];
+    const rosterStatus = data.roster ? data.roster.status : null;
+
+    statusAlert.innerHTML = '';
+    if (rosterStatus === 'approved') {
+      statusAlert.innerHTML = '<div class="alert alert-success">تم اعتماد هذا الكشف مسبقاً</div>';
+      document.getElementById('approve-roster-btn').style.display = 'none';
+    } else if (items.length > 0) {
+      document.getElementById('approve-roster-btn').style.display = 'inline-block';
+    } else {
+      document.getElementById('approve-roster-btn').style.display = 'none';
+    }
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">لا توجد بيانات لهذا الشهر</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map((item, idx) => {
+      const eligible = isEligibleForPromotion(item.grade_before, item.allowance_before);
+      const dueDateStr = item.allowance_due_date ? formatDate(item.allowance_due_date) : '—';
+      return `<tr>
+        <td>${idx + 1}</td>
+        <td>${item.full_name || '—'}</td>
+        <td>${item.grade_before || '—'}</td>
+        <td>${item.allowance_before || '—'}</td>
+        <td>${item.grade_after || item.grade_before || '—'}</td>
+        <td>${item.allowance_after || (item.allowance_before + 1) || '—'}</td>
+        <td>${dueDateStr}</td>
+        <td>${eligible ? '<span class="badge badge-gold">مرشح للترقية</span>' : '<span class="badge badge-success">لا</span>'}</td>
+        <td>${item.notes || '—'}</td>
+      </tr>`;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-danger">خطأ في تحميل البيانات: ${err.message}</td></tr>`;
+  }
+}
+
+async function loadEligiblePromotions() {
+  const tbody = document.getElementById('promotions-body');
+  try {
+    const data = await window.API.allowances.getEligiblePromotions();
+    eligibleEmployees = Array.isArray(data) ? data : (data.data || []);
+
+    if (eligibleEmployees.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لا يوجد موظفون مرشحون للترقية حالياً</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = eligibleEmployees.map((emp, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${emp.full_name}</td>
+        <td>${emp.emp_number}</td>
+        <td>${emp.grade_level}</td>
+        <td>${emp.grade_allowance_count} ${emp.grade_level == 10 ? '/ 5' : '/ 4'}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="openPromoteModal(${emp.id}, '${emp.full_name}', ${emp.grade_level})">
+            ترقية
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">خطأ: ${err.message}</td></tr>`;
+  }
+}
+
+async function approveRoster() {
+  if (!rosterData) {
+    window.showToast('لا توجد بيانات كشف للاعتماد', 'error');
+    return;
+  }
+
+  if (!confirm('هل تريد اعتماد كشف البدلات لهذا الشهر؟')) return;
+
+  const month = document.getElementById('all-month-sel').value;
+  const year = document.getElementById('all-year-sel').value;
+  const items = (rosterData.items || []).map(item => ({
+    employee_id: item.employee_id,
+    grade_before: item.grade_before,
+    allowance_before: item.allowance_before,
+    grade_after: item.grade_after || item.grade_before,
+    allowance_after: item.allowance_after || (item.allowance_before + 1),
+    promotion_eligible: isEligibleForPromotion(item.grade_before, item.allowance_before),
+    notes: item.notes || ''
+  }));
+
+  try {
+    await window.API.allowances.approveRoster(year, month, items);
+    window.showToast('تم اعتماد الكشف بنجاح', 'success');
+    await loadAllowanceRoster();
+    await loadEligiblePromotions();
+  } catch (err) {
+    window.showToast('خطأ في اعتماد الكشف: ' + err.message, 'error');
+  }
+}
+
+function isEligibleForPromotion(grade, allowanceCount) {
+  if (!grade || allowanceCount === undefined) return false;
+  return parseInt(grade) === 10 ? parseInt(allowanceCount) >= 5 : parseInt(allowanceCount) >= 4;
+}
+
+function calculateDueDate(startDate) {
+  if (!startDate) return null;
+  const d = new Date(startDate);
+  const day = d.getDate();
+  if (day <= 2) {
+    // First of same month, next year
+    return new Date(d.getFullYear() + 1, d.getMonth(), 1);
+  } else {
+    // First of next month, next year
+    return new Date(d.getFullYear() + 1, d.getMonth() + 1, 1);
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    return new Date(dateStr).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function openPromoteModal(empId, empName, currentGrade) {
+  document.getElementById('promote-emp-id').value = empId;
+  document.getElementById('promote-emp-name').value = empName;
+  document.getElementById('promote-current-grade').value = currentGrade;
+  document.getElementById('promote-new-grade').value = '';
+  document.getElementById('promote-decision-num').value = '';
+  document.getElementById('promote-decision-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('promote-modal').classList.remove('hidden');
+}
+
+async function savePromotion() {
+  const empId = document.getElementById('promote-emp-id').value;
+  const newGrade = document.getElementById('promote-new-grade').value;
+  const decisionNum = document.getElementById('promote-decision-num').value;
+  const decisionDate = document.getElementById('promote-decision-date').value;
+
+  if (!newGrade) { window.showToast('يرجى اختيار الدرجة الجديدة', 'error'); return; }
+  if (!decisionNum) { window.showToast('يرجى إدخال رقم القرار', 'error'); return; }
+  if (!decisionDate) { window.showToast('يرجى إدخال تاريخ القرار', 'error'); return; }
+
+  try {
+    await window.API.allowances.promote(empId, {
+      new_grade: parseInt(newGrade),
+      decision_number: decisionNum,
+      decision_date: decisionDate
+    });
+    window.showToast('تمت الترقية بنجاح', 'success');
+    document.getElementById('promote-modal').classList.add('hidden');
+    await loadEligiblePromotions();
+    await loadAllowanceRoster();
+  } catch (err) {
+    window.showToast('خطأ في الترقية: ' + err.message, 'error');
+  }
+}
+
+initAllowances();
+</script>
