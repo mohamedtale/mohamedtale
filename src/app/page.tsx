@@ -1,742 +1,732 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { useCountUp } from "@/hooks/useCountUp";
 import {
-  Menu, X, ChevronLeft, Phone, Mail, MapPin, Clock,
-  Droplets, Wrench, FlaskConical, Headphones, Zap,
-  Map, GraduationCap, ShieldCheck, Star, ArrowLeft,
-  CheckCircle, Globe
+  Menu, X, MapPin, Phone, Mail, Clock, Droplets, Wrench,
+  FlaskConical, MessageSquare, Settings, Globe, GraduationCap,
+  Shield, ChevronDown, ArrowLeft, CheckCircle, Target, Award,
+  Users, Drill, Play, Star,
 } from "lucide-react";
 
-// --- Navbar ---
-function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+// ─── Images (Unsplash) ───────────────────────────────────────────────────────
+const IMAGES = {
+  heroBg:    "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1920&q=85&fit=crop",
+  aboutBg:   "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&q=80&fit=crop",
+  workers:   "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=900&q=80&fit=crop",
+  water:     "https://images.unsplash.com/photo-1559825481-12a05cc00344?w=900&q=80&fit=crop",
+  drilling:  "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=900&q=80&fit=crop",
+  proj1:     "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80&fit=crop&crop=center",
+  proj2:     "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?w=800&q=80&fit=crop",
+  proj3:     "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80&fit=crop",
+  desert:    "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80&fit=crop",
+  waterDrop: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80&fit=crop",
+};
 
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handler);
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
-
-  const links = [
-    { label: "الرئيسية", href: "#" },
-    { label: "عن الجهاز", href: "#about" },
-    { label: "خدماتنا", href: "#services" },
-    { label: "مشاريعنا", href: "#projects" },
-    { label: "الخريطة", href: "#map" },
-    { label: "اتصل بنا", href: "#contact" },
-  ];
-
-  return (
-    <nav
-      className={`fixed top-0 right-0 left-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/90 backdrop-blur-md shadow-lg"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo + Name */}
-          <div className="flex items-center gap-3">
-            <Logo size={44} />
-            <div className="hidden sm:block">
-              <p className={`text-xs font-bold leading-tight ${scrolled ? "text-blue-900" : "text-white"}`}>
-                الجهاز التنفيذي
-              </p>
-              <p className={`text-xs leading-tight ${scrolled ? "text-blue-700" : "text-blue-200"}`}>
-                لحفر وصيانة آبار المياه
-              </p>
-            </div>
-          </div>
-
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-6">
-            {links.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className={`text-sm font-medium transition-colors hover:text-blue-400 ${
-                  scrolled ? "text-gray-700" : "text-white"
-                }`}
-              >
-                {l.label}
-              </a>
-            ))}
-            <Link
-              href="/login"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              بوابة الموظفين
-            </Link>
-            <button
-              className={`text-sm border rounded-lg px-3 py-1.5 transition-colors ${
-                scrolled
-                  ? "border-blue-600 text-blue-600 hover:bg-blue-50"
-                  : "border-white/50 text-white hover:bg-white/10"
-              }`}
-            >
-              EN
-            </button>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className={`lg:hidden p-2 ${scrolled ? "text-gray-700" : "text-white"}`}
-            onClick={() => setOpen(!open)}
-          >
-            {open ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        {open && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-md rounded-2xl mb-2 p-4 shadow-xl">
-            {links.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="block py-2 px-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                {l.label}
-              </a>
-            ))}
-            <Link
-              href="/login"
-              className="block mt-2 bg-blue-600 text-white text-center py-2 rounded-lg"
-              onClick={() => setOpen(false)}
-            >
-              بوابة الموظفين
-            </Link>
-          </div>
-        )}
-      </div>
-    </nav>
-  );
-}
-
-// --- Particles ---
-function Particles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 6 + 2,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    delay: Math.random() * 5,
-    duration: Math.random() * 10 + 8,
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="particle"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.left}%`,
-            top: `${p.top}%`,
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${p.duration}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// --- Stat Card ---
-function StatCard({ target, suffix, label, prefix }: { target: number; suffix?: string; label: string; prefix?: string }) {
-  const { displayValue, elementRef } = useCountUp({ target, duration: 2000, prefix, suffix });
-  return (
-    <div
-      ref={elementRef as React.RefObject<HTMLDivElement>}
-      className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/20"
-    >
-      <div className="text-4xl font-bold text-white mb-2">{displayValue}</div>
-      <div className="text-blue-200 text-sm">{label}</div>
-    </div>
-  );
-}
-
-// --- Hero ---
-function Hero() {
-  return (
-    <section
-      className="relative min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20"
-      style={{
-        background: "linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0d2137 100%)",
-      }}
-    >
-      <Particles />
-      <div className="relative z-10 max-w-4xl mx-auto">
-        <div className="flex justify-center mb-6">
-          <Logo size={80} />
-        </div>
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
-          الجهاز التنفيذي
-          <span className="block text-blue-400">لحفر وصيانة آبار المياه</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-          نعمل من أجل توفير المياه النظيفة لكل مواطن ليبي — بكفاءة، احترافية، واستدامة
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="#map"
-            className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-8 py-4 rounded-xl transition-all hover:shadow-lg hover:shadow-blue-500/30 flex items-center gap-2 justify-center"
-          >
-            <Map size={18} />
-            استعرض خريطة الآبار
-          </a>
-          <a
-            href="#about"
-            className="border border-white/30 hover:bg-white/10 text-white font-medium px-8 py-4 rounded-xl transition-all flex items-center gap-2 justify-center"
-          >
-            تعرف علينا
-            <ChevronLeft size={18} />
-          </a>
-        </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
-          <StatCard target={1500} prefix="+" label="تقرير فني" />
-          <StatCard target={24} label="منطقة جغرافية" />
-          <StatCard target={247} prefix="+" label="بئر فعال" />
-          <StatCard target={300} prefix="+" label="مشروع منجز" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- About ---
-function About() {
-  const cards = [
-    { title: "التأسيس", icon: <Star size={24} />, desc: "تأسس الجهاز لتلبية الاحتياجات المائية الوطنية وضمان استدامة الموارد المائية في ليبيا." },
-    { title: "الانتشار الجغرافي", icon: <Globe size={24} />, desc: "يغطي الجهاز 24 منطقة جغرافية على امتداد الأراضي الليبية من الشرق إلى الغرب." },
-    { title: "معايير الجودة", icon: <ShieldCheck size={24} />, desc: "نطبق أعلى معايير الجودة الدولية في جميع مراحل الحفر والصيانة والتحليل المخبري." },
-  ];
-
-  return (
-    <section id="about" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Text */}
-          <div>
-            <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">عن الجهاز</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-6 leading-tight">
-              نحو مستقبل مائي مستدام لليبيا
-            </h2>
-            <p className="text-gray-600 leading-relaxed mb-4">
-              الجهاز التنفيذي لحفر وصيانة آبار المياه هو مؤسسة حكومية ليبية متخصصة في إدارة الموارد المائية الجوفية،
-              تأسس بهدف تحقيق الأمن المائي وضمان وصول المياه النظيفة لجميع مناطق ليبيا.
-            </p>
-            <p className="text-gray-600 leading-relaxed mb-8">
-              يضم الجهاز كوادر هندسية وفنية مؤهلة، ويعتمد أحدث التقنيات في مجال حفر الآبار والمسح الجيولوجي
-              وتحليل جودة المياه، مع التزام تام بالمعايير البيئية الدولية.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {["الأمن المائي", "التنمية المستدامة", "الكفاءة التقنية"].map((tag) => (
-                <span
-                  key={tag}
-                  className="bg-blue-50 text-blue-700 text-sm font-medium px-4 py-1.5 rounded-full border border-blue-100"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Cards */}
-          <div className="space-y-4">
-            {cards.map((card) => (
-              <div
-                key={card.title}
-                className="flex gap-4 p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all bg-white"
-              >
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-                  {card.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">{card.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{card.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- Stats Section ---
-function StatsSection() {
-  const stats = [
-    { target: 1500, suffix: "+", label: "تقرير فني مُعتمد" },
-    { target: 300, suffix: "+", label: "مشروع منجز" },
-    { target: 24, suffix: "", label: "منطقة جغرافية" },
-    { target: 15, suffix: "+", label: "سنة خبرة" },
-  ];
-
-  return (
-    <section
-      className="py-24"
-      style={{ background: "linear-gradient(135deg, #0a1628 0%, #1e3a5f 100%)" }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white">إنجازاتنا بالأرقام</h2>
-          <p className="text-blue-300 mt-2">سنوات من العطاء والخدمة لوطننا الحبيب</p>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((s) => (
-            <StatCard key={s.label} target={s.target} suffix={s.suffix} label={s.label} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- Services ---
-function Services() {
-  const services = [
-    { icon: <Droplets size={28} />, title: "حفر الآبار", desc: "حفر الآبار الجوفية بأحدث المعدات والتقنيات المتطورة" },
-    { icon: <Wrench size={28} />, title: "الصيانة الدورية", desc: "برامج صيانة منتظمة لضمان كفاءة الآبار واستمرارية التشغيل" },
-    { icon: <FlaskConical size={28} />, title: "التحاليل المخبرية", desc: "فحص وتحليل جودة المياه وفق أعلى المعايير الدولية" },
-    { icon: <Headphones size={28} />, title: "الاستشارات الفنية", desc: "خدمات استشارية متخصصة في مجال الموارد المائية الجوفية" },
-    { icon: <Zap size={28} />, title: "تركيب المضخات", desc: "تركيب وصيانة أنظمة ضخ المياه بكفاءة عالية" },
-    { icon: <Map size={28} />, title: "المسح الجيولوجي", desc: "دراسات جيولوجية وهيدرولوجية شاملة لتحديد مواقع الآبار" },
-    { icon: <GraduationCap size={28} />, title: "التدريب والتأهيل", desc: "برامج تدريبية متخصصة للكوادر الفنية والهندسية" },
-    { icon: <ShieldCheck size={28} />, title: "ضمان الجودة", desc: "تطبيق أنظمة متكاملة لضمان الجودة في جميع العمليات" },
-  ];
-
-  return (
-    <section id="services" className="py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">خدماتنا</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">ماذا نقدم؟</h2>
-          <p className="text-gray-500 mt-3 max-w-xl mx-auto">
-            نقدم طيفاً واسعاً من الخدمات المتكاملة في مجال حفر وصيانة آبار المياه
-          </p>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-          {services.map((s) => (
-            <div
-              key={s.title}
-              className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-1 transition-all duration-300 group"
-            >
-              <div className="w-12 h-12 bg-blue-50 group-hover:bg-blue-600 rounded-xl flex items-center justify-center text-blue-600 group-hover:text-white transition-colors mb-4">
-                {s.icon}
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2">{s.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- Map Section ---
-const wellsData = [
-  { name: "طرابلس", x: 22, y: 18, status: "فعال", count: 89 },
-  { name: "مصراتة", x: 38, y: 22, status: "فعال", count: 45 },
-  { name: "بنغازي", x: 72, y: 28, status: "فعال", count: 67 },
-  { name: "سبها", x: 48, y: 62, status: "صيانة", count: 34 },
-  { name: "الزاوية", x: 18, y: 22, status: "فعال", count: 28 },
-  { name: "الكفرة", x: 78, y: 68, status: "فعال", count: 21 },
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const NAV = [
+  { href: "#home",     label: "الرئيسية" },
+  { href: "#about",    label: "عن الجهاز" },
+  { href: "#services", label: "خدماتنا" },
+  { href: "#map",      label: "الخريطة" },
+  { href: "#projects", label: "مشاريعنا" },
+  { href: "#contact",  label: "اتصل بنا" },
 ];
 
-function MapSection() {
-  const [hovered, setHovered] = useState<null | typeof wellsData[0]>(null);
+const SERVICES = [
+  { icon: Drill,          title: "حفر الآبار",        desc: "حفر آبار المياه الجوفية بأحدث المعدات الثقيلة وأعلى معايير الدقة والجودة" },
+  { icon: Wrench,         title: "الصيانة الدورية",    desc: "برامج صيانة شاملة تضمن استمرارية تشغيل الآبار وتمديد عمرها الافتراضي" },
+  { icon: FlaskConical,   title: "التحاليل المخبرية",  desc: "تحليل دقيق لجودة المياه وفق أحدث المعايير الدولية لضمان سلامتها" },
+  { icon: MessageSquare,  title: "الاستشارات الفنية",  desc: "فريق من الخبراء المتخصصين يقدم حلولاً مبتكرة لكل تحديات إدارة المياه" },
+  { icon: Settings,       title: "تركيب المضخات",      desc: "تركيب وصيانة منظومات الضخ المتكاملة بكافة الأنواع والأحجام" },
+  { icon: Globe,          title: "المسح الجيولوجي",    desc: "دراسات جيولوجية متعمقة لتحديد أفضل المواقع وضمان نجاح الحفر" },
+  { icon: GraduationCap,  title: "التدريب والتأهيل",   desc: "برامج تدريب متخصصة لرفع كفاءة الكوادر الفنية في قطاع المياه" },
+  { icon: Shield,         title: "ضمان الجودة",        desc: "التزام راسخ بمعايير ISO الدولية في كل مرحلة من مراحل العمل" },
+];
 
-  const statusColor: Record<string, string> = {
-    "فعال": "#22c55e",
-    "صيانة": "#f97316",
-    "متعطل": "#ef4444",
+const WELLS = [
+  { name: "طرابلس",  count: 89,  status: "فعال",   x: "22%", y: "17%", color: "#22c55e" },
+  { name: "الزاوية", count: 28,  status: "فعال",   x: "16%", y: "22%", color: "#22c55e" },
+  { name: "مصراتة",  count: 45,  status: "فعال",   x: "39%", y: "23%", color: "#22c55e" },
+  { name: "بنغازي",  count: 67,  status: "فعال",   x: "72%", y: "27%", color: "#22c55e" },
+  { name: "سبها",    count: 34,  status: "صيانة",  x: "48%", y: "62%", color: "#f97316" },
+  { name: "الكفرة",  count: 21,  status: "فعال",   x: "78%", y: "68%", color: "#22c55e" },
+];
+
+const PROJECTS = [
+  {
+    img: IMAGES.proj1,
+    title: "مشروع آبار طرابلس الكبرى",
+    date: "مارس 2024", region: "طرابلس", count: "45 بئر",
+    desc: "حفر وتجهيز 45 بئراً في محيط طرابلس الكبرى لتأمين المياه للمناطق النائية وتحسين جودة الحياة للسكان.",
+  },
+  {
+    img: IMAGES.proj2,
+    title: "مشروع صيانة آبار بنغازي",
+    date: "يناير 2024", region: "بنغازي", count: "62 بئر",
+    desc: "صيانة شاملة لـ 62 بئراً وتحديث كامل لمنظومة الضخ في منطقة بنغازي لضمان الاستمرارية.",
+  },
+  {
+    img: IMAGES.proj3,
+    title: "مشروع مسح جيولوجي سبها",
+    date: "نوفمبر 2023", region: "سبها", count: "12 موقع",
+    desc: "مسح جيولوجي شامل لمنطقة سبها وتحديد 12 موقعاً مثالياً للحفر في القطاع الجنوبي.",
+  },
+];
+
+// ─── Animated Counter ─────────────────────────────────────────────────────────
+function Counter({ target, prefix = "", suffix = "", label }: {
+  target: number; prefix?: string; suffix?: string; label: string;
+}) {
+  const { displayValue, elementRef } = useCountUp({ target, duration: 2500, prefix, suffix });
+  return (
+    <div ref={elementRef as React.RefObject<HTMLDivElement>} className="text-center">
+      <div className="text-5xl lg:text-6xl font-black text-white mb-2 tabular-nums">{displayValue}</div>
+      <div className="text-blue-300 text-sm font-medium tracking-wide uppercase">{label}</div>
+    </div>
+  );
+}
+
+// ─── Well Dot ─────────────────────────────────────────────────────────────────
+function WellDot({ w }: { w: typeof WELLS[0] }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="absolute" style={{ left: w.x, top: w.y, transform: "translate(-50%,-50%)" }}>
+      <button
+        onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}
+        className="relative group"
+      >
+        <span className="absolute inset-0 rounded-full animate-ping opacity-40" style={{ backgroundColor: w.color }} />
+        <span className="relative block w-5 h-5 rounded-full border-2 border-white shadow-lg transition-transform group-hover:scale-150"
+          style={{ backgroundColor: w.color }} />
+        {show && (
+          <div className="absolute bottom-8 right-0 bg-white rounded-2xl shadow-2xl p-4 min-w-max z-20 text-right"
+            style={{ border: "1px solid #e5e7eb" }}>
+            <p className="font-bold text-gray-800 text-sm mb-1">{w.name}</p>
+            <p className="text-blue-600 text-xs font-semibold">{w.count} بئر</p>
+            <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium"
+              style={{
+                backgroundColor: w.status === "فعال" ? "#dcfce7" : "#ffedd5",
+                color: w.status === "فعال" ? "#16a34a" : "#ea580c",
+              }}>
+              {w.status}
+            </span>
+          </div>
+        )}
+      </button>
+    </div>
+  );
+}
+
+// ─── Contact Form ─────────────────────────────────────────────────────────────
+function ContactForm() {
+  const [f, setF] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => { setLoading(false); setSent(true); }, 1600);
   };
 
+  if (sent) return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+        style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}>
+        <CheckCircle className="w-10 h-10 text-white" />
+      </div>
+      <h3 className="text-2xl font-bold text-white mb-2">تم إرسال رسالتك بنجاح</h3>
+      <p className="text-blue-200 mb-6">سنتواصل معك في أقرب وقت ممكن</p>
+      <button onClick={() => { setSent(false); setF({ name: "", email: "", phone: "", subject: "", message: "" }); }}
+        className="px-6 py-2.5 rounded-xl text-sm font-medium text-white border border-white/30 hover:bg-white/10 transition-colors">
+        إرسال رسالة أخرى
+      </button>
+    </div>
+  );
+
+  const inputCls = "w-full px-4 py-3 rounded-xl text-sm outline-none transition-all bg-white/10 border border-white/20 text-white placeholder-blue-200/60 focus:bg-white/15 focus:border-blue-400";
+
   return (
-    <section id="map" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">الخريطة</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">خريطة انتشار الآبار</h2>
-          <p className="text-gray-500 mt-3">توزيع الآبار عبر المناطق الليبية</p>
+    <form onSubmit={submit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-blue-200 text-xs mb-1.5 font-medium">الاسم الكامل</label>
+          <input required className={inputCls} placeholder="محمد علي" value={f.name}
+            onChange={e => setF(p => ({ ...p, name: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-blue-200 text-xs mb-1.5 font-medium">رقم الهاتف</label>
+          <input className={inputCls} placeholder="+218 91 000 0000" value={f.phone}
+            onChange={e => setF(p => ({ ...p, phone: e.target.value }))} />
+        </div>
+      </div>
+      <div>
+        <label className="block text-blue-200 text-xs mb-1.5 font-medium">البريد الإلكتروني</label>
+        <input required type="email" className={inputCls} placeholder="example@email.com" value={f.email}
+          onChange={e => setF(p => ({ ...p, email: e.target.value }))} />
+      </div>
+      <div>
+        <label className="block text-blue-200 text-xs mb-1.5 font-medium">موضوع الرسالة</label>
+        <input required className={inputCls} placeholder="استفسار عن خدمة..." value={f.subject}
+          onChange={e => setF(p => ({ ...p, subject: e.target.value }))} />
+      </div>
+      <div>
+        <label className="block text-blue-200 text-xs mb-1.5 font-medium">الرسالة</label>
+        <textarea required rows={4} className={inputCls} style={{ resize: "none" }}
+          placeholder="اكتب رسالتك هنا..." value={f.message}
+          onChange={e => setF(p => ({ ...p, message: e.target.value }))} />
+      </div>
+      <button type="submit" disabled={loading}
+        className="w-full py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+        style={{ background: loading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#2196F3,#1565C0)", color: "white" }}>
+        {loading
+          ? <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>جاري الإرسال...</>
+          : <><ArrowLeft className="w-4 h-4" />إرسال الرسالة</>}
+      </button>
+    </form>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function HomePage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const fn = () => { setScrolled(window.scrollY > 50); setScrollY(window.scrollY); };
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-white" dir="rtl">
+
+      {/* ═══ NAVBAR ═══ */}
+      <nav className="fixed top-0 inset-x-0 z-50 transition-all duration-500"
+        style={{
+          background: scrolled ? "rgba(255,255,255,0.97)" : "transparent",
+          backdropFilter: scrolled ? "blur(16px)" : "none",
+          boxShadow: scrolled ? "0 1px 30px rgba(0,0,0,0.1)" : "none",
+        }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-3">
+              <Logo size={42} />
+              <div>
+                <p className="text-sm font-black leading-tight"
+                  style={{ color: scrolled ? "#0d2137" : "white" }}>الجهاز التنفيذي</p>
+                <p className="text-xs leading-tight"
+                  style={{ color: scrolled ? "#6b7280" : "rgba(255,255,255,0.65)" }}>حفر وصيانة آبار المياه</p>
+              </div>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-8">
+              {NAV.map(l => (
+                <a key={l.href} href={l.href}
+                  className="text-sm font-medium transition-all hover:opacity-60"
+                  style={{ color: scrolled ? "#374151" : "rgba(255,255,255,0.92)" }}>
+                  {l.label}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link href="/login"
+                className="hidden lg:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
+                style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)", boxShadow: "0 4px 15px rgba(33,150,243,0.35)" }}>
+                بوابة الموظفين
+              </Link>
+              <button className="lg:hidden p-2 rounded-lg transition-colors"
+                style={{ color: scrolled ? "#374151" : "white" }}
+                onClick={() => setMenuOpen(!menuOpen)}>
+                {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="relative rounded-3xl overflow-hidden border border-gray-200 shadow-xl bg-gray-50">
-          <div className="relative w-full" style={{ paddingBottom: "55%" }}>
-            <svg
-              viewBox="0 0 800 440"
-              className="absolute inset-0 w-full h-full"
-              style={{ background: "linear-gradient(180deg, #dbeafe 0%, #eff6ff 100%)" }}
-            >
-              {/* Simplified Libya outline */}
-              <path
-                d="M 60 80 L 100 60 L 200 50 L 280 55 L 340 50 L 400 48 L 460 52 L 520 55 L 580 60 L 620 70 L 660 80 L 700 100 L 720 140 L 730 180 L 720 220 L 700 260 L 680 300 L 660 340 L 620 370 L 560 390 L 480 400 L 400 405 L 320 400 L 240 390 L 160 370 L 100 340 L 70 300 L 55 260 L 50 220 L 52 180 L 55 140 Z"
-                fill="#bfdbfe"
-                stroke="#3b82f6"
-                strokeWidth="2"
-              />
-              {/* Interior terrain lines */}
-              <path d="M 100 200 Q 300 180 500 200 Q 650 215 720 200" stroke="#93c5fd" strokeWidth="1" fill="none" />
-              <path d="M 80 280 Q 250 260 450 275 Q 620 290 700 280" stroke="#93c5fd" strokeWidth="1" fill="none" />
+        {menuOpen && (
+          <div className="lg:hidden mx-4 mb-3 rounded-2xl overflow-hidden shadow-2xl"
+            style={{ background: "rgba(13,33,55,0.98)", backdropFilter: "blur(20px)" }}>
+            <div className="p-5 space-y-1">
+              {NAV.map(l => (
+                <a key={l.href} href={l.href}
+                  className="block py-3 px-4 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all text-sm font-medium"
+                  onClick={() => setMenuOpen(false)}>{l.label}</a>
+              ))}
+              <Link href="/login"
+                className="block mt-3 text-center py-3 rounded-xl text-white font-bold text-sm"
+                style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}
+                onClick={() => setMenuOpen(false)}>
+                بوابة الموظفين
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
 
-              {/* Well dots */}
-              {wellsData.map((well) => {
-                const cx = (well.x / 100) * 800;
-                const cy = (well.y / 100) * 440;
-                const color = statusColor[well.status] || "#22c55e";
-                return (
-                  <g
-                    key={well.name}
-                    className="cursor-pointer"
-                    onMouseEnter={() => setHovered(well)}
-                    onMouseLeave={() => setHovered(null)}
-                  >
-                    <circle cx={cx} cy={cy} r="18" fill={color} opacity="0.15" />
-                    <circle cx={cx} cy={cy} r="10" fill={color} opacity="0.3" />
-                    <circle cx={cx} cy={cy} r="6" fill={color} />
-                    <text
-                      x={cx}
-                      y={cy + 22}
-                      textAnchor="middle"
-                      fontSize="11"
-                      fill="#1e3a5f"
-                      fontWeight="bold"
-                    >
-                      {well.name}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+      {/* ═══ HERO ═══ */}
+      <section id="home" className="relative min-h-screen flex flex-col justify-center overflow-hidden">
+        {/* Real background image with parallax */}
+        <div className="absolute inset-0" style={{ transform: `translateY(${scrollY * 0.35}px)`, willChange: "transform" }}>
+          <img src={IMAGES.heroBg} alt="" className="w-full h-full object-cover scale-110"
+            style={{ filter: "brightness(0.35) saturate(0.8)" }} />
+        </div>
 
-            {/* Tooltip */}
-            {hovered && (
-              <div
-                className="absolute bg-white rounded-xl shadow-xl border border-gray-100 p-4 pointer-events-none z-10 min-w-40"
-                style={{
-                  left: `${hovered.x}%`,
-                  top: `${hovered.y}%`,
-                  transform: "translate(-50%, -130%)",
-                }}
-              >
-                <div className="font-bold text-gray-900 mb-1">{hovered.name}</div>
-                <div className="text-sm text-gray-500">عدد الآبار: <span className="text-blue-600 font-semibold">{hovered.count}</span></div>
-                <div className="text-sm mt-1">
-                  الحالة:{" "}
-                  <span
-                    className="font-medium"
-                    style={{ color: statusColor[hovered.status] }}
-                  >
-                    {hovered.status}
-                  </span>
-                </div>
-              </div>
-            )}
+        {/* Color overlay */}
+        <div className="absolute inset-0"
+          style={{ background: "linear-gradient(135deg, rgba(4,16,31,0.85) 0%, rgba(13,33,55,0.7) 50%, rgba(4,16,31,0.9) 100%)" }} />
+
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 inset-x-0 h-40"
+          style={{ background: "linear-gradient(to top, #ffffff, transparent)" }} />
+
+        {/* Floating particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {Array.from({ length: 16 }).map((_, i) => (
+            <div key={i} className="particle" style={{
+              width: `${3 + (i % 4) * 2}px`, height: `${3 + (i % 4) * 2}px`,
+              left: `${5 + i * 6.2}%`, top: `${10 + (i * 17) % 75}%`,
+              animationDuration: `${5 + (i % 6) * 1.5}s`,
+              animationDelay: `${i * 0.3}s`,
+            }} />
+          ))}
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 pt-32 pb-20 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold mb-10 animate-fade-in-up"
+            style={{ background: "rgba(33,150,243,0.15)", border: "1px solid rgba(33,150,243,0.4)", color: "#93c5fd" }}>
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            الجهاز التنفيذي الوطني — ليبيا
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center justify-center gap-6 py-4 border-t border-gray-100 bg-white">
-            {Object.entries(statusColor).map(([label, color]) => (
-              <div key={label} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ background: color }} />
-                <span className="text-sm text-gray-600">{label}</span>
+          {/* Heading */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-none animate-fade-in-up"
+            style={{ animationDelay: "0.1s", letterSpacing: "-0.02em" }}>
+            نحفر
+            <span style={{
+              background: "linear-gradient(90deg,#60a5fa,#38bdf8,#2196F3)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}> المستقبل</span>
+            <br />
+            <span className="text-4xl md:text-5xl lg:text-6xl font-bold text-white/80">
+              لنوصل الماء لكل بيت
+            </span>
+          </h1>
+
+          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up"
+            style={{ animationDelay: "0.2s" }}>
+            الجهاز التنفيذي لحفر وصيانة آبار المياه — نضمن وصول المياه النقية
+            لكل مناطق ليبيا بأعلى معايير الجودة والاحترافية
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-wrap gap-4 justify-center mb-20 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+            <a href="#map"
+              className="px-8 py-4 rounded-2xl text-white font-bold text-sm flex items-center gap-2 transition-all hover:scale-105 hover:shadow-2xl"
+              style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)", boxShadow: "0 8px 30px rgba(33,150,243,0.5)" }}>
+              <MapPin className="w-5 h-5" />
+              خريطة الآبار التفاعلية
+            </a>
+            <a href="#projects"
+              className="px-8 py-4 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all hover:bg-white/15"
+              style={{ border: "1px solid rgba(255,255,255,0.3)", color: "white" }}>
+              <Play className="w-4 h-4" />
+              استعرض مشاريعنا
+            </a>
+          </div>
+
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto animate-fade-in-up"
+            style={{ animationDelay: "0.4s" }}>
+            {[
+              { v: "+١٬٥٠٠", l: "تقرير فني" },
+              { v: "٢٤", l: "منطقة جغرافية" },
+              { v: "+٢٤٧", l: "بئر فعال" },
+              { v: "+٣٠٠", l: "مشروع مكتمل" },
+            ].map((s, i) => (
+              <div key={i} className="rounded-2xl p-5 text-center"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(12px)" }}>
+                <p className="text-3xl font-black text-white mb-1">{s.v}</p>
+                <p className="text-xs text-blue-300 font-medium">{s.l}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
 
-// --- Projects ---
-function Projects() {
-  const projects = [
-    {
-      title: "مشروع آبار طرابلس الكبرى",
-      region: "طرابلس",
-      date: "مارس 2024",
-      desc: "حفر وتجهيز 45 بئراً جوفياً لتأمين مياه الشرب لمناطق طرابلس الكبرى وضواحيها.",
-      count: 45,
-      gradient: "from-blue-900 to-blue-600",
-    },
-    {
-      title: "مشروع صيانة آبار بنغازي",
-      region: "بنغازي",
-      date: "يناير 2024",
-      desc: "أعمال صيانة شاملة لـ 62 بئراً في منطقة بنغازي مع تحديث منظومة الضخ.",
-      count: 62,
-      gradient: "from-indigo-900 to-blue-700",
-    },
-    {
-      title: "مشروع مسح جيولوجي سبها",
-      region: "سبها",
-      date: "نوفمبر 2023",
-      desc: "مسح جيولوجي وهيدرولوجي شامل لمنطقة سبها لتحديد المواقع المثلى لحفر الآبار.",
-      count: 34,
-      gradient: "from-blue-900 to-indigo-800",
-    },
-  ];
-
-  return (
-    <section id="projects" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">مشاريعنا</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">أحدث المشاريع</h2>
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/40 animate-bounce">
+          <span className="text-xs">اكتشف المزيد</span>
+          <ChevronDown className="w-4 h-4" />
         </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          {projects.map((p) => (
-            <div
-              key={p.title}
-              className="rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-            >
-              {/* Image placeholder */}
-              <div className={`h-48 bg-gradient-to-br ${p.gradient} relative flex items-center justify-center`}>
-                <Droplets size={48} className="text-white/30" />
-                <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
-                  {p.region}
-                </div>
-                <div className="absolute bottom-4 left-4 text-white/70 text-xs">{p.date}</div>
+      </section>
+
+      {/* ═══ ABOUT ═══ */}
+      <section id="about" className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Images collage */}
+            <div className="relative h-[500px]">
+              <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl">
+                <img src={IMAGES.workers} alt="موظفو الجهاز" className="w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,33,55,0.5), transparent)" }} />
               </div>
-              <div className="p-6">
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{p.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-4">{p.desc}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-600 text-sm font-medium">{p.count} بئر</span>
-                  <button className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:gap-2 transition-all">
-                    عرض التفاصيل
-                    <ArrowLeft size={14} />
+              <div className="absolute -bottom-6 -left-6 w-52 h-52 rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+                <img src={IMAGES.waterDrop} alt="مياه" className="w-full h-full object-cover" />
+              </div>
+              <div className="absolute -top-4 -right-4 w-40 h-40 rounded-2xl overflow-hidden shadow-xl border-4 border-white">
+                <img src={IMAGES.drilling} alt="حفر" className="w-full h-full object-cover" />
+              </div>
+              {/* Floating badge */}
+              <div className="absolute bottom-8 right-4 bg-white rounded-2xl px-5 py-4 shadow-xl"
+                style={{ border: "1px solid #e8f0fe" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+                    <Star className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-black text-gray-800 text-lg">+١٥ عام</p>
+                    <p className="text-xs text-gray-500">من الخبرة والتميز</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Text */}
+            <div>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+                style={{ background: "#dbeafe", color: "#1565C0" }}>من نحن</span>
+              <h2 className="text-4xl lg:text-5xl font-black mt-5 mb-6 leading-tight" style={{ color: "#0d2137" }}>
+                رائدون في مجال
+                <br />
+                <span style={{ color: "#1565C0" }}>إدارة موارد المياه</span>
+              </h2>
+              <p className="text-gray-600 text-lg leading-relaxed mb-5">
+                الجهاز التنفيذي لحفر وصيانة آبار المياه مؤسسة حكومية ليبية متخصصة،
+                تأسست لضمان توفير المياه النقية لجميع المناطق الليبية من خلال منظومة
+                متكاملة من خدمات الحفر والصيانة والتحليل.
+              </p>
+              <p className="text-gray-500 leading-relaxed mb-8">
+                نعمل بمنهجية علمية واحترافية عالية، ونوظف أحدث التقنيات والمعدات
+                لضمان جودة المياه واستدامتها لخدمة المواطن الليبي في كل أرجاء البلاد.
+              </p>
+
+              <div className="space-y-3 mb-8">
+                {[
+                  "معدات حفر حديثة بمواصفات دولية عالية الجودة",
+                  "كوادر فنية مؤهلة وذات خبرة ميدانية واسعة",
+                  "تغطية جغرافية شاملة لكافة مناطق ليبيا",
+                  "معايير سلامة صارمة في جميع العمليات",
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg,#dbeafe,#bfdbfe)" }}>
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                    </div>
+                    <span className="text-gray-700 text-sm">{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Target, title: "رسالتنا", desc: "توفير المياه النقية لكل مواطن ليبي" },
+                  { icon: Award,  title: "رؤيتنا",  desc: "الريادة في إدارة المياه الجوفية بإفريقيا" },
+                  { icon: Users,  title: "فريقنا",  desc: "+٥٠٠ متخصص في الهندسة والجيولوجيا" },
+                  { icon: Shield, title: "جودتنا",  desc: "التزام بمعايير ISO الدولية" },
+                ].map((c, i) => (
+                  <div key={i} className="rounded-2xl p-5"
+                    style={{ background: "#f8faff", border: "1px solid #e8f0fe" }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+                      style={{ background: "linear-gradient(135deg,#dbeafe,#bfdbfe)" }}>
+                      <c.icon className="w-4 h-4 text-blue-700" />
+                    </div>
+                    <p className="font-bold text-gray-800 text-sm mb-1">{c.title}</p>
+                    <p className="text-gray-500 text-xs leading-relaxed">{c.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ STATS BAND ═══ */}
+      <section className="relative py-28 overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={IMAGES.desert} alt="" className="w-full h-full object-cover"
+            style={{ filter: "brightness(0.2) saturate(0.5)" }} />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(4,16,31,0.95),rgba(13,33,55,0.9))" }} />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-white mb-3">إنجازاتنا بالأرقام</h2>
+            <p className="text-blue-300">مسيرة حافلة في خدمة المواطن الليبي</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            <Counter target={1500} prefix="+" label="تقرير فني" />
+            <Counter target={300}  prefix="+" label="مشروع منجز" />
+            <Counter target={24}              label="منطقة جغرافية" />
+            <Counter target={15}  prefix="+" suffix=" عام" label="سنوات الخبرة" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SERVICES ═══ */}
+      <section id="services" className="py-32" style={{ backgroundColor: "#f8faff" }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: "#dbeafe", color: "#1565C0" }}>خدماتنا</span>
+            <h2 className="text-4xl font-black mt-5 mb-3" style={{ color: "#0d2137" }}>منظومة خدمات متكاملة</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              نقدم حلولاً شاملة لإدارة آبار المياه في ليبيا من الحفر حتى الصيانة والتحليل
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            {SERVICES.map((s, i) => (
+              <div key={i} className="bg-white rounded-3xl p-6 text-center cursor-default group transition-all duration-300"
+                style={{ border: "1px solid #e8f0fe", boxShadow: "0 2px 12px rgba(21,101,192,0.05)" }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-6px)";
+                  e.currentTarget.style.boxShadow = "0 16px 40px rgba(21,101,192,0.18)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(21,101,192,0.05)";
+                }}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110"
+                  style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+                  <s.icon className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="font-bold text-gray-800 mb-2 text-sm">{s.title}</h3>
+                <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ MAP ═══ */}
+      <section id="map" className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: "#dbeafe", color: "#1565C0" }}>التوزيع الجغرافي</span>
+            <h2 className="text-4xl font-black mt-5 mb-3" style={{ color: "#0d2137" }}>خريطة انتشار الآبار</h2>
+            <p className="text-gray-500">توزيع شبكة الآبار عبر مختلف مناطق ليبيا</p>
+          </div>
+          <div className="rounded-3xl overflow-hidden shadow-2xl" style={{ border: "1px solid #e8f0fe" }}>
+            <div className="relative h-[500px]"
+              style={{ background: "linear-gradient(175deg,#b8d9f0 0%,#a0cce0 25%,#c8e0a8 55%,#d4c880 78%,#c8b060 100%)" }}>
+              <div className="absolute top-5 right-5 bg-white/90 backdrop-blur rounded-xl px-4 py-2 text-xs font-semibold text-gray-700 shadow-md">
+                🗺️ ليبيا — شبكة الآبار
+              </div>
+              {WELLS.map((w, i) => <WellDot key={i} w={w} />)}
+            </div>
+            <div className="bg-gray-50 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-6 text-sm">
+                {[{ c: "#22c55e", l: "بئر فعال" }, { c: "#f97316", l: "تحت الصيانة" }, { c: "#ef4444", l: "متعطل" }].map(x => (
+                  <div key={x.l} className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: x.c }} />
+                    <span className="text-gray-600">{x.l}</span>
+                  </div>
+                ))}
+              </div>
+              <Link href="/dashboard/wells/map"
+                className="text-sm font-bold flex items-center gap-1 transition-opacity hover:opacity-70"
+                style={{ color: "#1565C0" }}>
+                الخريطة التفاعلية الكاملة <ArrowLeft className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+            {WELLS.map((w, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-4"
+                style={{ border: "1px solid #e8f0fe" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: w.color + "20" }}>
+                  <Droplets className="w-5 h-5" style={{ color: w.color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-800 text-sm">{w.name}</p>
+                  <p className="text-gray-500 text-xs">{w.count} بئر</p>
+                </div>
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0"
+                  style={{
+                    backgroundColor: w.status === "فعال" ? "#dcfce7" : "#ffedd5",
+                    color: w.status === "فعال" ? "#16a34a" : "#ea580c",
+                  }}>
+                  {w.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PROJECTS ═══ */}
+      <section id="projects" className="py-32" style={{ backgroundColor: "#f8faff" }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: "#dbeafe", color: "#1565C0" }}>مشاريعنا</span>
+            <h2 className="text-4xl font-black mt-5 mb-3" style={{ color: "#0d2137" }}>أبرز المشاريع المنجزة</h2>
+            <p className="text-gray-500">إنجازات حقيقية على أرض الواقع في خدمة الشعب الليبي</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-7">
+            {PROJECTS.map((p, i) => (
+              <div key={i} className="bg-white rounded-3xl overflow-hidden transition-all duration-400 cursor-pointer"
+                style={{ boxShadow: "0 4px 24px rgba(21,101,192,0.07)", border: "1px solid #e8f0fe" }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-8px)";
+                  e.currentTarget.style.boxShadow = "0 20px 50px rgba(21,101,192,0.2)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 24px rgba(21,101,192,0.07)";
+                }}>
+                <div className="relative h-52 overflow-hidden">
+                  <img src={p.img} alt={p.title} className="w-full h-full object-cover transition-transform duration-500"
+                    onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.05)")}
+                    onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")} />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top,rgba(13,33,55,0.7),transparent)" }} />
+                  <div className="absolute bottom-4 right-4">
+                    <span className="px-3 py-1.5 rounded-full text-xs font-bold text-white"
+                      style={{ background: "rgba(33,150,243,0.8)", backdropFilter: "blur(8px)" }}>
+                      {p.count}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style={{ background: "#dbeafe", color: "#1565C0" }}>{p.region}</span>
+                    <span className="text-xs text-gray-400">{p.date}</span>
+                  </div>
+                  <h3 className="font-black text-gray-800 mb-2 text-lg leading-snug">{p.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-5">{p.desc}</p>
+                  <button className="text-sm font-bold flex items-center gap-1.5 transition-all hover:gap-3"
+                    style={{ color: "#1565C0" }}>
+                    عرض التفاصيل <ArrowLeft className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- Contact ---
-function Contact() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    setSuccess(true);
-  };
-
-  const info = [
-    { icon: <MapPin size={20} />, label: "العنوان", value: "طريق المطار، طرابلس، ليبيا" },
-    { icon: <Phone size={20} />, label: "الهاتف", value: "+218 21 123 4567" },
-    { icon: <Mail size={20} />, label: "البريد الإلكتروني", value: "info@wwda.ly" },
-    { icon: <Clock size={20} />, label: "ساعات العمل", value: "الأحد – الخميس: 8:00 – 15:00" },
-  ];
-
-  return (
-    <section id="contact" className="py-24 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <span className="text-blue-600 text-sm font-semibold uppercase tracking-widest">اتصل بنا</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">نحن هنا لمساعدتك</h2>
-        </div>
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Form */}
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 order-1 lg:order-2">
-            {success ? (
-              <div className="flex flex-col items-center justify-center h-full py-12 text-center">
-                <CheckCircle size={64} className="text-green-500 mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">تم إرسال رسالتك بنجاح!</h3>
-                <p className="text-gray-500">سيتواصل معك فريقنا قريباً</p>
-                <button
-                  onClick={() => { setSuccess(false); setForm({ name: "", email: "", phone: "", subject: "", message: "" }); }}
-                  className="mt-6 text-blue-600 text-sm font-medium"
-                >
-                  إرسال رسالة أخرى
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="أدخل اسمك الكامل"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="example@email.com"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+218 ..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">موضوع الرسالة</label>
-                  <input
-                    type="text"
-                    required
-                    value={form.subject}
-                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="موضوع رسالتك"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">الرسالة</label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    placeholder="اكتب رسالتك هنا..."
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      جارٍ الإرسال...
-                    </>
-                  ) : "إرسال الرسالة"}
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Info */}
-          <div className="order-2 lg:order-1 space-y-6">
-            <p className="text-gray-600 leading-relaxed">
-              يسعدنا التواصل معكم للرد على استفساراتكم وتقديم المساعدة اللازمة. فريقنا متاح خلال ساعات الدوام الرسمي.
-            </p>
-            {info.map((item) => (
-              <div key={item.label} className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white flex-shrink-0">
-                  {item.icon}
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 text-sm">{item.label}</div>
-                  <div className="text-gray-500 text-sm mt-0.5">{item.value}</div>
-                </div>
-              </div>
             ))}
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-// --- Footer ---
-function Footer() {
-  return (
-    <footer style={{ background: "#0f1c36" }} className="text-white py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-3 gap-10 pb-10 border-b border-white/10">
-          {/* Logo col */}
-          <div>
-            <div className="flex items-center gap-3 mb-4">
-              <Logo size={40} />
-              <div>
-                <div className="font-bold text-sm">الجهاز التنفيذي</div>
-                <div className="text-blue-300 text-xs">لحفر وصيانة آبار المياه</div>
+      {/* ═══ CONTACT ═══ */}
+      <section id="contact" className="py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: "#dbeafe", color: "#1565C0" }}>تواصل معنا</span>
+            <h2 className="text-4xl font-black mt-5 mb-3" style={{ color: "#0d2137" }}>نحن هنا للمساعدة</h2>
+            <p className="text-gray-500">تواصل معنا لأي استفسار أو طلب خدمة</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-10">
+            {/* Contact Info */}
+            <div className="relative rounded-3xl overflow-hidden"
+              style={{ minHeight: "500px", boxShadow: "0 20px 60px rgba(13,33,55,0.3)" }}>
+              <img src={IMAGES.water} alt="مياه" className="absolute inset-0 w-full h-full object-cover"
+                style={{ filter: "brightness(0.25) saturate(0.7)" }} />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg,rgba(13,33,55,0.92),rgba(21,101,192,0.85))" }} />
+              <div className="relative p-8 h-full flex flex-col justify-between">
+                <div>
+                  <h3 className="text-2xl font-black text-white mb-2">معلومات التواصل</h3>
+                  <p className="text-blue-200 text-sm mb-10">فريقنا جاهز لخدمتك في أي وقت</p>
+                  <div className="space-y-6">
+                    {[
+                      { icon: MapPin, title: "العنوان",            value: "طرابلس، ليبيا — شارع عمر المختار" },
+                      { icon: Phone,  title: "الهاتف",             value: "+218 21 333 0000" },
+                      { icon: Mail,   title: "البريد الإلكتروني",   value: "info@wellsagency.ly" },
+                      { icon: Clock,  title: "ساعات العمل",         value: "الأحد – الخميس: ٨:٠٠ – ١٥:٠٠" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-4">
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
+                          <item.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-blue-300 text-xs mb-0.5 font-medium">{item.title}</p>
+                          <p className="text-white font-semibold text-sm">{item.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-10 pt-6" style={{ borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+                  <p className="text-blue-200 text-xs">نرد على جميع الاستفسارات خلال ٢٤ ساعة</p>
+                </div>
               </div>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              نعمل على توفير المياه النظيفة لكل مواطن ليبي من خلال إدارة فعالة وتقنيات حديثة.
-            </p>
-          </div>
 
-          {/* Quick links */}
-          <div>
-            <h4 className="font-bold mb-4 text-sm">روابط سريعة</h4>
-            <ul className="space-y-2">
-              {["الرئيسية", "عن الجهاز", "خدماتنا", "مشاريعنا", "اتصل بنا"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-                    {link}
+            {/* Form */}
+            <div className="rounded-3xl p-8"
+              style={{ background: "linear-gradient(135deg,#0d2137,#1565C0)", boxShadow: "0 20px 60px rgba(21,101,192,0.25)" }}>
+              <h3 className="text-2xl font-black text-white mb-2">أرسل رسالتك</h3>
+              <p className="text-blue-200 text-sm mb-8">سنتواصل معك في أقرب وقت</p>
+              <ContactForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER ═══ */}
+      <footer style={{ background: "linear-gradient(135deg,#04101f,#0d1f35)" }}>
+        <div className="max-w-7xl mx-auto px-6 py-16">
+          <div className="grid md:grid-cols-3 gap-10 mb-10">
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <Logo size={40} />
+                <div>
+                  <p className="font-black text-white text-sm">الجهاز التنفيذي</p>
+                  <p className="text-gray-500 text-xs">حفر وصيانة آبار المياه</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                مؤسسة حكومية ليبية متخصصة في توفير المياه النقية لجميع مناطق ليبيا
+                بأعلى معايير الجودة والاحترافية.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-5">روابط سريعة</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {NAV.map(l => (
+                  <a key={l.href} href={l.href}
+                    className="text-gray-400 text-sm hover:text-blue-400 transition-colors py-1">
+                    {l.label}
                   </a>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-5">تواصل معنا</h4>
+              <div className="space-y-3 text-sm text-gray-400">
+                <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-400" />طرابلس، ليبيا</p>
+                <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-blue-400" />+218 21 333 0000</p>
+                <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-blue-400" />info@wellsagency.ly</p>
+              </div>
+            </div>
           </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="font-bold mb-4 text-sm">تواصل معنا</h4>
-            <ul className="space-y-3 text-gray-400 text-sm">
-              <li className="flex items-center gap-2"><MapPin size={14} />طريق المطار، طرابلس، ليبيا</li>
-              <li className="flex items-center gap-2"><Phone size={14} />+218 21 123 4567</li>
-              <li className="flex items-center gap-2"><Mail size={14} />info@wwda.ly</li>
-            </ul>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-8"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <p className="text-gray-600 text-sm">
+              © 2024 الجهاز التنفيذي لحفر وصيانة آبار المياه — جميع الحقوق محفوظة
+            </p>
+            <Link href="/login" className="text-xs text-gray-600 hover:text-blue-400 transition-colors">
+              بوابة الموظفين
+            </Link>
           </div>
         </div>
-
-        <div className="pt-8 text-center text-gray-500 text-sm">
-          © 2024 الجهاز التنفيذي لحفر وصيانة آبار المياه — جميع الحقوق محفوظة
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-// --- Main Page ---
-export default function HomePage() {
-  return (
-    <main dir="rtl" className="font-sans">
-      <Navbar />
-      <Hero />
-      <About />
-      <StatsSection />
-      <Services />
-      <MapSection />
-      <Projects />
-      <Contact />
-      <Footer />
-    </main>
+      </footer>
+    </div>
   );
 }
