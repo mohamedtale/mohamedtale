@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Well {
+  id           String   @id @default(cuid())
+  wellId       String   @unique
+  name         String
+  region       String
+  location     String?
+  latitude     Float?
+  longitude    Float?
+  depth        Int?
+  type         String   @default("مياه جوفية")
+  status       String   @default("فعال")
+  drillingDate DateTime?
+  casingType   String?
+  pumpType     String?
+  waterQuality String?
+  cost         Float?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  maintenance MaintenanceLog[]
+  reports     Report[]
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  title     String
+  type      String
+  status    String   @default("مسودة")
+  author    String
+  reviewer  String?
+  wellId    String?
+  well      Well?    @relation(fields: [wellId], references: [id])
+  fileSize  String?
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  approvedAt DateTime?
+}
+
+model MaintenanceLog {
+  id          String   @id @default(cuid())
+  wellId      String
+  well        Well     @relation(fields: [wellId], references: [id])
+  type        String
+  status      String   @default("قيد التنفيذ")
+  description String?
+  technician  String
+  cost        Float?
+  duration    String?
+  parts       String?
+  priority    String   @default("متوسطة")
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id         String   @id @default(cuid())
+  employeeId String   @unique
+  name       String
+  email      String   @unique
+  phone      String?
+  whatsapp   String?
+  department String?
+  role       String   @default("موظف")
+  status     String   @default("نشط")
+  password   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Contract {
+  id        String   @id @default(cuid())
+  title     String
+  vendor    String
+  value     Float
+  wells     Int      @default(0)
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("نشط")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
