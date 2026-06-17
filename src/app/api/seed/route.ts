@@ -7,7 +7,11 @@ import ws from "ws";
 export async function POST() {
   try {
     neonConfig.webSocketConstructor = ws;
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      return NextResponse.json({ error: "DATABASE_URL is not set in this function" }, { status: 500 });
+    }
+    const pool = new Pool({ connectionString: dbUrl });
     const adapter = new PrismaNeon(pool as any);
     const prisma = new PrismaClient({ adapter } as any);
 
