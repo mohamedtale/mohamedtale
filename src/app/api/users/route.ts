@@ -2,15 +2,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const users = await prisma.user.findMany({
-    select: { id: true, employeeId: true, name: true, email: true, phone: true, department: true, role: true, status: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-  return NextResponse.json(users);
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { id: true, employeeId: true, name: true, email: true, phone: true, department: true, role: true, status: true, createdAt: true },
+    });
+    return NextResponse.json(users);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const data = await req.json();
-  const user = await prisma.user.create({ data });
-  return NextResponse.json(user, { status: 201 });
+  try {
+    const body = await req.json();
+    const user = await prisma.user.create({
+      data: { ...body, password: body.password || "changeme123" },
+      select: { id: true, employeeId: true, name: true, email: true, phone: true, department: true, role: true, status: true, createdAt: true },
+    });
+    return NextResponse.json(user);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }

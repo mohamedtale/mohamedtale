@@ -1,58 +1,95 @@
 "use client";
-import { CheckCircle, XCircle, FileText, User, Calendar } from "lucide-react";
-
-const pending = [
-  { id: 1, title: "تقرير فحص جودة المياه - بئر طرابلس الجديد", author: "د. محمد الصقم", well: "بئر طرابلس الجديد", date: "2024-06-05", page: "3 من 5" },
-  { id: 2, title: "تقرير الصيانة الدورية - بئر سرت", author: "م. خالد أحمد", well: "بئر سرت", date: "2024-06-07", page: "2 من 5" },
-  { id: 3, title: "دراسة جيولوجية - منطقة الكفرة الشرقي", author: "د. فاطمة علي", well: "بئر الكفرة الشرقي", date: "2024-06-08", page: "4 من 5" },
-];
+import { useState, useEffect } from "react";
+import { CheckCircle, XCircle, FileText, RefreshCw } from "lucide-react";
 
 export default function ReportApprovalPage() {
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/reports").then(r => r.json()).then(d => {
+      const pending = Array.isArray(d) ? d.filter((r: any) => r.status === "قيد المراجعة") : [];
+      setReports(pending);
+    }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const action = async (id: string, status: string) => {
+    setProcessing(id);
+    try {
+      const body: any = { status };
+      if (status === "معتمد") body.approvedAt = new Date().toISOString();
+      await fetch(`/api/reports/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      setMsg(status === "معتمد" ? "تم اعتماد التقرير ✓" : "تم رفض التقرير");
+      load();
+    } finally {
+      setProcessing(null);
+      setTimeout(() => setMsg(""), 3000);
+    }
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">اعتماد التقارير</h1>
-        <p className="text-gray-500 text-sm mt-1">متابعة سير العمل واعتماد التقارير الفنية</p>
+    <div className="p-6 lg:p-8" dir="rtl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-black text-gray-800">اعتماد التقارير</h1>
+          <p className="text-gray-500 text-sm mt-1">التقارير قيد المراجعة في انتظار القرار</p>
+        </div>
+        <button onClick={load} className="p-2.5 rounded-xl border border-gray-200 hover:bg-gray-50">
+          <RefreshCw className={`w-4 h-4 text-gray-600 ${loading ? "animate-spin" : ""}`} />
+        </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
-        <div className="p-4 border-b border-gray-100">
-          <h2 className="font-bold text-slate-800">التقارير قيد المراجعة</h2>
-          <p className="text-xs text-gray-500 mt-1">متابعة سير العمل واعتماد التقارير الفنية</p>
+      {msg && <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 text-green-700 text-sm border border-green-200">{msg}</div>}
+
+      {loading ? (
+        <div className="space-y-3">{Array(3).fill(0).map((_, i) => <div key={i} className="animate-pulse bg-gray-200 rounded-2xl h-24" />)}</div>
+      ) : reports.length === 0 ? (
+        <div className="bg-white rounded-3xl p-16 text-center shadow-sm border border-gray-100">
+          <CheckCircle className="w-14 h-14 text-green-200 mx-auto mb-3" />
+          <p className="text-gray-500 font-semibold">لا توجد تقارير معلقة</p>
+          <p className="text-gray-400 text-sm mt-1">جميع التقارير تمت مراجعتها</p>
         </div>
-        <div className="divide-y divide-gray-50">
-          {pending.map((report) => (
-            <div key={report.id} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <FileText size={18} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-orange-600 font-medium bg-orange-50 inline-block px-2 py-0.5 rounded-full mb-1">قيد المراجعة</div>
-                    <h3 className="font-semibold text-slate-800 text-sm">{report.title}</h3>
-                    <div className="flex items-center gap-4 mt-1.5 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><User size={12} /> الكاتب: {report.author}</span>
-                      <span className="flex items-center gap-1"><Calendar size={12} /> {report.date}</span>
-                      <span className="text-blue-600 font-medium">الصفحة {report.page}</span>
-                    </div>
-                  </div>
+      ) : (
+        <div className="space-y-4">
+          {reports.map((r: any) => (
+            <div key={r.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#fef3c7" }}>
+                  <FileText className="w-6 h-6 text-orange-500" />
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-green-700 transition-colors">
-                    <CheckCircle size={14} />
-                    <span>اعتماد</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-800">{r.title}</p>
+                  <p className="text-sm text-gray-500 mt-1">النوع: {r.type}</p>
+                  <p className="text-sm text-gray-500">المُعِد: {r.author}{r.reviewer ? ` • المراجع: ${r.reviewer}` : ""}</p>
+                  <p className="text-xs text-gray-400 mt-1">{new Date(r.createdAt).toLocaleDateString("ar-LY")}</p>
+                  {r.content && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs text-gray-600">{r.content}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <button onClick={() => action(r.id, "معتمد")} disabled={processing === r.id}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-colors"
+                    style={{ backgroundColor: "#16a34a" }}>
+                    <CheckCircle className="w-4 h-4" /> اعتماد
                   </button>
-                  <button className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">
-                    <XCircle size={14} />
-                    <span>رفض</span>
+                  <button onClick={() => action(r.id, "مرفوض")} disabled={processing === r.id}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-colors"
+                    style={{ backgroundColor: "#dc2626" }}>
+                    <XCircle className="w-4 h-4" /> رفض
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

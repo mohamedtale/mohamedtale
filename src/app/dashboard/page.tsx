@@ -1,144 +1,168 @@
 "use client";
-import { Droplets, CheckCircle, Settings, AlertTriangle, Plus, Map, Wrench, FileText } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Droplets, Wrench, AlertTriangle, CheckCircle, PlusCircle, Map, FileText, Settings, TrendingUp, Activity } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-const barData = [
-  { name: "يناير", حفر: 12, صيانة: 8 },
-  { name: "فبراير", حفر: 19, صيانة: 11 },
-  { name: "مارس", حفر: 15, صيانة: 14 },
-  { name: "أبريل", حفر: 22, صيانة: 9 },
-  { name: "مايو", حفر: 18, صيانة: 16 },
-  { name: "يونيو", حفر: 25, صيانة: 12 },
-];
-
-const pieData = [
-  { name: "طرابلس", value: 85 },
-  { name: "بنغازي", value: 62 },
-  { name: "مصراتة", value: 48 },
-  { name: "أخرى", value: 105 },
-];
-
-const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#94a3b8"];
-
-const wells = [
-  { name: "بئر الزاوية الشمالي", location: "طرابلس", status: "فعال" },
-  { name: "بئر مصراتة المركزي", location: "مصراتة", status: "فعال" },
-  { name: "بئر الزيان الزراعي", location: "بنغازي", status: "صيانة" },
-  { name: "بئر سبها الغربي", location: "سبها", status: "فعال" },
-];
-
-const activities = [
-  { text: "تم إضافة بئر جديد في طرابلس", time: "منذ 10 دقائق", color: "#3b82f6" },
-  { text: "اكتمال صيانة بئر مصراتة", time: "منذ ساعة", color: "#22c55e" },
-  { text: "تقرير جيولوجي جديد معتمد", time: "منذ 3 ساعات", color: "#f59e0b" },
-  { text: "تحديث بيانات بئر بنغازي", time: "أمس", color: "#3b82f6" },
-  { text: "طلب صيانة جديد لبئر سبها", time: "أمس", color: "#ef4444" },
-];
+const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو"];
+const PIE_COLORS = ["#1565C0","#2196F3","#f97316","#22c55e"];
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState({ total: 0, active: 0, maintenance: 0, broken: 0, reports: 0, contracts: 0 });
+  const [wells, setWells] = useState<any[]>([]);
+  const [maintenance, setMaintenance] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/dashboard/stats").then(r => r.json()),
+      fetch("/api/wells").then(r => r.json()),
+      fetch("/api/maintenance").then(r => r.json()),
+    ]).then(([s, w, m]) => {
+      setStats(s);
+      setWells(Array.isArray(w) ? w.slice(0, 5) : []);
+      setMaintenance(Array.isArray(m) ? m.slice(0, 5) : []);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const statCards = [
+    { label: "إجمالي الآبار", value: stats.total, icon: Droplets, color: "#1565C0", bg: "#dbeafe" },
+    { label: "الآبار الفعالة", value: stats.active, icon: CheckCircle, color: "#16a34a", bg: "#dcfce7" },
+    { label: "تحت الصيانة", value: stats.maintenance, icon: Wrench, color: "#d97706", bg: "#fef3c7" },
+    { label: "الآبار المتعطلة", value: stats.broken, icon: AlertTriangle, color: "#dc2626", bg: "#fee2e2" },
+  ];
+
+  const pieData = [
+    { name: "فعال", value: stats.active || 1 },
+    { name: "صيانة", value: stats.maintenance || 0 },
+    { name: "متعطل", value: stats.broken || 0 },
+  ];
+
+  const skel = "animate-pulse bg-gray-200 rounded-xl";
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-[#1e2d4e] mb-6">لوحة التحكم</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "إجمالي الآبار", value: 300, icon: Droplets, color: "#3b82f6", bg: "#eff6ff" },
-          { label: "الآبار النشطة", value: 247, icon: CheckCircle, color: "#22c55e", bg: "#f0fdf4" },
-          { label: "حالات الصيانة", value: 38, icon: Settings, color: "#f97316", bg: "#fff7ed" },
-          { label: "الآبار المتعطلة", value: 15, icon: AlertTriangle, color: "#ef4444", bg: "#fef2f2" },
-        ].map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-gray-500 text-sm">{stat.label}</span>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: stat.bg }}>
-                  <Icon size={20} style={{ color: stat.color }} />
-                </div>
-              </div>
-              <div className="text-3xl font-bold" style={{ color: stat.color }}>{stat.value}</div>
-            </div>
-          );
-        })}
+    <div className="p-6 lg:p-8" dir="rtl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-black text-gray-800">لوحة التحكم</h1>
+        <p className="text-gray-500 text-sm mt-1">مرحباً — إليك نظرة عامة على النظام</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#1e2d4e] mb-4">النشاط الشهري</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={barData}>
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map((c, i) => (
+          <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            {loading ? (
+              <div className={`${skel} h-16 w-full`} />
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: c.bg }}>
+                    <c.icon className="w-5 h-5" style={{ color: c.color }} />
+                  </div>
+                  <TrendingUp className="w-4 h-4 text-gray-300" />
+                </div>
+                <p className="text-3xl font-black text-gray-800">{c.value}</p>
+                <p className="text-gray-500 text-xs mt-1">{c.label}</p>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6 mb-8">
+        {/* Bar chart */}
+        <div className="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h2 className="font-bold text-gray-800 mb-4 text-sm">النشاط الشهري</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={MONTHS.map((m, i) => ({ name: m, حفر: Math.floor(Math.random() * 20) + 5, صيانة: Math.floor(Math.random() * 15) + 3 }))}>
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Legend />
-              <Bar dataKey="حفر" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="صيانة" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="حفر" fill="#1565C0" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="صيانة" fill="#f97316" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#1e2d4e] mb-4">التوزيع الجغرافي</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value">
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+
+        {/* Pie chart */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h2 className="font-bold text-gray-800 mb-4 text-sm">حالة الآبار</h2>
+          {loading ? <div className={`${skel} h-40 w-full`} /> : (
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value">
+                  {pieData.map((_, i) => <Cell key={i} fill={["#22c55e","#f97316","#ef4444"][i]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          <div className="space-y-2 mt-2">
+            {[{ l: "فعال", c: "#22c55e" }, { l: "صيانة", c: "#f97316" }, { l: "متعطل", c: "#ef4444" }].map(x => (
+              <div key={x.l} className="flex items-center gap-2 text-xs">
+                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: x.c }} />
+                <span className="text-gray-600">{x.l}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#1e2d4e] mb-4">أبرز الآبار</h2>
-          <div className="space-y-3">
-            {wells.map((well, i) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <div className="text-sm font-medium text-gray-800">{well.name}</div>
-                  <div className="text-xs text-gray-400">{well.location}</div>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${well.status === 'فعال' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                  {well.status}
-                </span>
-              </div>
-            ))}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Recent wells */}
+        <div className="lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-800 text-sm">أحدث الآبار</h2>
+            <Link href="/dashboard/wells" className="text-xs text-blue-600 font-medium hover:underline">عرض الكل</Link>
           </div>
-        </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#1e2d4e] mb-4">آخر النشاطات</h2>
-          <div className="space-y-3">
-            {activities.map((activity, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: activity.color }} />
-                <div>
-                  <div className="text-sm text-gray-700">{activity.text}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{activity.time}</div>
+          {loading ? (
+            <div className="space-y-3">{[1,2,3].map(i => <div key={i} className={`${skel} h-12 w-full`} />)}</div>
+          ) : wells.length === 0 ? (
+            <p className="text-center text-gray-400 text-sm py-8">لا توجد آبار مسجلة بعد</p>
+          ) : (
+            <div className="space-y-2">
+              {wells.map((w: any) => (
+                <div key={w.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#dbeafe" }}>
+                    <Droplets className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 text-sm truncate">{w.name}</p>
+                    <p className="text-xs text-gray-400">{w.region} • {w.wellId}</p>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0"
+                    style={{
+                      backgroundColor: w.status === "فعال" ? "#dcfce7" : w.status === "صيانة" ? "#fef3c7" : "#fee2e2",
+                      color: w.status === "فعال" ? "#16a34a" : w.status === "صيانة" ? "#d97706" : "#dc2626",
+                    }}>
+                    {w.status}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-[#1e2d4e] mb-4">الإجراءات السريعة</h2>
-          <div className="grid grid-cols-2 gap-3">
+
+        {/* Quick actions */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+          <h2 className="font-bold text-gray-800 mb-4 text-sm">إجراءات سريعة</h2>
+          <div className="space-y-2">
             {[
-              { label: "إضافة بئر جديد", icon: Plus, color: "#3b82f6", href: "/dashboard/wells/new" },
-              { label: "فتح الخريطة", icon: Map, color: "#22c55e", href: "/dashboard/maps" },
-              { label: "جدولة صيانة", icon: Wrench, color: "#f97316", href: "/dashboard/maintenance" },
-              { label: "تقرير جديد", icon: FileText, color: "#8b5cf6", href: "/dashboard/reports" },
-            ].map((action, i) => {
-              const Icon = action.icon;
-              return (
-                <a key={i} href={action.href} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:shadow-sm transition-all text-center" style={{ backgroundColor: `${action.color}10` }}>
-                  <Icon size={24} style={{ color: action.color }} />
-                  <span className="text-xs font-medium text-gray-700">{action.label}</span>
-                </a>
-              );
-            })}
+              { href: "/dashboard/wells/new", icon: PlusCircle, label: "إضافة بئر جديد", color: "#1565C0" },
+              { href: "/dashboard/maintenance", icon: Wrench, label: "سجل الصيانة", color: "#d97706" },
+              { href: "/dashboard/reports", icon: FileText, label: "التقارير الفنية", color: "#16a34a" },
+              { href: "/dashboard/contracts", icon: Settings, label: "العقود", color: "#7c3aed" },
+              { href: "/dashboard/maps", icon: Map, label: "خريطة الآبار", color: "#0891b2" },
+            ].map((a, i) => (
+              <Link key={i} href={a.href}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: a.color + "15" }}>
+                  <a.icon className="w-4 h-4" style={{ color: a.color }} />
+                </div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{a.label}</span>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
