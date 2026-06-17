@@ -14,7 +14,7 @@ import {
   Wrench,
   DollarSign,
   Users,
-  User,
+  Globe,
 } from "lucide-react";
 
 const menuItems: any[] = [
@@ -46,6 +46,7 @@ const menuItems: any[] = [
     label: "المحتوى",
     isSection: true,
     children: [
+      { label: "تحرير الموقع", icon: Globe, href: "/dashboard/content/site" },
       { label: "إدارة المشاريع", icon: FileText, href: "/dashboard/content/projects" },
       { label: "الإحصائيات", icon: FileText, href: "/dashboard/content/stats" },
     ],
