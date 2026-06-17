@@ -224,6 +224,7 @@ export default function HomePage() {
   const displayProjects = dbProjects ?? PROJECTS;
   const stat = (key: string, fallback: number) => dbStats?.[key] ? parseInt(dbStats[key]) : fallback;
 
+
   return (
     <div className="min-h-screen bg-white" dir="rtl">
 
