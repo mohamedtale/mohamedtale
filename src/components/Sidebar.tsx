@@ -42,6 +42,14 @@ const menuItems: any[] = [
   },
   { label: "العقود والأسعار", icon: DollarSign, href: "/dashboard/contracts" },
   { label: "إدارة المستخدمين", icon: Users, href: "/dashboard/users" },
+  {
+    label: "المحتوى",
+    isSection: true,
+    children: [
+      { label: "إدارة المشاريع", icon: FileText, href: "/dashboard/content/projects" },
+      { label: "الإحصائيات", icon: FileText, href: "/dashboard/content/stats" },
+    ],
+  },
 ];
 
 export default function Sidebar() {
