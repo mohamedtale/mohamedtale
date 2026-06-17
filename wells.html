@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>منظومة متابعة الآبار 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --navy:    #0b1a2d;
+  --navy-md: #112240;
+  --navy-lt: #1a3a5c;
+  --blue:    #1565c0;
+  --blue-lt: #1e88e5;
+  --water:   #0288d1;
+  --water-lt:#29b6f6;
+  --surface: #f0f4f8;
+  --card:    #ffffff;
+  --sidebar: #0b1a2d;
+  --text:    #1a2744;
+  --text-lt: #64748b;
+  --border:  #dde3ed;
+  --green:   #28a745;
+  --yellow:  #ffc107;
+  --red:     #dc3545;
+  --dark-st: #4a5568;
+  --shadow:  0 2px 12px rgba(11,26,45,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Cairo',sans-serif;direction:rtl;overflow:hidden}
+
+/* ══ LOGIN ══ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-lt) 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card{
+  background:rgba(255,255,255,.07);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.13);border-radius:24px;
+  padding:48px 40px;width:100%;max-width:400px;text-align:center;
+}
+.login-logo{width:88px;margin-bottom:18px;filter:drop-shadow(0 0 20px rgba(41,182,246,.4))}
+.login-title{color:var(--water-lt);font-size:1.45rem;font-weight:900;margin-bottom:4px}
+.login-sub{color:rgba(255,255,255,.4);font-size:.82rem;margin-bottom:30px;line-height:1.6}
+.login-field{position:relative;margin-bottom:14px}
+.login-field i{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.3);font-size:.85rem}
+.login-field input{
+  width:100%;padding:13px 42px 13px 16px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;color:white;font-family:'Cairo';font-size:.93rem;outline:none;
+  transition:border-color .2s;
+}
+.login-field input::placeholder{color:rgba(255,255,255,.28)}
+.login-field input:focus{border-color:var(--water-lt)}
+.login-btn{
+  width:100%;padding:13px;margin-top:6px;
+  background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;
+  border:none;border-radius:12px;font-family:'Cairo';font-size:.98rem;font-weight:900;
+  cursor:pointer;box-shadow:0 4px 20px rgba(2,136,209,.4);
+  transition:transform .15s,box-shadow .15s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(2,136,209,.5)}
+.login-err{color:#f87171;font-size:.82rem;margin-top:10px;min-height:18px}
+
+/* ══ APP LAYOUT ══ */
+#app{display:none;height:100vh}
+body.logged-in #loginScreen{display:none}
+body.logged-in #app{display:flex}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:255px;background:var(--sidebar);
+  border-left:1px solid rgba(255,255,255,.06);
+  display:flex;flex-direction:column;flex-shrink:0;z-index:100;
+  transition:width .28s cubic-bezier(.4,0,.2,1);overflow:hidden;
+}
+.sidebar.collapsed{width:64px}
+.sb-top{
+  padding:18px 14px;border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;gap:10px;min-height:72px;
+}
+.sb-logo{width:38px;height:38px;flex-shrink:0;border-radius:10px;object-fit:contain;background:rgba(255,255,255,.05);padding:3px}
+.sb-title{color:var(--water-lt);font-size:.9rem;font-weight:900;white-space:nowrap;overflow:hidden;flex:1}
+.sidebar.collapsed .sb-title{opacity:0;pointer-events:none}
+.btn-collapse{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:.88rem;padding:5px;border-radius:6px;transition:.15s;flex-shrink:0}
+.btn-collapse:hover{color:var(--water-lt);background:rgba(255,255,255,.06)}
+
+.sb-nav{padding:10px 6px;flex:1;overflow-y:auto;overflow-x:hidden}
+.sb-lbl{color:rgba(255,255,255,.22);font-size:.62rem;font-weight:700;padding:10px 10px 4px;letter-spacing:1.2px;text-transform:uppercase;white-space:nowrap}
+.sidebar.collapsed .sb-lbl{opacity:0}
+.nav-btn{
+  width:100%;padding:10px 11px;margin-bottom:3px;
+  background:transparent;border:none;color:rgba(255,255,255,.5);
+  text-align:right;font-family:'Cairo';cursor:pointer;border-radius:10px;
+  transition:.18s;display:flex;align-items:center;gap:11px;font-size:.85rem;
+  white-space:nowrap;overflow:hidden;
+}
+.nav-btn i{width:20px;text-align:center;flex-shrink:0;font-size:.9rem}
+.nav-btn span{overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .nav-btn span{display:none}
+.nav-btn:hover{background:rgba(41,182,246,.1);color:var(--water-lt)}
+.nav-btn.active{
+  background:linear-gradient(135deg,rgba(2,136,209,.22),rgba(21,101,192,.15));
+  color:var(--water-lt);font-weight:700;
+  border-right:3px solid var(--water-lt);
+}
+.sb-footer{padding:10px 6px;border-top:1px solid rgba(255,255,255,.06)}
+.user-chip{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);
+}
+.user-av{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--water),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;font-weight:900;color:white;
+}
+.user-details{overflow:hidden;flex:1}
+.user-nm{color:white;font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-rl{color:rgba(255,255,255,.3);font-size:.68rem}
+.sidebar.collapsed .user-details{display:none}
+.btn-logout{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;padding:4px;font-size:.88rem;transition:.15s;flex-shrink:0}
+.btn-logout:hover{color:#f87171}
+
+/* ══ MAIN ══ */
+.main{flex:1;overflow-y:auto;background:var(--surface);min-width:0}
+.tab-section{display:none}
+.tab-section.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:13px 22px;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-size:1rem;font-weight:900;color:var(--text);display:flex;align-items:center;gap:8px}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ══ KPI ══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi-card{
+  background:var(--card);border-radius:14px;padding:18px;
+  border-right:4px solid var(--blue-lt);box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:12px;transition:.2s;
+}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(11,26,45,.12)}
+.kpi-ic{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.kpi-num{font-size:1.75rem;font-weight:900;color:var(--text);line-height:1}
+.kpi-lbl{font-size:.72rem;color:var(--text-lt);margin-top:3px}
+
+/* ══ MAP ══ */
+.map-wrap{border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border);position:relative}
+#map{height:480px;width:100%;background:#dde8f0}
+.map-filters{
+  position:absolute;top:12px;right:12px;z-index:400;
+  background:white;border-radius:12px;padding:12px 14px;
+  box-shadow:0 4px 18px rgba(0,0,0,.14);display:flex;flex-direction:column;gap:8px;min-width:190px;
+}
+.map-filters select{
+  padding:7px 10px;border:1px solid var(--border);border-radius:8px;
+  font-family:'Cairo';font-size:.8rem;color:var(--text);background:white;outline:none;cursor:pointer;
+}
+.map-legend{
+  position:absolute;bottom:20px;right:12px;z-index:400;
+  background:white;border-radius:10px;padding:9px 13px;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);font-size:.73rem;
+}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.leg-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.map-title-badge{
+  position:absolute;top:12px;left:12px;z-index:400;
+  background:var(--navy);color:var(--water-lt);padding:7px 14px;
+  border-radius:8px;font-size:.8rem;font-weight:700;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+
+/* ══ CARD ══ */
+.card{background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-title{font-size:.9rem;font-weight:900;color:var(--text)}
+.card-body{padding:18px 20px}
+
+/* ══ BUTTONS ══ */
+.btn{padding:9px 16px;border:none;border-radius:9px;font-family:'Cairo';font-size:.83rem;font-weight:700;cursor:pointer;transition:.18s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{filter:brightness(.92)}
+.btn-primary{background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;box-shadow:0 3px 10px rgba(2,136,209,.3)}
+.btn-primary:hover{transform:translateY(-1px);filter:none;box-shadow:0 5px 16px rgba(2,136,209,.4)}
+.btn-dark{background:var(--navy);color:white}
+.btn-danger{background:#fee2e2;color:#991b1b}
+.btn-success{background:#d1fae5;color:#065f46}
+.btn-warn{background:#fef3c7;color:#92400e}
+.btn-ghost{background:#f1f5f9;color:var(--text-lt)}
+
+/* ══ TABLE ══ */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{
+  background:var(--navy);color:rgba(255,255,255,.82);
+  font-size:.73rem;font-weight:700;padding:11px 13px;
+  text-align:right;letter-spacing:.3px;white-space:nowrap;
+}
+thead th:first-child{border-radius:0 0 0 0}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:hover{background:#f5f8ff}
+tbody td{padding:11px 13px;font-size:.83rem;color:var(--text);vertical-align:middle}
+
+/* ══ BADGES ══ */
+.badge{padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:700;display:inline-block}
+.bg-green{background:#d1fae5;color:#065f46}
+.bg-yellow{background:#fef3c7;color:#92400e}
+.bg-red{background:#fee2e2;color:#991b1b}
+.bg-gray{background:#f1f5f9;color:#475569}
+.bg-blue{background:#dbeafe;color:#1e40af}
+
+/* ══ PROGRESS ══ */
+.prog-bar{height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;min-width:80px}
+.prog-fill{height:100%;border-radius:4px;transition:width .4s}
+
+/* ══ SEARCH ══ */
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-wrap i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-lt);font-size:.82rem;pointer-events:none}
+.search-wrap input{
+  width:100%;padding:9px 34px 9px 13px;border:1px solid var(--border);
+  border-radius:9px;font-family:'Cairo';font-size:.85rem;color:var(--text);
+  background:white;outline:none;transition:border-color .18s;
+}
+.search-wrap input:focus{border-color:var(--water)}
+.filter-sel{
+  padding:9px 12px;border:1px solid var(--border);border-radius:9px;
+  font-family:'Cairo';font-size:.83rem;color:var(--text);background:white;outline:none;cursor:pointer;
+}
+.filter-sel:focus{border-color:var(--water)}
+
+/* ══ MODAL ══ */
+.modal-ov{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(11,26,45,.65);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:18px;
+  animation:fadeUp .2s;
+}
+.modal-ov.show{display:flex}
+.modal-card{
+  background:white;border-radius:18px;width:100%;max-width:680px;
+  max-height:92vh;overflow-y:auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.28);
+  animation:popIn .28s cubic-bezier(.34,1.3,.64,1);
+}
+.modal-card.sm{max-width:420px}
+@keyframes popIn{from{transform:translateY(20px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-head{
+  background:linear-gradient(135deg,var(--navy),var(--navy-lt));
+  padding:18px 22px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.modal-title{color:var(--water-lt);font-size:.95rem;font-weight:900}
+.modal-sub{color:rgba(255,255,255,.4);font-size:.75rem;margin-top:1px}
+.btn-close{background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:1rem;padding:4px;border-radius:6px;transition:.15s}
+.btn-close:hover{color:#f87171;background:rgba(255,255,255,.06)}
+.modal-body{padding:22px}
+.modal-foot{
+  padding:14px 22px;background:#f8fafc;border-top:1px solid var(--border);
+  display:flex;gap:9px;justify-content:flex-end;
+  position:sticky;bottom:0;
+}
+
+/* ══ FORM ══ */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:.75rem;font-weight:700;color:var(--text-lt)}
+.fg input,.fg select,.fg textarea{
+  padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'Cairo';font-size:.88rem;color:var(--text);background:white;
+  outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:var(--water);box-shadow:0 0 0 3px rgba(2,136,209,.1);
+}
+.fg textarea{resize:vertical;min-height:66px}
+.fg input[type=range]{padding:0;border:none;box-shadow:none;accent-color:var(--water);cursor:pointer}
+.fg input[type=range]:focus{box-shadow:none}
+.form-sep{grid-column:1/-1;font-size:.68rem;font-weight:900;color:var(--water);padding:6px 0;border-bottom:1px solid var(--border);letter-spacing:.8px;text-transform:uppercase;margin-top:4px}
+.slider-row{display:flex;align-items:center;gap:10px}
+.slider-row input{flex:1}
+.slider-num{font-size:1rem;font-weight:900;color:var(--water);min-width:42px;text-align:center}
+.hint-box{
+  grid-column:1/-1;background:#f0f9ff;border-radius:9px;padding:10px 14px;
+  border:1px dashed #7dd3fc;font-size:.77rem;color:#0369a1;
+}
+
+/* ══ DETAIL VIEW ══ */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.detail-cell{background:#f8fafc;border-radius:9px;padding:10px 12px;border:1px solid var(--border)}
+.detail-lbl{font-size:.68rem;color:var(--text-lt);font-weight:700;margin-bottom:2px}
+.detail-val{font-size:.86rem;font-weight:700;color:var(--text)}
+
+/* ══ REPORTS ══ */
+.reports-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.report-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.report-title{font-size:.88rem;font-weight:900;color:var(--text);margin-bottom:2px}
+.report-sub{font-size:.73rem;color:var(--text-lt);margin-bottom:14px}
+.bar-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bar-lbl{font-size:.75rem;color:var(--text-lt);width:110px;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:20px;background:#f1f5f9;border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-left:6px;font-size:.68rem;color:white;font-weight:700;transition:width .6s ease}
+.bar-cnt{font-size:.8rem;font-weight:700;color:var(--text);min-width:28px}
+
+/* ══ USERS ══ */
+.users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+.user-card{background:var(--card);border-radius:12px;padding:16px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.uc-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--water),var(--blue));display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:white;flex-shrink:0}
+.uc-info{flex:1;overflow:hidden}
+.uc-name{font-size:.88rem;font-weight:700;color:var(--text)}
+.uc-meta{font-size:.73rem;color:var(--text-lt);margin-top:2px}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;
+  padding:11px 22px;border-radius:12px;font-family:'Cairo';font-size:.88rem;font-weight:700;
+  color:white;box-shadow:0 8px 28px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;
+  animation:toastIn .3s;pointer-events:none;
+}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(16px);opacity:0}to{transform:translateX(-50%);opacity:1}}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+.toast.info{background:var(--navy-lt)}
+
+/* ══ SPINNER ══ */
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spinning .7s linear infinite}
+@keyframes spinning{to{transform:rotate(360deg)}}
+.big-spin{width:38px;height:38px;border:3px solid #e2e8f0;border-top-color:var(--water);border-radius:50%;animation:spinning .8s linear infinite}
+.page-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;height:180px;gap:12px;color:var(--text-lt);font-size:.88rem}
+
+/* ══ EMPTY ══ */
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-lt)}
+.empty-state .empty-ic{font-size:2.5rem;margin-bottom:12px}
+.empty-state p{font-size:.88rem}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .reports-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+  .sidebar{position:absolute;height:100%;transform:translateX(100%);transition:transform .28s}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.3)}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .form-grid{grid-template-columns:1fr}
+  .main{width:100%}
+  .topbar{padding:11px 14px}
+  .tab-content{padding:12px}
+}
+
+/* ══ PRINT ══ */
+@media print{
+  .sidebar,.topbar,.no-print,.modal-ov{display:none!important}
+  .main{overflow:visible}
+  .tab-section{display:block!important}
+  #tab-wells{display:block!important}
+}
+
+/* leaflet popup arabic */
+.leaflet-popup-content{direction:rtl;font-family:'Cairo',sans-serif;padding:0!important}
+.leaflet-popup-content-wrapper{border-radius:12px!important;padding:0!important;overflow:hidden}
+.wp-head{background:var(--navy);color:var(--water-lt);padding:10px 14px;font-weight:900;font-size:.88rem}
+.wp-body{padding:10px 14px;font-size:.78rem}
+.wp-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid #f1f5f9}
+.wp-row:last-child{border:none}
+.wp-row span{color:var(--text-lt)}
+.wp-row b{color:var(--text);text-align:left}
+.wp-prog{height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin:8px 0 4px}
+.wp-prog-fill{height:100%;border-radius:4px}
+.wp-pct{font-size:.78rem;font-weight:900;text-align:left}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <img class="login-logo" src="https://i.ibb.co/rf5pWjnT/image.png" alt="شعار">
+    <div class="login-title">منظومة متابعة الآبار</div>
+    <div class="login-sub">الجهاز التنفيذي لحفر وصيانة<br>آبار المياه — ليبيا 2026</div>
+    <div class="login-field">
+      <i class="fas fa-user"></i>
+      <input type="text" id="li_user" placeholder="اسم المستخدم" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <i class="fas fa-lock"></i>
+      <input type="password" id="li_pass" placeholder="كلمة المرور"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()" id="loginBtn">
+      <i class="fas fa-sign-in-alt"></i> دخول إلى النظام
+    </button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-top">
+      <img class="sb-logo" src="https://i.ibb.co/rf5pWjnT/image.png" alt="">
+      <span class="sb-title">منظومة الآبار</span>
+      <button class="btn-collapse" onclick="toggleSidebar()" title="طي القائمة">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-lbl">الرئيسية</div>
+      <button class="nav-btn active" onclick="showTab('dashboard',this)">
+        <i class="fas fa-map-marked-alt"></i><span>لوحة التحكم</span>
+      </button>
+      <button class="nav-btn" onclick="showTab('wells',this)">
+        <i class="fas fa-water"></i><span>قائمة الآبار</span>
+      </button>
+      <div class="sb-lbl">التحليل</div>
+      <button class="nav-btn" onclick="showTab('reports',this)">
+        <i class="fas fa-chart-bar"></i><span>التقارير</span>
+      </button>
+      <div class="sb-lbl admin-lbl" style="display:none">الإدارة</div>
+      <button class="nav-btn admin-nav" style="display:none" onclick="showTab('users',this)">
+        <i class="fas fa-users-cog"></i><span>المستخدمون</span>
+      </button>
+    </div>
+    <div class="sb-footer">
+      <div class="user-chip">
+        <div class="user-av" id="userAv">م</div>
+        <div class="user-details">
+          <div class="user-nm" id="userNm">—</div>
+          <div class="user-rl" id="userRl">—</div>
+        </div>
+        <button class="btn-logout" onclick="doLogout()" title="تسجيل الخروج">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainArea">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="tab-dashboard" class="tab-section active">
+      <div class="topbar">
+        <div class="topbar-title">
+          <i class="fas fa-map-marked-alt" style="color:var(--water)"></i>
+          لوحة التحكم — الخريطة التفاعلية
+        </div>
+        <div class="topbar-actions no-print">
+          <button class="btn btn-ghost" onclick="refreshAll()">
+            <i class="fas fa-sync" id="refreshIcon"></i> تحديث
+          </button>
+          <button class="btn btn-dark" onclick="window.print()">
+            <i class="fas fa-print"></i> طباعة
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px">
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi-card">
+            <div class="kpi-ic" style="background:#dbeafe">
+              <i class="fas fa-water" style="color:var(--blue-lt)"></i>
+            </div>
+            <div>
+              <div class="kpi-num" id="kpi-total">—</div>
+              <div class="kpi-lbl">إجمالي الآبار</div>
+            </div>
+          </div>
+          <div class="kpi-card" style="border-color:var(--green)">
+            <div class="kpi-ic" style="background:#d1fae5">
+              <i class="fas fa-check-circle" style="color:var(--green)"></i>
+            </div>
+            <div>
+              <div class="kpi-num" id="kpi-ready" style="color:var(--green)">—</div>
+              <div class="kpi-lbl">جاهزة وتعمل</div>
+            </div>
+          </div>
+          <div class="kpi-card" style="border-color:var(--yellow)">
+            <div class="kpi-ic" style="background:#fef3c7">
+              <i class="fas fa-hard-hat" style="color:#d97706"></i>
+            </div>
+            <div>
+              <div class="kpi-num" id="kpi-inprog" style="color:#d97706">—</div>
+              <div class="kpi-lbl">قيد التنفيذ</div>
+            </div>
+          </div>
+          <div class="kpi-card" style="border-color:var(--red)">
+            <div class="kpi-ic" style="background:#fee2e2">
+              <i class="fas fa-exclamation-triangle" style="color:var(--red)"></i>
+            </div>
+            <div>
+              <div class="kpi-num" id="kpi-stopped" style="color:var(--red)">—</div>
+              <div class="kpi-lbl">متوقفة / خارج الخدمة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map toggle buttons -->
+        <div style="display:flex;gap:8px;margin-bottom:10px" class="no-print">
+          <button id="btnMapDynamic" onclick="switchMap('dynamic')"
+            style="padding:8px 16px;border:none;border-radius:9px;font-family:'Cairo';font-size:.82rem;font-weight:700;cursor:pointer;
+                   background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;
+                   box-shadow:0 3px 10px rgba(2,136,209,.3);display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-map-marker-alt"></i> الخريطة التفاعلية
+          </button>
+          <button id="btnMapGoogle" onclick="switchMap('google')"
+            style="padding:8px 16px;border:none;border-radius:9px;font-family:'Cairo';font-size:.82rem;font-weight:700;cursor:pointer;
+                   background:#f1f5f9;color:var(--text-lt);display:flex;align-items:center;gap:6px;">
+            <i class="fab fa-google"></i> خريطة Google My Maps
+          </button>
+        </div>
+
+        <div class="map-wrap">
+          <!-- Dynamic Leaflet map -->
+          <div id="mapDynamicWrap" style="position:relative">
+            <div id="map"></div>
+            <div class="map-title-badge">🇱🇾 خريطة الآبار — ليبيا</div>
+            <div class="map-filters no-print">
+              <select id="mapFCity" onchange="applyMapFilters()">
+                <option value="">كل المدن</option>
+              </select>
+              <select id="mapFStatus" onchange="applyMapFilters()">
+                <option value="">كل الحالات</option>
+                <option value="جاهز">✅ جاهز</option>
+                <option value="قيد التنفيذ">🔧 قيد التنفيذ</option>
+                <option value="متوقف">⚠️ متوقف</option>
+                <option value="خارج الخدمة">❌ خارج الخدمة</option>
+              </select>
+            </div>
+            <div class="map-legend">
+              <div style="font-size:.68rem;font-weight:900;color:#475569;margin-bottom:5px">الحالات</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#28a745"></div>جاهز</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#ffc107"></div>قيد التنفيذ</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#dc3545"></div>متوقف</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#4a5568"></div>خارج الخدمة</div>
+            </div>
+          </div>
+          <!-- Google My Maps iframe -->
+          <div id="mapGoogleWrap" style="display:none">
+            <iframe id="googleMapFrame"
+              src="https://www.google.com/maps/d/embed?mid=12N_azPXuRum4ve50N5_2O9KE5rzlzSY&ehbc=2E312F&noprof=1"
+              style="width:100%;height:480px;border:none;display:block"
+              allowfullscreen loading="lazy">
+            </iframe>
+            <div style="position:absolute;top:12px;left:12px;z-index:10;
+                        background:var(--navy);color:var(--water-lt);padding:7px 14px;
+                        border-radius:8px;font-size:.78rem;font-weight:700;
+                        box-shadow:0 4px 12px rgba(0,0,0,.2);">
+              🗺️ Google My Maps — خريطة الجهاز التنفيذي
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WELLS ── -->
+    <div id="tab-wells" class="tab-section">
+      <div class="topbar">
+        <div class="topbar-title">
+          <i class="fas fa-water" style="color:var(--water)"></i>
+          قائمة الآبار
+        </div>
+        <div class="topbar-actions no-print">
+          <button class="btn btn-primary" id="btnAddWell" onclick="openWellModal()">
+            <i class="fas fa-plus"></i> إضافة بئر
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px">
+        <div class="card">
+          <div class="card-head">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1">
+              <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="wellSearch" placeholder="ابحث برقم البئر أو المدينة أو الشركة…" oninput="filterWells()">
+              </div>
+              <select class="filter-sel" id="tblFStatus" onchange="filterWells()">
+                <option value="">كل الحالات</option>
+                <option value="جاهز">جاهز</option>
+                <option value="قيد التنفيذ">قيد التنفيذ</option>
+                <option value="متوقف">متوقف</option>
+                <option value="خارج الخدمة">خارج الخدمة</option>
+              </select>
+              <select class="filter-sel" id="tblFCity" onchange="filterWells()">
+                <option value="">كل المدن</option>
+              </select>
+              <button class="btn btn-ghost no-print" onclick="printWellsTable()">
+                <i class="fas fa-file-export"></i> تصدير
+              </button>
+            </div>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>رقم البئر</th>
+                  <th>المدينة / المنطقة</th>
+                  <th>نوع العمل</th>
+                  <th>الإنجاز</th>
+                  <th>الحالة</th>
+                  <th>الشركة المنفذة</th>
+                  <th>آخر تحديث</th>
+                  <th class="no-print">إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="wellsTbody">
+                <tr>
+                  <td colspan="9" style="text-align:center;padding:40px">
+                    <div class="big-spin" style="margin:0 auto 10px"></div>
+                    <div style="color:var(--text-lt);font-size:.85rem">جاري تحميل البيانات…</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="wellsCount" style="padding:10px 18px;font-size:.75rem;color:var(--text-lt);border-top:1px solid var(--border)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="tab-reports" class="tab-section">
+      <div class="topbar">
+        <div class="topbar-title">
+          <i class="fas fa-chart-bar" style="color:var(--water)"></i>
+          التقارير والإحصائيات
+        </div>
+        <div class="topbar-actions no-print">
+          <button class="btn btn-dark" onclick="window.print()">
+            <i class="fas fa-print"></i> طباعة
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px">
+        <div class="reports-grid" id="reportsGrid">
+          <div class="report-card">
+            <div class="report-title">📊 توزيع الحالات التشغيلية</div>
+            <div class="report-sub">نسبة كل حالة من إجمالي الآبار</div>
+            <div id="rptStatus"></div>
+          </div>
+          <div class="report-card">
+            <div class="report-title">🗺️ توزيع الآبار بالمدن</div>
+            <div class="report-sub">أعلى 10 مدن من حيث عدد الآبار</div>
+            <div id="rptCity"></div>
+          </div>
+          <div class="report-card" style="grid-column:1/-1">
+            <div class="report-title">📈 متوسط نسبة الإنجاز حسب المدينة</div>
+            <div class="report-sub">متوسط الإنجاز لكل آبار المدينة</div>
+            <div id="rptProgress"></div>
+          </div>
+          <div class="report-card">
+            <div class="report-title">🏗️ نوع العمل</div>
+            <div class="report-sub">حفر جديد مقابل صيانة</div>
+            <div id="rptWorkType"></div>
+          </div>
+          <div class="report-card">
+            <div class="report-title">📋 ملخص إحصائي</div>
+            <div class="report-sub">أرقام جوهرية سريعة</div>
+            <div id="rptSummary" style="margin-top:6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS (admin) ── -->
+    <div id="tab-users" class="tab-section">
+      <div class="topbar">
+        <div class="topbar-title">
+          <i class="fas fa-users-cog" style="color:var(--water)"></i>
+          إدارة المستخدمين
+        </div>
+        <div class="topbar-actions no-print">
+          <button class="btn btn-primary" onclick="openUserModal()">
+            <i class="fas fa-user-plus"></i> إضافة مستخدم
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px">
+        <div id="usersGrid" class="users-grid">
+          <div class="page-loader"><div class="big-spin"></div>جاري التحميل…</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Well Modal (add / edit) -->
+<div class="modal-ov" id="wellModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="wmTitle">إضافة بئر جديد</div>
+        <div class="modal-sub" id="wmSub">أدخل بيانات البئر الجديد</div>
+      </div>
+      <button class="btn-close" onclick="closeModal('wellModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+
+        <div class="form-sep">📋 البيانات الأساسية</div>
+
+        <div class="fg">
+          <label>رقم البئر العام *</label>
+          <input type="text" id="wf_wellId" placeholder="مثال: W-LY-001">
+        </div>
+        <div class="fg">
+          <label>المنطقة / المدينة *</label>
+          <input type="text" id="wf_cityRegion" placeholder="مثال: طرابلس — سوق الجمعة">
+        </div>
+
+        <div class="form-sep">📍 الموقع الجغرافي</div>
+
+        <div class="fg">
+          <label>خط العرض (Latitude)</label>
+          <input type="number" id="wf_lat" placeholder="مثال: 32.8872" step="0.00001">
+        </div>
+        <div class="fg">
+          <label>خط الطول (Longitude)</label>
+          <input type="number" id="wf_lng" placeholder="مثال: 13.1913" step="0.00001">
+        </div>
+        <div class="hint-box full">
+          <i class="fas fa-info-circle" style="color:var(--water);margin-left:5px"></i>
+          <b>كيف أحصل على الإحداثيات؟</b> افتح Google Maps ← انقر بزر الفأرة الأيمن على الموقع ← اضغط على الإحداثيات
+        </div>
+
+        <div class="form-sep">⚙️ بيانات العمل الفني</div>
+
+        <div class="fg">
+          <label>نوع العمل المستهدف *</label>
+          <select id="wf_workType">
+            <option value="">اختر نوع العمل</option>
+            <option value="حفر جديد">حفر جديد</option>
+            <option value="صيانة">صيانة بئر قائم</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>الحالة التشغيلية *</label>
+          <select id="wf_status">
+            <option value="">اختر الحالة</option>
+            <option value="جاهز">✅ جاهز</option>
+            <option value="قيد التنفيذ">🔧 قيد التنفيذ</option>
+            <option value="متوقف">⚠️ متوقف</option>
+            <option value="خارج الخدمة">❌ خارج الخدمة</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>العمق الحالي (متر)</label>
+          <input type="number" id="wf_curDepth" placeholder="0" min="0">
+        </div>
+        <div class="fg">
+          <label>العمق المستهدف (متر)</label>
+          <input type="number" id="wf_tgtDepth" placeholder="0" min="0">
+        </div>
+        <div class="fg">
+          <label>الإنتاجية المستهدفة (م³/يوم)</label>
+          <input type="number" id="wf_prod" placeholder="0" min="0">
+        </div>
+        <div class="fg">
+          <label>نوع وقوة المضخة</label>
+          <input type="text" id="wf_pump" placeholder="مثال: طاردة 15HP">
+        </div>
+        <div class="fg">
+          <label>الشركة المنفذة / المقاول</label>
+          <input type="text" id="wf_contractor" placeholder="اسم الشركة">
+        </div>
+        <div class="fg">
+          <label>لون الأيقونة المستهدف</label>
+          <select id="wf_iconColor">
+            <option value="">اختر اللون</option>
+            <option value="أخضر">🟢 أخضر</option>
+            <option value="أصفر">🟡 أصفر</option>
+            <option value="أحمر">🔴 أحمر</option>
+            <option value="رمادي">⚫ رمادي</option>
+            <option value="أزرق">🔵 أزرق</option>
+          </select>
+        </div>
+
+        <div class="form-sep">📊 نسبة الإنجاز</div>
+
+        <div class="fg full">
+          <label>نسبة الإنجاز — <span id="pctLabel" style="color:var(--water);font-weight:900">0%</span></label>
+          <div class="slider-row">
+            <input type="range" id="wf_pct" min="0" max="100" value="0"
+              oninput="document.getElementById('pctLabel').textContent=this.value+'%';document.getElementById('pctNum').textContent=this.value+'%'">
+            <div class="slider-num" id="pctNum">0%</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('wellModal')">إلغاء</button>
+      <button class="btn btn-primary" id="wellSaveBtn" onclick="submitWell()">
+        <i class="fas fa-save"></i> حفظ البئر
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Well Detail -->
+<div class="modal-ov" id="wellDetailModal">
+  <div class="modal-card" style="max-width:540px">
+    <div class="modal-head" id="wdHead">
+      <div>
+        <div class="modal-title" id="wd_id">—</div>
+        <div class="modal-sub" id="wd_loc">—</div>
+      </div>
+      <button class="btn-close" onclick="closeModal('wellDetailModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="wdBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('wellDetailModal')">إغلاق</button>
+      <button class="btn btn-warn" id="wdEditBtn" onclick="editFromDetail()">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+      <button class="btn btn-danger" id="wdDelBtn" onclick="deleteFromDetail()">
+        <i class="fas fa-trash"></i> حذف
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-ov" id="userModal">
+  <div class="modal-card sm">
+    <div class="modal-head">
+      <div class="modal-title" id="umTitle">إضافة مستخدم</div>
+      <button class="btn-close" onclick="closeModal('userModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="fg">
+          <label>الاسم الكامل</label>
+          <input type="text" id="uf_name" placeholder="الاسم الرباعي">
+        </div>
+        <div class="fg">
+          <label>اسم المستخدم (بالإنجليزي)</label>
+          <input type="text" id="uf_user" placeholder="username" dir="ltr">
+        </div>
+        <div class="fg">
+          <label>كلمة المرور</label>
+          <input type="text" id="uf_pass" placeholder="••••••••" dir="ltr">
+        </div>
+        <div class="fg">
+          <label>مستوى الصلاحية</label>
+          <select id="uf_role">
+            <option value="مشاهد">مشاهد — يرى البيانات فقط</option>
+            <option value="مهندس">مهندس — يضيف ويعدل البيانات</option>
+            <option value="مدير">مدير — صلاحيات كاملة</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="submitUser()">
+        <i class="fas fa-save"></i> حفظ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="modal-ov" id="delModal">
+  <div class="modal-card sm">
+    <div class="modal-head" style="background:linear-gradient(135deg,#7f1d1d,#991b1b)">
+      <div class="modal-title"><i class="fas fa-exclamation-triangle" style="margin-left:8px"></i>تأكيد الحذف</div>
+      <button class="btn-close" onclick="closeModal('delModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:28px">
+      <div style="font-size:2.2rem;margin-bottom:10px">🗑️</div>
+      <div style="font-weight:700;color:var(--text)" id="delConfirmTxt">هل أنت متأكد من الحذف؟</div>
+      <div style="font-size:.8rem;color:var(--text-lt);margin-top:7px">لا يمكن التراجع عن هذا الإجراء</div>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="btn btn-ghost" onclick="closeModal('delModal')">إلغاء</button>
+      <button class="btn" style="background:var(--red);color:white" id="delConfirmBtn">
+        <i class="fas fa-trash"></i> تأكيد الحذف
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPT ══════════════ -->
+<script>
+'use strict';
+
+/* ════════════════════════════════
+   CONSTANTS
+════════════════════════════════ */
+const STATUS_COLOR = {
+  'جاهز':          '#28a745',
+  'قيد التنفيذ':   '#ffc107',
+  'متوقف':         '#dc3545',
+  'خارج الخدمة':   '#4a5568'
+};
+const STATUS_BADGE = {
+  'جاهز':         'bg-green',
+  'قيد التنفيذ':  'bg-yellow',
+  'متوقف':        'bg-red',
+  'خارج الخدمة':  'bg-gray'
+};
+
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+let _session   = null;
+let _wells     = [];
+let _map       = null;
+let _markers   = [];
+let _editWellId = null;
+let _editUserId = null;
+let _pendingDel = null;
+let _pendingDelType = null;
+let _activeDetailId = null;
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+window.onload = () => {
+  document.getElementById('li_user').focus();
+};
+
+/* ════════════════════════════════
+   MAP — Leaflet + OpenStreetMap
+════════════════════════════════ */
+function initMap() {
+  _map = L.map('map', { zoomControl: true, attributionControl: false })
+          .setView([27.0, 17.5], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap contributors'
+  }).addTo(_map);
+  L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(_map);
+}
+
+function makeMarkerSvg(color) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 38" width="26" height="38">
+    <filter id="s"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity=".25"/></filter>
+    <path filter="url(#s)" d="M13 1C6.9 1 2 5.9 2 12c0 7.5 11 25 11 25S24 19.5 24 12C24 5.9 19.1 1 13 1z"
+          fill="${color}" stroke="white" stroke-width="1.5"/>
+    <circle cx="13" cy="12" r="5.5" fill="white" opacity=".92"/>
+  </svg>`;
+}
+
+function makeIcon(status) {
+  const color = STATUS_COLOR[status] || '#4a5568';
+  return L.divIcon({
+    html: makeMarkerSvg(color),
+    className: '', iconSize: [26, 38], iconAnchor: [13, 38], popupAnchor: [0, -40]
+  });
+}
+
+function buildPopupHtml(w) {
+  const color = STATUS_COLOR[w.status] || '#4a5568';
+  const pct   = parseInt(w.completion) || 0;
+  return `<div>
+    <div class="wp-head">${w.wellId} — ${w.cityRegion||'—'}</div>
+    <div class="wp-body">
+      <div class="wp-row"><span>الحالة</span><b style="color:${color}">${w.status||'—'}</b></div>
+      <div class="wp-row"><span>نوع العمل</span><b>${w.workType||'—'}</b></div>
+      <div class="wp-row"><span>العمق الحالي</span><b>${w.currentDepth||0} م</b></div>
+      <div class="wp-row"><span>العمق المستهدف</span><b>${w.targetDepth||0} م</b></div>
+      <div class="wp-row"><span>الإنتاجية</span><b>${w.productivity||0} م³/يوم</b></div>
+      <div class="wp-row"><span>الشركة</span><b>${w.contractor||'—'}</b></div>
+      <div class="wp-row"><span>المضخة</span><b>${w.pumpType||'—'}</b></div>
+      <div style="font-size:.73rem;font-weight:700;color:var(--text-lt);margin-top:8px">نسبة الإنجاز: <b style="color:${color}">${pct}%</b></div>
+      <div class="wp-prog"><div class="wp-prog-fill" style="width:${pct}%;background:${color}"></div></div>
+      ${w.notes ? `<div style="font-size:.7rem;color:#64748b;margin-top:6px;border-top:1px solid #f1f5f9;padding-top:5px">${w.notes}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderMapMarkers(wells) {
+  if (!_map) return;
+  _markers.forEach(m => _map.removeLayer(m));
+  _markers = [];
+  wells.forEach(w => {
+    const lat = parseFloat(w.lat);
+    const lng = parseFloat(w.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    if (lat === 0 && lng === 0) return;
+    const m = L.marker([lat, lng], { icon: makeIcon(w.status) });
+    m.bindPopup(buildPopupHtml(w), { maxWidth: 260, minWidth: 220 });
+    m.on('click', () => openWellDetail(w.wellId));
+    m.addTo(_map);
+    _markers.push(m);
+  });
+}
+
+function applyMapFilters() {
+  const city   = document.getElementById('mapFCity').value;
+  const status = document.getElementById('mapFStatus').value;
+  renderMapMarkers(_wells.filter(w =>
+    (!city   || w.cityRegion === city) &&
+    (!status || w.status     === status)
+  ));
+}
+
+/* ════════════════════════════════
+   AUTH
+════════════════════════════════ */
+function doLogin() {
+  const user = document.getElementById('li_user').value.trim();
+  const pass = document.getElementById('li_pass').value;
+  const err  = document.getElementById('loginErr');
+  const btn  = document.getElementById('loginBtn');
+  if (!user || !pass) { err.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; return; }
+  err.textContent = '';
+  btn.innerHTML = '<span class="spin"></span> جاري التحقق…';
+  btn.disabled  = true;
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول إلى النظام';
+      if (res.ok) {
+        _session = { username: user, role: res.role, name: res.name };
+        onLoginSuccess();
+      } else {
+        err.textContent = res.error || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+      }
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول إلى النظام';
+      err.textContent = 'فشل الاتصال: ' + e.message;
+    })
+    .login(user, pass);
+}
+
+function onLoginSuccess() {
+  document.body.classList.add('logged-in');
+  document.getElementById('userNm').textContent  = _session.name;
+  document.getElementById('userRl').textContent  = _session.role;
+  document.getElementById('userAv').textContent  = (_session.name || '؟').charAt(0);
+  if (_session.role === 'مدير') {
+    document.querySelectorAll('.admin-lbl,.admin-nav').forEach(el => el.style.display = '');
+  }
+  if (_session.role === 'مشاهد') {
+    document.getElementById('btnAddWell').style.display = 'none';
+  }
+  // نهيئ الخريطة بعد أن يصبح #app مرئياً — مهم جداً لـ Leaflet
+  setTimeout(() => {
+    initMap();
+    loadWells();
+  }, 50);
+}
+
+function doLogout() {
+  _session = null; _wells = [];
+  document.body.classList.remove('logged-in');
+  document.getElementById('li_pass').value = '';
+  document.getElementById('loginErr').textContent = '';
+}
+
+/* ════════════════════════════════
+   DATA LOADING
+════════════════════════════════ */
+function loadWells(callback) {
+  google.script.run
+    .withSuccessHandler(data => {
+      _wells = Array.isArray(data) ? data : [];
+      renderWellsTable(_wells);
+      renderMapMarkers(_wells);
+      updateKPIs(_wells);
+      updateReports(_wells);
+      syncFilterDropdowns(_wells);
+      if (typeof callback === 'function') callback();
+    })
+    .withFailureHandler(e => showToast('فشل تحميل البيانات: ' + e.message, 'error'))
+    .getWells();
+}
+
+function refreshAll() {
+  const icon = document.getElementById('refreshIcon');
+  icon.classList.add('fa-spin');
+  google.script.run
+    .withSuccessHandler(data => {
+      icon.classList.remove('fa-spin');
+      _wells = Array.isArray(data) ? data : [];
+      renderWellsTable(_wells);
+      renderMapMarkers(_wells);
+      updateKPIs(_wells);
+      updateReports(_wells);
+      syncFilterDropdowns(_wells);
+      showToast('تم التحديث بنجاح ✅', 'success');
+    })
+    .withFailureHandler(e => { icon.classList.remove('fa-spin'); showToast('فشل التحديث', 'error'); })
+    .getWells();
+}
+
+function syncFilterDropdowns(wells) {
+  const cities = [...new Set(wells.map(w => w.cityRegion).filter(Boolean))].sort();
+  ['mapFCity','tblFCity'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">كل المدن</option>`;
+    cities.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c; sel.appendChild(o);
+    });
+    sel.value = cur;
+  });
+}
+
+function updateKPIs(wells) {
+  document.getElementById('kpi-total').textContent   = wells.length;
+  document.getElementById('kpi-ready').textContent   = wells.filter(w => w.status === 'جاهز').length;
+  document.getElementById('kpi-inprog').textContent  = wells.filter(w => w.status === 'قيد التنفيذ').length;
+  document.getElementById('kpi-stopped').textContent = wells.filter(w => w.status === 'متوقف' || w.status === 'خارج الخدمة').length;
+}
+
+/* ════════════════════════════════
+   WELLS TABLE
+════════════════════════════════ */
+function renderWellsTable(data) {
+  const tbody = document.getElementById('wellsTbody');
+  document.getElementById('wellsCount').textContent = `عرض ${data.length} بئر`;
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
+      <div class="empty-ic">🔍</div><p>لا توجد نتائج مطابقة</p></div></td></tr>`;
+    return;
+  }
+  const canEdit = _session && _session.role !== 'مشاهد';
+  const canDel  = _session && _session.role === 'مدير';
+  tbody.innerHTML = data.map((w, i) => {
+    const pct   = parseInt(w.completion) || 0;
+    const color = STATUS_COLOR[w.status] || '#ccc';
+    const badge = STATUS_BADGE[w.status] || 'bg-gray';
+    return `<tr>
+      <td style="color:var(--text-lt);font-size:.75rem">${i+1}</td>
+      <td>
+        <button onclick="openWellDetail('${esc(w.wellId)}')"
+          style="background:none;border:none;cursor:pointer;color:var(--blue-lt);font-weight:700;font-size:.85rem;font-family:'Cairo'">
+          ${w.wellId}
+        </button>
+      </td>
+      <td style="font-size:.84rem;font-weight:600">${w.cityRegion||'—'}</td>
+      <td><span class="badge bg-blue">${w.workType||'—'}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+          <span style="font-size:.75rem;font-weight:700;color:${color};white-space:nowrap">${pct}%</span>
+        </div>
+      </td>
+      <td><span class="badge ${badge}">${w.status||'—'}</span></td>
+      <td style="font-size:.8rem">${w.contractor||'—'}</td>
+      <td style="font-size:.75rem;color:var(--text-lt)">${w.lastUpdate||'—'}</td>
+      <td class="no-print">
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-success" style="padding:5px 9px;font-size:.73rem"
+            onclick="openWellDetail('${esc(w.wellId)}')"><i class="fas fa-eye"></i></button>
+          ${canEdit ? `<button class="btn btn-warn" style="padding:5px 9px;font-size:.73rem"
+            onclick="openWellModal('${esc(w.wellId)}')"><i class="fas fa-edit"></i></button>` : ''}
+          ${canDel  ? `<button class="btn btn-danger" style="padding:5px 9px;font-size:.73rem"
+            onclick="confirmDelete('${esc(w.wellId)}','well')"><i class="fas fa-trash"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterWells() {
+  const q      = document.getElementById('wellSearch').value.toLowerCase();
+  const status = document.getElementById('tblFStatus').value;
+  const city   = document.getElementById('tblFCity').value;
+  const f = _wells.filter(w =>
+    (!q      || (w.wellId+(w.cityRegion||'')+(w.contractor||'')).toLowerCase().includes(q)) &&
+    (!status || w.status     === status) &&
+    (!city   || w.cityRegion === city)
+  );
+  renderWellsTable(f);
+}
+
+/* ════════════════════════════════
+   WELL MODAL
+════════════════════════════════ */
+function openWellModal(wellId = null) {
+  _editWellId = wellId;
+  const isEdit = !!wellId;
+  document.getElementById('wmTitle').textContent = isEdit ? 'تعديل بيانات البئر' : 'إضافة بئر جديد';
+  document.getElementById('wmSub').textContent   = isEdit ? 'عدّل البيانات ثم اضغط حفظ' : 'أدخل بيانات البئر الجديد كاملة';
+  if (!isEdit) {
+    clearWellForm();
+  } else {
+    const w = _wells.find(x => x.wellId === wellId);
+    if (w) fillWellForm(w);
+  }
+  openModal('wellModal');
+}
+
+function clearWellForm() {
+  ['wf_wellId','wf_cityRegion','wf_lat','wf_lng','wf_workType','wf_status',
+   'wf_curDepth','wf_tgtDepth','wf_prod','wf_pump','wf_contractor','wf_iconColor']
+  .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('wf_pct').value = 0;
+  document.getElementById('pctLabel').textContent = '0%';
+  document.getElementById('pctNum').textContent   = '0%';
+}
+
+function fillWellForm(w) {
+  document.getElementById('wf_wellId').value      = w.wellId       || '';
+  document.getElementById('wf_cityRegion').value  = w.cityRegion   || '';
+  document.getElementById('wf_lat').value         = w.lat          || '';
+  document.getElementById('wf_lng').value         = w.lng          || '';
+  document.getElementById('wf_workType').value    = w.workType     || '';
+  document.getElementById('wf_status').value      = w.status       || '';
+  document.getElementById('wf_curDepth').value    = w.currentDepth || '';
+  document.getElementById('wf_tgtDepth').value    = w.targetDepth  || '';
+  document.getElementById('wf_prod').value        = w.productivity || '';
+  document.getElementById('wf_pump').value        = w.pumpType     || '';
+  document.getElementById('wf_contractor').value  = w.contractor   || '';
+  document.getElementById('wf_iconColor').value   = w.iconColor    || '';
+  const pct = parseInt(w.completion) || 0;
+  document.getElementById('wf_pct').value         = pct;
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('pctNum').textContent   = pct + '%';
+}
+
+function submitWell() {
+  const data = {
+    wellId:       document.getElementById('wf_wellId').value.trim(),
+    cityRegion:   document.getElementById('wf_cityRegion').value.trim(),
+    lat:          document.getElementById('wf_lat').value,
+    lng:          document.getElementById('wf_lng').value,
+    workType:     document.getElementById('wf_workType').value,
+    status:       document.getElementById('wf_status').value,
+    currentDepth: document.getElementById('wf_curDepth').value,
+    targetDepth:  document.getElementById('wf_tgtDepth').value,
+    productivity: document.getElementById('wf_prod').value,
+    pumpType:     document.getElementById('wf_pump').value.trim(),
+    contractor:   document.getElementById('wf_contractor').value.trim(),
+    iconColor:    document.getElementById('wf_iconColor').value,
+    completion:   document.getElementById('wf_pct').value,
+    isEdit:       !!_editWellId,
+    originalId:   _editWellId || '',
+    user:         _session ? _session.username : '—'
+  };
+  if (!data.wellId)      { showToast('رقم البئر مطلوب', 'error'); return; }
+  if (!data.cityRegion)  { showToast('يرجى إدخال المنطقة / المدينة', 'error'); return; }
+  if (!data.status)      { showToast('يرجى اختيار الحالة التشغيلية', 'error'); return; }
+
+  const btn = document.getElementById('wellSaveBtn');
+  btn.innerHTML = '<span class="spin"></span> جاري الحفظ…';
+  btn.disabled  = true;
+
+  const savedLat = parseFloat(data.lat);
+  const savedLng = parseFloat(data.lng);
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ البئر';
+      btn.disabled  = false;
+      if (res.ok) {
+        closeModal('wellModal');
+        showToast(data.isEdit ? 'تم تحديث البئر بنجاح ✅' : 'تم إضافة البئر بنجاح ✅', 'success');
+        loadWells(() => {
+          // انتقل للخريطة وأظهر موقع البئر إن وُجدت إحداثيات
+          if (Number.isFinite(savedLat) && Number.isFinite(savedLng) && !(savedLat===0&&savedLng===0)) {
+            showTab('dashboard', document.querySelector('.nav-btn'));
+            setTimeout(() => {
+              if (_map) {
+                switchMap('dynamic');
+                _map.setView([savedLat, savedLng], 12);
+              }
+            }, 300);
+          }
+        });
+      } else {
+        showToast(res.error || 'حدث خطأ', 'error');
+      }
+    })
+    .withFailureHandler(e => {
+      btn.innerHTML = '<i class="fas fa-save"></i> حفظ البئر';
+      btn.disabled  = false;
+      showToast('فشل الاتصال: ' + e.message, 'error');
+    })
+    .saveWell(data);
+}
+
+/* ════════════════════════════════
+   WELL DETAIL
+════════════════════════════════ */
+function openWellDetail(wellId) {
+  const w = _wells.find(x => x.wellId === wellId);
+  if (!w) return;
+  _activeDetailId = wellId;
+  const color = STATUS_COLOR[w.status] || '#ccc';
+  const badge = STATUS_BADGE[w.status] || 'bg-gray';
+  const pct   = parseInt(w.completion) || 0;
+
+  document.getElementById('wd_id').textContent  = w.wellId;
+  document.getElementById('wd_loc').textContent = w.cityRegion || '—';
+
+  document.getElementById('wdBody').innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="font-size:.73rem;color:var(--text-lt);font-weight:700;margin-bottom:5px">نسبة الإنجاز الكلية</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1;height:12px;background:#e2e8f0;border-radius:6px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:6px;transition:width .5s"></div>
+        </div>
+        <span style="font-size:1.15rem;font-weight:900;color:${color}">${pct}%</span>
+      </div>
+    </div>
+    <div class="detail-grid">
+      ${dCell('الحالة التشغيلية', `<span class="badge ${badge}">${w.status||'—'}</span>`)}
+      ${dCell('نوع العمل', w.workType||'—')}
+      ${dCell('المنطقة / المدينة', w.cityRegion||'—')}
+      ${dCell('العمق الحالي', (w.currentDepth||0)+' م')}
+      ${dCell('العمق المستهدف', (w.targetDepth||0)+' م')}
+      ${dCell('الإنتاجية المستهدفة', (w.productivity||0)+' م³/يوم')}
+      ${dCell('نوع وقوة المضخة', w.pumpType||'—')}
+      ${dCell('الشركة المنفذة', w.contractor||'—')}
+      ${dCell('لون الأيقونة', w.iconColor||'—')}
+      ${w.lat&&w.lng ? dCell('الإحداثيات', w.lat+', '+w.lng) : ''}
+    </div>
+    ${w.notes ? `
+      <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;
+                  font-size:.84rem;color:var(--text-lt);border:1px solid var(--border)">
+        <b style="color:var(--text)">ملاحظات: </b>${w.notes}
+      </div>` : ''}
+  `;
+
+  const canEdit = _session && _session.role !== 'مشاهد';
+  const canDel  = _session && _session.role === 'مدير';
+  document.getElementById('wdEditBtn').style.display = canEdit ? '' : 'none';
+  document.getElementById('wdDelBtn').style.display  = canDel  ? '' : 'none';
+  openModal('wellDetailModal');
+}
+
+function dCell(lbl, val) {
+  return `<div class="detail-cell">
+    <div class="detail-lbl">${lbl}</div>
+    <div class="detail-val">${val}</div>
+  </div>`;
+}
+
+function editFromDetail()   { closeModal('wellDetailModal'); openWellModal(_activeDetailId); }
+function deleteFromDetail() { closeModal('wellDetailModal'); confirmDelete(_activeDetailId, 'well'); }
+
+/* ════════════════════════════════
+   DELETE
+════════════════════════════════ */
+function confirmDelete(id, type) {
+  _pendingDel     = id;
+  _pendingDelType = type;
+  document.getElementById('delConfirmTxt').textContent = `هل تريد حذف "${id}"؟`;
+  document.getElementById('delConfirmBtn').onclick = executeDelete;
+  openModal('delModal');
+}
+
+function executeDelete() {
+  const id   = _pendingDel;
+  const type = _pendingDelType;
+  closeModal('delModal');
+  const fn = type === 'well' ? 'deleteWell' : 'deleteUser';
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.ok) {
+        showToast('تم الحذف بنجاح', 'success');
+        if (type === 'well') loadWells();
+        else loadUsers();
+      } else {
+        showToast(res.error || 'فشل الحذف', 'error');
+      }
+    })
+    .withFailureHandler(e => showToast('فشل: ' + e.message, 'error'))
+    [fn](id);
+}
+
+/* ════════════════════════════════
+   REPORTS
+════════════════════════════════ */
+function updateReports(wells) {
+  const total = wells.length || 1;
+
+  // Status
+  const statuses = ['جاهز','قيد التنفيذ','متوقف','خارج الخدمة'];
+  document.getElementById('rptStatus').innerHTML = statuses.map(s => {
+    const cnt   = wells.filter(w => w.status === s).length;
+    const pct   = Math.round(cnt / total * 100);
+    const color = STATUS_COLOR[s] || '#ccc';
+    return barRow(s, cnt, pct, color, total);
+  }).join('');
+
+  // City
+  const cityMap = {};
+  wells.forEach(w => { if(w.cityRegion) cityMap[w.cityRegion] = (cityMap[w.cityRegion]||0)+1; });
+  const topCities = Object.entries(cityMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxC = topCities[0]?.[1] || 1;
+  document.getElementById('rptCity').innerHTML = topCities.map(([c,n]) =>
+    barRow(c, n, Math.round(n/maxC*100), 'var(--water)', maxC)
+  ).join('');
+
+  // Avg progress
+  const cityProg = {};
+  wells.forEach(w => {
+    if (!w.cityRegion) return;
+    if (!cityProg[w.cityRegion]) cityProg[w.cityRegion] = [];
+    cityProg[w.cityRegion].push(parseInt(w.completion)||0);
+  });
+  const avgProg = Object.entries(cityProg)
+    .map(([c,arr]) => [c, Math.round(arr.reduce((a,b)=>a+b,0)/arr.length)])
+    .sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('rptProgress').innerHTML = avgProg.map(([c,avg]) => {
+    const color = avg>=75 ? STATUS_COLOR['جاهز'] : avg>=40 ? STATUS_COLOR['قيد التنفيذ'] : STATUS_COLOR['متوقف'];
+    return barRow(c, avg+'%', avg, color, 100);
+  }).join('');
+
+  // Work type
+  const newDrill  = wells.filter(w => w.workType === 'حفر جديد').length;
+  const maintain  = wells.filter(w => w.workType === 'صيانة بئر قائم').length;
+  document.getElementById('rptWorkType').innerHTML = [
+    barRow('حفر جديد',          newDrill, Math.round(newDrill/total*100), 'var(--water)', total),
+    barRow('صيانة بئر قائم', maintain, Math.round(maintain/total*100), '#8b5cf6', total),
+  ].join('');
+
+  // Summary
+  const avgComp = wells.length
+    ? Math.round(wells.reduce((s,w) => s + (parseInt(w.completion)||0), 0) / wells.length)
+    : 0;
+  const withCoords = wells.filter(w => w.lat && w.lng).length;
+  document.getElementById('rptSummary').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${summCell('متوسط الإنجاز الكلي', avgComp+'%', 'var(--water)')}
+      ${summCell('آبار مرسومة على الخريطة', withCoords+'/'+wells.length, 'var(--green)')}
+      ${summCell('أعلى شركة تنفيذاً', topContractor(wells), 'var(--blue-lt)')}
+      ${summCell('آبار بدون إحداثيات', (wells.length-withCoords)+'', '#d97706')}
+    </div>`;
+}
+
+function barRow(label, count, pct, color, max) {
+  return `<div class="bar-row">
+    <div class="bar-lbl">${label}</div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width:${pct}%;background:${color}">
+        ${pct>8?count:''}
+      </div>
+    </div>
+    <div class="bar-cnt">${count}</div>
+  </div>`;
+}
+
+function summCell(lbl, val, color) {
+  return `<div style="background:#f8fafc;border-radius:9px;padding:10px 12px;border:1px solid var(--border)">
+    <div style="font-size:.68rem;color:var(--text-lt);font-weight:700;margin-bottom:2px">${lbl}</div>
+    <div style="font-size:.95rem;font-weight:900;color:${color}">${val}</div>
+  </div>`;
+}
+
+function topContractor(wells) {
+  const m = {};
+  wells.forEach(w => { if(w.contractor) m[w.contractor]=(m[w.contractor]||0)+1; });
+  const top = Object.entries(m).sort((a,b)=>b[1]-a[1])[0];
+  return top ? top[0] : '—';
+}
+
+/* ════════════════════════════════
+   USERS
+════════════════════════════════ */
+function loadUsers() {
+  document.getElementById('usersGrid').innerHTML =
+    '<div class="page-loader"><div class="big-spin"></div>جاري التحميل…</div>';
+  google.script.run
+    .withSuccessHandler(users => renderUsers(users || []))
+    .withFailureHandler(e => showToast('فشل تحميل المستخدمين', 'error'))
+    .getUsers();
+}
+
+function renderUsers(users) {
+  const grid = document.getElementById('usersGrid');
+  if (!users.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-ic">👥</div><p>لا يوجد مستخدمون مسجلون</p></div>';
+    return;
+  }
+  grid.innerHTML = users.map(u => `
+    <div class="user-card">
+      <div class="uc-av">${((u.fullName||u.username||'?').charAt(0))}</div>
+      <div class="uc-info">
+        <div class="uc-name">${u.fullName||u.username}</div>
+        <div class="uc-meta">${u.username} &middot; <span class="badge bg-blue" style="padding:2px 7px;font-size:.67rem">${u.role}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <button class="btn btn-warn" style="padding:5px 9px;font-size:.72rem"
+          onclick="openUserModal('${esc(u.username)}')"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-danger" style="padding:5px 9px;font-size:.72rem"
+          onclick="confirmDelete('${esc(u.username)}','user')"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function openUserModal(username = null) {
+  _editUserId = username;
+  document.getElementById('umTitle').textContent = username ? 'تعديل مستخدم' : 'إضافة مستخدم جديد';
+  document.getElementById('uf_name').value = '';
+  document.getElementById('uf_user').value = username || '';
+  document.getElementById('uf_pass').value = '';
+  document.getElementById('uf_role').value = 'مشاهد';
+  openModal('userModal');
+}
+
+function submitUser() {
+  const data = {
+    fullName:          document.getElementById('uf_name').value.trim(),
+    username:          document.getElementById('uf_user').value.trim(),
+    password:          document.getElementById('uf_pass').value,
+    role:              document.getElementById('uf_role').value,
+    isEdit:            !!_editUserId,
+    originalUsername:  _editUserId || ''
+  };
+  if (!data.username || !data.password) {
+    showToast('اسم المستخدم وكلمة المرور مطلوبان', 'error'); return;
+  }
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.ok) { closeModal('userModal'); showToast('تم الحفظ بنجاح ✅', 'success'); loadUsers(); }
+      else showToast(res.error || 'حدث خطأ', 'error');
+    })
+    .withFailureHandler(e => showToast('فشل: ' + e.message, 'error'))
+    .saveUser(data);
+}
+
+/* ════════════════════════════════
+   PRINT TABLE
+════════════════════════════════ */
+function printWellsTable() {
+  const rows = document.querySelectorAll('#wellsTbody tr');
+  let trs = '';
+  rows.forEach(r => {
+    const tds = r.querySelectorAll('td');
+    if (tds.length < 8) return;
+    trs += '<tr>';
+    for (let i = 0; i < 8; i++) trs += `<td>${tds[i]?.innerText?.trim()||'—'}</td>`;
+    trs += '</tr>';
+  });
+  const html = `<html dir="rtl"><head><meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body{font-family:'Cairo';padding:20px;color:#111}
+      h2{color:#0b1a2d;margin-bottom:4px}
+      .sub{font-size:11px;color:#64748b;margin-bottom:16px}
+      table{width:100%;border-collapse:collapse}
+      th{background:#0b1a2d;color:white;padding:8px 10px;font-size:11px;text-align:right}
+      td{padding:7px 10px;border:1px solid #e2e8f0;font-size:11px}
+      tr:nth-child(even) td{background:#f8fafc}
+    </style></head><body>
+    <h2>منظومة متابعة الآبار — الجهاز التنفيذي</h2>
+    <div class="sub">تاريخ التصدير: ${new Date().toLocaleDateString('ar-LY',{year:'numeric',month:'long',day:'numeric'})}</div>
+    <table><thead><tr>
+      <th>#</th><th>رقم البئر</th><th>المدينة</th><th>نوع العمل</th>
+      <th>الإنجاز</th><th>الحالة</th><th>الشركة</th><th>آخر تحديث</th>
+    </tr></thead><tbody>${trs}</tbody></table></body></html>`;
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 600);
+}
+
+/* ════════════════════════════════
+   UI HELPERS
+════════════════════════════════ */
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'dashboard') setTimeout(() => _map && _map.invalidateSize(), 150);
+  if (name === 'users' && _session?.role === 'مدير') loadUsers();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  setTimeout(() => _map && _map.invalidateSize(), 320);
+}
+
+function switchMap(type) {
+  const dynWrap = document.getElementById('mapDynamicWrap');
+  const gglWrap = document.getElementById('mapGoogleWrap');
+  const btnDyn  = document.getElementById('btnMapDynamic');
+  const btnGgl  = document.getElementById('btnMapGoogle');
+  const activeStyle  = 'padding:8px 16px;border:none;border-radius:9px;font-family:\'Cairo\';font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--water),var(--blue-lt));color:white;box-shadow:0 3px 10px rgba(2,136,209,.3);display:flex;align-items:center;gap:6px;';
+  const inactiveStyle = 'padding:8px 16px;border:none;border-radius:9px;font-family:\'Cairo\';font-size:.82rem;font-weight:700;cursor:pointer;background:#f1f5f9;color:var(--text-lt);display:flex;align-items:center;gap:6px;';
+  if (type === 'dynamic') {
+    dynWrap.style.display = '';
+    gglWrap.style.display = 'none';
+    btnDyn.style.cssText  = activeStyle;
+    btnGgl.style.cssText  = inactiveStyle;
+    setTimeout(() => _map && _map.invalidateSize(), 100);
+  } else {
+    dynWrap.style.display = 'none';
+    gglWrap.style.display = 'block';
+    btnDyn.style.cssText  = inactiveStyle;
+    btnGgl.style.cssText  = activeStyle;
+  }
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+let _toastTmr = null;
+function showToast(msg, type = 'info') {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const ic = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  el.innerHTML = `${ic} ${msg}`;
+  document.body.appendChild(el);
+  clearTimeout(_toastTmr);
+  _toastTmr = setTimeout(() => el.remove(), 3600);
+}
+
+function esc(str) {
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>أرشيف الموظفين — الجهاز التنفيذي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    *{font-family:'Cairo',sans-serif}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:#f1f5f9}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+    .glass{backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+    .sidebar-link{transition:all .18s;position:relative}
+    .sidebar-link.active{background:linear-gradient(135deg,rgba(30,58,138,.12),rgba(30,58,138,.06));color:#1e3a8a;font-weight:800}
+    .sidebar-link.active::before{content:'';position:absolute;right:0;top:20%;height:60%;width:3px;background:#1e3a8a;border-radius:3px 0 0 3px}
+    .sidebar-link:not(.active):hover{background:#f8fafc;color:#1e3a8a}
+    .tab-content{display:none;animation:fadeUp .25s ease}
+    .tab-content.active{display:block}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .skeleton{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .drop-active{border-color:#1e3a8a!important;background:#eff6ff!important}
+    .file-row:hover .file-actions{opacity:1}
+    .file-actions{opacity:0;transition:.15s}
+    .tr-hover:hover{background:#f8fafc}
+    .stat-ring{transform:rotate(-90deg);transform-origin:50% 50%}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700}
+    .modal-overlay{transition:opacity .2s;opacity:0;pointer-events:none}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal-overlay.open .modal-box{transform:scale(1) translateY(0);opacity:1}
+    .modal-box{transform:scale(.96) translateY(12px);opacity:0;transition:transform .25s cubic-bezier(.34,1.3,.64,1),opacity .2s}
+    .notif-panel{transform:translateX(300px);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+    .notif-panel.open{transform:translateX(0)}
+    .sidebar-collapse .sb-label{display:none}
+    .sidebar-collapse .sb-logo-text{display:none}
+    .sidebar-collapse{width:68px!important}
+    .sidebar-collapse .sidebar-link{justify-content:center}
+    .sidebar-collapse .sidebar-link i{margin:0!important;font-size:1.1rem}
+    .progress-ring{transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1)}
+    input:focus,select:focus,textarea:focus{outline:none!important;border-color:#1e3a8a!important;box-shadow:0 0 0 3px rgba(30,58,138,.1)!important}
+    .upload-btn:disabled{opacity:.45;cursor:not-allowed}
+    @media(max-width:768px){#sidebar{position:fixed;z-index:200;transform:translateX(100%);transition:transform .28s}.sidebar-open #sidebar{transform:translateX(0)}}
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<div id="loginScreen" class="fixed inset-0 z-[999] bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#0369a1] flex items-center justify-center p-4">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 mx-auto rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center mb-4 shadow-2xl">
+        <i class="fas fa-folder-tree text-white text-3xl"></i>
+      </div>
+      <h1 class="text-2xl font-black text-white mb-1">نظام أرشفة الموظفين</h1>
+      <p class="text-white/50 text-sm">الجهاز التنفيذي لحفر وصيانة آبار المياه</p>
+    </div>
+    <div class="bg-white/10 glass border border-white/15 rounded-3xl p-7 shadow-2xl">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-white/70 text-xs font-bold mb-1.5 mr-1">اسم المستخدم</label>
+          <div class="relative">
+            <i class="fas fa-user absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 text-sm"></i>
+            <input id="li-user" type="text" placeholder="أدخل اسم المستخدم" autocomplete="username"
+              class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pr-10 pl-4 text-white placeholder-white/30 text-sm font-medium focus:border-white/50 focus:bg-white/15 transition-all"
+              onkeydown="if(event.key==='Enter')doLogin()">
+          </div>
+        </div>
+        <div>
+          <label class="block text-white/70 text-xs font-bold mb-1.5 mr-1">كلمة المرور</label>
+          <div class="relative">
+            <i class="fas fa-lock absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 text-sm"></i>
+            <input id="li-pass" type="password" placeholder="••••••••" autocomplete="current-password"
+              class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pr-10 pl-10 text-white placeholder-white/30 text-sm font-medium focus:border-white/50 focus:bg-white/15 transition-all"
+              onkeydown="if(event.key==='Enter')doLogin()">
+            <button onclick="togglePwd()" class="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 text-sm transition-colors" tabindex="-1">
+              <i class="fas fa-eye" id="pwdEye"></i>
+            </button>
+          </div>
+        </div>
+        <div id="loginErr" class="text-red-300 text-xs font-bold text-center min-h-[18px]"></div>
+        <button id="loginBtn" onclick="doLogin()"
+          class="w-full h-12 rounded-xl bg-white text-[#1e3a8a] font-extrabold text-sm shadow-lg hover:bg-white/90 active:scale-[.98] transition-all flex items-center justify-center gap-2">
+          <i class="fas fa-right-to-bracket"></i> دخول إلى النظام
+        </button>
+      </div>
+      <p class="text-center text-white/30 text-[11px] mt-5">النظام محمي — الاستخدام للمخوّلين فقط</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP SHELL ═══════════════════ -->
+<div id="appShell" class="hidden h-screen flex overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="w-64 bg-white border-l border-slate-100 flex flex-col shadow-xl shadow-slate-200/50 transition-all duration-300 overflow-hidden shrink-0">
+    <!-- Logo -->
+    <div class="p-5 border-b border-slate-100 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1e3a8a] to-[#1d4ed8] flex items-center justify-center shadow-lg shrink-0">
+        <i class="fas fa-folder-tree text-white text-base"></i>
+      </div>
+      <div class="sb-logo-text min-w-0">
+        <div class="font-black text-[#1e3a8a] text-sm leading-tight truncate">أرشيف الموظفين</div>
+        <div class="text-[10px] text-slate-400 font-medium">الجهاز التنفيذي</div>
+      </div>
+      <button onclick="toggleSidebar()" class="mr-auto text-slate-300 hover:text-slate-500 transition-colors text-sm">
+        <i class="fas fa-angles-right" id="sidebarArrow"></i>
+      </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+      <div class="text-[10px] font-extrabold text-slate-400 px-3 pb-1 pt-2 uppercase tracking-wider sb-label">الرئيسية</div>
+      <a onclick="switchPage('dashboard')" data-page="dashboard" class="sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm text-slate-600">
+        <i class="fas fa-chart-pie w-5 text-center"></i><span class="sb-label">لوحة التحكم</span>
+      </a>
+      <div class="text-[10px] font-extrabold text-slate-400 px-3 pb-1 pt-3 uppercase tracking-wider sb-label">الإدارة</div>
+      <a onclick="switchPage('upload')" data-page="upload" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm text-slate-600">
+        <i class="fas fa-cloud-arrow-up w-5 text-center"></i><span class="sb-label">رفع وثائق</span>
+      </a>
+      <a onclick="switchPage('search')" data-page="search" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm text-slate-600">
+        <i class="fas fa-magnifying-glass w-5 text-center"></i><span class="sb-label">البحث والاسترجاع</span>
+      </a>
+      <a onclick="switchPage('employee')" data-page="employee" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm text-slate-600">
+        <i class="fas fa-id-card w-5 text-center"></i><span class="sb-label">ملف موظف</span>
+      </a>
+      <div class="text-[10px] font-extrabold text-slate-400 px-3 pb-1 pt-3 uppercase tracking-wider sb-label">التحليل</div>
+      <a onclick="switchPage('reports')" data-page="reports" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer text-sm text-slate-600">
+        <i class="fas fa-chart-bar w-5 text-center"></i><span class="sb-label">التقارير</span>
+      </a>
+    </nav>
+
+    <!-- User Footer -->
+    <div class="p-3 border-t border-slate-100">
+      <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 cursor-pointer" onclick="showSettings()">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#1e3a8a] to-[#0369a1] flex items-center justify-center text-white text-xs font-black shrink-0" id="userAvatar">م</div>
+        <div class="flex-1 min-w-0 sb-label">
+          <div class="text-sm font-bold truncate" id="userFullName">مدير النظام</div>
+          <div class="text-[11px] text-slate-400" id="userRoleBadge">مدير</div>
+        </div>
+        <button onclick="event.stopPropagation();doLogout()" class="sb-label text-slate-300 hover:text-red-500 transition-colors text-sm" title="تسجيل خروج">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+    <!-- TOPBAR -->
+    <header class="bg-white border-b border-slate-100 px-5 h-16 flex items-center gap-4 shrink-0 shadow-sm">
+      <!-- Mobile menu -->
+      <button onclick="document.body.classList.toggle('sidebar-open')" class="md:hidden w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <!-- Quick search -->
+      <div class="flex-1 max-w-md relative">
+        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+        <input type="text" id="quickSearch" placeholder="بحث سريع بالاسم أو الرقم…"
+          class="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl pr-9 pl-4 text-sm text-slate-700 placeholder-slate-400 transition-all"
+          onkeyup="if(event.key==='Enter'){document.getElementById('searchQuery').value=this.value;switchPage('search');doSearch()}">
+      </div>
+
+      <div class="flex items-center gap-2 mr-auto">
+        <!-- Notifications -->
+        <div class="relative">
+          <button onclick="toggleNotifPanel()" class="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 relative transition-colors">
+            <i class="fas fa-bell text-base"></i>
+            <span id="notifBadge" class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-black text-white flex items-center justify-center hidden">0</span>
+          </button>
+        </div>
+        <!-- Settings -->
+        <button onclick="showSettings()" class="w-10 h-10 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
+          <i class="fas fa-gear text-base"></i>
+        </button>
+        <!-- Online indicator -->
+        <div class="hidden sm:flex items-center gap-1.5 px-3 h-8 rounded-full bg-emerald-50 border border-emerald-200">
+          <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span class="text-xs font-bold text-emerald-700">متصل</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGES -->
+    <main class="flex-1 overflow-y-auto p-5 space-y-0">
+
+      <!-- ════ DASHBOARD ════ -->
+      <section id="page-dashboard" class="tab-content active">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <i class="fas fa-house text-slate-300"></i>
+          <span class="font-bold text-slate-600">لوحة التحكم</span>
+        </div>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+          <!-- Total employees -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <i class="fas fa-users text-blue-600"></i>
+              </div>
+              <svg class="w-14 h-14 stat-ring" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round"
+                  stroke-dasharray="113" stroke-dashoffset="28" class="progress-ring"/>
+              </svg>
+            </div>
+            <div class="text-3xl font-black mb-0.5" id="stat-employees">—</div>
+            <div class="text-xs text-slate-400 font-medium">موظف مؤرشف</div>
+            <div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+              <i class="fas fa-arrow-up"></i> <span id="stat-emp-new">+5</span> هذا الشهر
+            </div>
+          </div>
+
+          <!-- Total files -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                <i class="fas fa-file-lines text-amber-600"></i>
+              </div>
+              <svg class="w-14 h-14 stat-ring" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+                <circle cx="22" cy="22" r="18" fill="none" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"
+                  stroke-dasharray="113" stroke-dashoffset="20" class="progress-ring"/>
+              </svg>
+            </div>
+            <div class="text-3xl font-black mb-0.5" id="stat-files">—</div>
+            <div class="text-xs text-slate-400 font-medium">وثيقة محفوظة</div>
+            <div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-amber-600">
+              <i class="fas fa-arrow-up"></i> <span id="stat-files-new">+12</span> هذا الأسبوع
+            </div>
+          </div>
+
+          <!-- Expiring -->
+          <div class="bg-white rounded-2xl p-5 border border-red-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="switchPage('search');document.getElementById('filter-status').value='expiring';doSearch()">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
+                <i class="fas fa-triangle-exclamation text-red-500"></i>
+              </div>
+              <span class="badge bg-red-100 text-red-700">عاجل</span>
+            </div>
+            <div class="text-3xl font-black text-red-600 mb-0.5" id="stat-expiring">—</div>
+            <div class="text-xs text-slate-400 font-medium">تنتهي خلال 30 يوم</div>
+            <div class="mt-2 text-[11px] font-bold text-red-500">اضغط للمراجعة ←</div>
+          </div>
+
+          <!-- Secret -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+                <i class="fas fa-lock text-purple-600"></i>
+              </div>
+              <span class="badge bg-purple-100 text-purple-700"><i class="fas fa-shield-halved"></i> محمية</span>
+            </div>
+            <div class="text-3xl font-black mb-0.5" id="stat-secure">—</div>
+            <div class="text-xs text-slate-400 font-medium">وثيقة سرية</div>
+            <div class="mt-2 text-[11px] font-bold text-purple-500">مستوى وصول مقيّد</div>
+          </div>
+        </div>
+
+        <div class="grid xl:grid-cols-3 gap-5">
+          <!-- Recent files -->
+          <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between p-5 border-b border-slate-100">
+              <h3 class="font-extrabold flex items-center gap-2 text-slate-700">
+                <i class="fas fa-clock-rotate-left text-amber-500"></i> آخر الوثائق المرفوعة
+              </h3>
+              <button onclick="switchPage('search')" class="text-xs font-bold text-[#1e3a8a] hover:underline flex items-center gap-1">
+                عرض الكل <i class="fas fa-arrow-left text-[10px]"></i>
+              </button>
+            </div>
+            <!-- Skeleton -->
+            <div id="recent-skeleton" class="p-4 space-y-3">
+              <div class="skeleton h-14 rounded-xl"></div>
+              <div class="skeleton h-14 rounded-xl"></div>
+              <div class="skeleton h-14 rounded-xl"></div>
+            </div>
+            <div id="recent-files" class="divide-y divide-slate-50 hidden max-h-96 overflow-y-auto"></div>
+          </div>
+
+          <!-- Expiring soon -->
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="p-5 border-b border-slate-100 flex items-center gap-2">
+              <i class="fas fa-calendar-xmark text-red-500"></i>
+              <h3 class="font-extrabold text-red-700">وثائق تنتهي قريباً</h3>
+            </div>
+            <div id="expiring-skeleton" class="p-4 space-y-3">
+              <div class="skeleton h-16 rounded-xl"></div>
+              <div class="skeleton h-16 rounded-xl"></div>
+              <div class="skeleton h-16 rounded-xl"></div>
+            </div>
+            <div id="expiring-list" class="p-4 space-y-2.5 hidden max-h-96 overflow-y-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ UPLOAD ════ -->
+      <section id="page-upload" class="tab-content">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <i class="fas fa-house text-slate-300"></i><i class="fas fa-chevron-left text-slate-200 text-[10px]"></i>
+          <span class="font-bold text-slate-600">رفع وثائق</span>
+        </div>
+        <div class="max-w-4xl">
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="bg-gradient-to-r from-[#1e3a8a] to-[#1d4ed8] p-5 flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center">
+                <i class="fas fa-cloud-arrow-up text-white text-xl"></i>
+              </div>
+              <div>
+                <h2 class="text-white font-extrabold text-lg">رفع وثائق جديدة</h2>
+                <p class="text-white/60 text-xs mt-0.5">ابحث عن الموظف ثم ارفع الوثيقة بياناتها</p>
+              </div>
+            </div>
+
+            <div class="p-6 space-y-6">
+              <!-- Step 1: Employee lookup -->
+              <div>
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="w-6 h-6 rounded-full bg-[#1e3a8a] text-white text-xs font-black flex items-center justify-center">1</div>
+                  <span class="font-extrabold text-sm text-slate-700">بيانات الموظف</span>
+                </div>
+                <div class="grid md:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div class="relative">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">الرقم الوطني *</label>
+                    <div class="relative">
+                      <input id="up-nationalId" type="text" placeholder="1199000000" maxlength="12"
+                        class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm font-mono focus:ring-0 transition-all"
+                        onblur="lookupEmployee()" oninput="clearEmployeeFields()">
+                      <div id="lookup-spinner" class="absolute left-2.5 top-1/2 -translate-y-1/2 hidden">
+                        <i class="fas fa-spinner fa-spin text-[#1e3a8a] text-xs"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">الرقم الوظيفي</label>
+                    <input id="up-jobId" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm font-mono text-slate-500">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">اسم الموظف</label>
+                    <input id="up-name" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm font-bold text-slate-600">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">القسم</label>
+                    <input id="up-dept" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm text-slate-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">المسمى الوظيفي</label>
+                    <input id="up-title" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm text-slate-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">الهاتف</label>
+                    <input id="up-phone" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm font-mono text-slate-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">الحالة</label>
+                    <input id="up-status" type="text" readonly class="w-full h-10 bg-slate-100 border border-slate-200 rounded-lg px-3 text-sm text-slate-500">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Document details -->
+              <div>
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="w-6 h-6 rounded-full bg-[#1e3a8a] text-white text-xs font-black flex items-center justify-center">2</div>
+                  <span class="font-extrabold text-sm text-slate-700">بيانات الوثيقة</span>
+                </div>
+                <div class="grid md:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">نوع الوثيقة *</label>
+                    <select id="up-docType" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                      <option value="">اختر النوع…</option>
+                      <option>بطاقة شخصية</option><option>جواز سفر</option><option>عقد عمل</option>
+                      <option>مباشرة عمل</option><option>قرار تعيين</option><option>قرار نقل</option>
+                      <option>قرار ترقية</option><option>مؤهل علمي</option><option>شهادة خبرة</option>
+                      <option>دورة تدريبية</option><option>تقرير طبي</option><option>إجازة</option>
+                      <option>إنذار</option><option>إخلاء طرف</option><option>رخصة قيادة</option>
+                      <option>صورة شخصية</option><option>أخرى</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">تاريخ الوثيقة *</label>
+                    <input id="up-docDate" type="date" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">تاريخ الانتهاء <span class="text-slate-300 font-normal">(اختياري)</span></label>
+                    <input id="up-expDate" type="date" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">رقم مرجعي</label>
+                    <input id="up-ref" type="text" placeholder="اختياري" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">جهة الإصدار</label>
+                    <input id="up-issuer" type="text" placeholder="اختياري" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-500 mb-1.5">وسوم (افصل بفاصلة)</label>
+                    <input id="up-tags" type="text" placeholder="مثال: 2024، تجديد" class="w-full h-10 bg-white border border-slate-200 rounded-lg px-3 text-sm transition-all">
+                  </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2">
+                  <label class="flex items-center gap-2 cursor-pointer group">
+                    <div class="relative">
+                      <input id="up-secret" type="checkbox" class="sr-only peer">
+                      <div class="w-10 h-5 bg-slate-200 rounded-full peer-checked:bg-red-500 transition-colors"></div>
+                      <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:-translate-x-5"></div>
+                    </div>
+                    <span class="text-sm font-bold text-red-600 flex items-center gap-1.5"><i class="fas fa-lock text-xs"></i>وثيقة سرية</span>
+                  </label>
+                  <span class="text-xs text-slate-400">— يُقيّد الوصول لمدراء النظام فقط</span>
+                </div>
+              </div>
+
+              <!-- Step 3: Files -->
+              <div>
+                <div class="flex items-center gap-2 mb-3">
+                  <div class="w-6 h-6 rounded-full bg-[#1e3a8a] text-white text-xs font-black flex items-center justify-center">3</div>
+                  <span class="font-extrabold text-sm text-slate-700">اختر الملفات</span>
+                </div>
+                <div id="dropzone" class="relative border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center bg-slate-50 hover:border-[#1e3a8a] hover:bg-blue-50/40 transition-all cursor-pointer group">
+                  <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff,.xlsx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  <div class="pointer-events-none space-y-2">
+                    <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-200 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
+                      <i class="fas fa-cloud-arrow-up text-slate-400 group-hover:text-[#1e3a8a] text-2xl transition-colors"></i>
+                    </div>
+                    <p class="font-extrabold text-slate-700">اسحب الملفات هنا أو اضغط للاختيار</p>
+                    <p class="text-xs text-slate-400">PDF • Word • صور JPG/PNG • حتى 100MB للملف</p>
+                  </div>
+                </div>
+                <div id="fileList" class="mt-3 space-y-2 hidden"></div>
+              </div>
+
+              <!-- Progress -->
+              <div id="uploadProgress" class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <div class="flex justify-between text-sm font-bold text-blue-700 mb-2">
+                  <span id="uploadStatus">جاري الرفع…</span>
+                  <span id="progressText">0%</span>
+                </div>
+                <div class="h-2.5 bg-blue-100 rounded-full overflow-hidden">
+                  <div id="progressBar" class="h-full bg-[#1e3a8a] w-0 transition-all duration-300 rounded-full"></div>
+                </div>
+              </div>
+
+              <!-- Validation errors -->
+              <div id="uploadErrors" class="hidden bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 font-medium"></div>
+
+              <!-- Actions -->
+              <div class="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                <button onclick="clearUpload()" class="h-11 px-6 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-colors text-sm">
+                  <i class="fas fa-rotate-right ml-1.5 text-xs"></i> مسح
+                </button>
+                <button id="btnUpload" onclick="startUpload()" disabled
+                  class="upload-btn h-11 px-8 rounded-xl bg-[#1e3a8a] text-white font-extrabold shadow-lg shadow-blue-900/20 hover:bg-[#1d4ed8] transition-all text-sm flex items-center gap-2">
+                  <i class="fas fa-upload"></i> رفع الملفات
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ SEARCH ════ -->
+      <section id="page-search" class="tab-content">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <i class="fas fa-house text-slate-300"></i><i class="fas fa-chevron-left text-slate-200 text-[10px]"></i>
+          <span class="font-bold text-slate-600">البحث والاسترجاع</span>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <!-- Search bar -->
+          <div class="p-5 border-b border-slate-100 space-y-3">
+            <div class="flex gap-3">
+              <div class="flex-1 relative">
+                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+                <input id="searchQuery" type="text" placeholder="ابحث بالاسم، الرقم الوطني، الرقم الوظيفي، أو نوع الوثيقة…"
+                  class="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl pr-11 pl-4 text-sm transition-all"
+                  onkeyup="if(event.key==='Enter')doSearch()">
+              </div>
+              <button onclick="doSearch()" class="h-12 px-6 rounded-xl bg-[#1e3a8a] text-white font-bold hover:bg-[#1d4ed8] transition-colors text-sm flex items-center gap-2">
+                <i class="fas fa-search"></i><span class="hidden sm:inline">بحث</span>
+              </button>
+            </div>
+            <!-- Filters -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5">
+              <select id="filter-type" class="h-9 px-3 rounded-lg border border-slate-200 text-sm bg-white text-slate-600">
+                <option value="">كل الأنواع</option>
+              </select>
+              <select id="filter-dept" class="h-9 px-3 rounded-lg border border-slate-200 text-sm bg-white text-slate-600">
+                <option value="">كل الأقسام</option>
+              </select>
+              <select id="filter-status" class="h-9 px-3 rounded-lg border border-slate-200 text-sm bg-white text-slate-600">
+                <option value="">كل الحالات</option>
+                <option value="expiring">تنتهي خلال 30 يوم</option>
+                <option value="expired">منتهية الصلاحية</option>
+                <option value="secret">سرية فقط</option>
+              </select>
+              <input id="filter-from" type="date" class="h-9 px-3 rounded-lg border border-slate-200 text-sm">
+              <input id="filter-to" type="date" class="h-9 px-3 rounded-lg border border-slate-200 text-sm">
+            </div>
+          </div>
+
+          <!-- Results toolbar -->
+          <div id="resultsToolbar" class="hidden px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-4 h-4 accent-[#1e3a8a]">
+                تحديد الكل
+              </label>
+              <span id="selectedCount" class="text-xs text-slate-400 hidden">0 محدد</span>
+            </div>
+            <div id="bulkActions" class="hidden flex items-center gap-2">
+              <button onclick="bulkDownload()" class="h-8 px-4 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors">
+                <i class="fas fa-download ml-1"></i> تحميل
+              </button>
+              <button onclick="bulkDelete()" class="h-8 px-4 rounded-lg bg-red-50 text-red-700 text-xs font-bold hover:bg-red-100 transition-colors">
+                <i class="fas fa-trash ml-1"></i> حذف
+              </button>
+            </div>
+            <span id="resultsCount" class="text-xs font-bold text-slate-500"></span>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50 border-b border-slate-100">
+                <tr class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wide">
+                  <th class="text-right px-4 py-3 w-10"><input type="checkbox" class="hidden" id="headerCheck"></th>
+                  <th class="text-right px-4 py-3">الموظف</th>
+                  <th class="text-right px-4 py-3">الوثيقة</th>
+                  <th class="text-center px-4 py-3">النوع</th>
+                  <th class="text-center px-4 py-3 cursor-pointer hover:text-slate-600" onclick="sortBy('date')">
+                    التاريخ <i class="fas fa-sort text-[10px] mr-1"></i>
+                  </th>
+                  <th class="text-center px-4 py-3 cursor-pointer hover:text-slate-600" onclick="sortBy('expiry')">
+                    الانتهاء <i class="fas fa-sort text-[10px] mr-1"></i>
+                  </th>
+                  <th class="text-center px-4 py-3">الحجم</th>
+                  <th class="text-center px-4 py-3 w-24">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="searchResults" class="divide-y divide-slate-50 text-sm">
+                <tr>
+                  <td colspan="8" class="text-center py-16 text-slate-400">
+                    <i class="fas fa-magnifying-glass text-4xl opacity-20 mb-3 block"></i>
+                    <p class="font-medium text-sm">ابدأ البحث للعثور على الوثائق</p>
+                    <p class="text-xs text-slate-300 mt-1">يمكنك البحث بالاسم أو الرقم الوطني أو نوع الوثيقة</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ EMPLOYEE ════ -->
+      <section id="page-employee" class="tab-content">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <i class="fas fa-house text-slate-300"></i><i class="fas fa-chevron-left text-slate-200 text-[10px]"></i>
+          <span class="font-bold text-slate-600">ملف موظف</span>
+        </div>
+        <div class="max-w-5xl">
+          <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div class="flex gap-3 mb-5">
+              <div class="flex-1 relative">
+                <i class="fas fa-id-card absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+                <input id="empSearch" type="text" placeholder="الرقم الوطني أو الرقم الوظيفي…"
+                  class="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl pr-11 pl-4 font-mono text-sm transition-all"
+                  onkeydown="if(event.key==='Enter')loadEmployee()">
+              </div>
+              <button onclick="loadEmployee()" class="h-12 px-6 rounded-xl bg-[#1e3a8a] text-white font-bold hover:bg-[#1d4ed8] transition-colors text-sm flex items-center gap-2">
+                <i class="fas fa-magnifying-glass"></i> عرض الملف
+              </button>
+            </div>
+
+            <!-- Employee skeleton -->
+            <div id="emp-skeleton" class="hidden grid md:grid-cols-3 gap-5">
+              <div class="skeleton h-64 rounded-2xl"></div>
+              <div class="md:col-span-2 space-y-3">
+                <div class="skeleton h-8 rounded-xl w-3/4"></div>
+                <div class="skeleton h-6 rounded-xl w-1/2"></div>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                  <div class="skeleton h-24 rounded-xl"></div>
+                  <div class="skeleton h-24 rounded-xl"></div>
+                  <div class="skeleton h-24 rounded-xl"></div>
+                  <div class="skeleton h-24 rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="employeeProfile" class="hidden"></div>
+
+            <!-- Empty state -->
+            <div id="emp-empty" class="py-16 text-center text-slate-400">
+              <i class="fas fa-id-card-clip text-5xl opacity-20 mb-4 block"></i>
+              <p class="font-bold text-sm">ابحث عن موظف لعرض ملفه</p>
+              <p class="text-xs mt-1">أدخل الرقم الوطني أو الرقم الوظيفي</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ REPORTS ════ -->
+      <section id="page-reports" class="tab-content">
+        <div class="flex items-center gap-2 text-xs text-slate-400 mb-4">
+          <i class="fas fa-house text-slate-300"></i><i class="fas fa-chevron-left text-slate-200 text-[10px]"></i>
+          <span class="font-bold text-slate-600">التقارير والتحليل</span>
+        </div>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
+          <button onclick="generateReport('expiring')" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-red-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-13 h-13 w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-calendar-xmark text-red-500 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">وثائق منتهية</h3>
+            <p class="text-xs text-slate-400">الوثائق المنتهية والقريبة من الانتهاء</p>
+            <div class="mt-3 text-xs font-bold text-red-500 group-hover:underline">إنشاء التقرير →</div>
+          </button>
+          <button onclick="generateReport('employee')" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-blue-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-user-tie text-blue-600 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">ملف موظف</h3>
+            <p class="text-xs text-slate-400">كشف كامل بجميع وثائق موظف محدد</p>
+            <div class="mt-3 text-xs font-bold text-blue-500 group-hover:underline">إنشاء التقرير →</div>
+          </button>
+          <button onclick="generateReport('department')" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-emerald-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-building text-emerald-600 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">تقرير قسم</h3>
+            <p class="text-xs text-slate-400">إحصائيات الوثائق لكل قسم</p>
+            <div class="mt-3 text-xs font-bold text-emerald-500 group-hover:underline">إنشاء التقرير →</div>
+          </button>
+          <button onclick="generateReport('missing')" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-amber-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-file-circle-xmark text-amber-600 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">الوثائق الناقصة</h3>
+            <p class="text-xs text-slate-400">الوثائق المطلوبة غير المرفوعة</p>
+            <div class="mt-3 text-xs font-bold text-amber-500 group-hover:underline">إنشاء التقرير →</div>
+          </button>
+          <button onclick="generateReport('audit')" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-purple-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-clipboard-list text-purple-600 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">سجل التدقيق</h3>
+            <p class="text-xs text-slate-400">جميع العمليات المنفذة على النظام</p>
+            <div class="mt-3 text-xs font-bold text-purple-500 group-hover:underline">إنشاء التقرير →</div>
+          </button>
+          <button onclick="exportAll()" class="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-right hover:border-green-200 hover:shadow-lg transition-all active:scale-[.98]">
+            <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <i class="fas fa-file-excel text-green-600 text-xl"></i>
+            </div>
+            <h3 class="font-extrabold mb-1">تصدير شامل</h3>
+            <p class="text-xs text-slate-400">تصدير كل البيانات بصيغة Excel</p>
+            <div class="mt-3 text-xs font-bold text-green-500 group-hover:underline">تصدير الآن →</div>
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- NOTIFICATION PANEL -->
+  <div id="notifOverlay" class="fixed inset-0 z-[150] bg-black/20 hidden" onclick="toggleNotifPanel()"></div>
+  <div id="notifPanel" class="notif-panel fixed left-0 top-0 h-full w-80 bg-white z-[200] shadow-2xl flex flex-col">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="font-extrabold flex items-center gap-2"><i class="fas fa-bell text-[#1e3a8a]"></i> الإشعارات</h3>
+      <button onclick="toggleNotifPanel()" class="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-3 space-y-2" id="notifList">
+      <div class="p-4 text-center text-slate-400 text-sm mt-8">
+        <i class="fas fa-bell-slash text-3xl opacity-20 mb-2 block"></i>
+        لا توجد إشعارات جديدة
+      </div>
+    </div>
+    <div class="p-3 border-t border-slate-100">
+      <button onclick="clearNotifs()" class="w-full h-9 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors">مسح الكل</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- Preview Modal -->
+<div id="previewModal" class="modal-overlay fixed inset-0 z-[300] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closePreview()">
+  <div class="modal-box bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center">
+          <i class="fas fa-file-pdf text-red-500"></i>
+        </div>
+        <div>
+          <h3 id="previewTitle" class="font-bold text-sm"></h3>
+          <p id="previewMeta" class="text-xs text-slate-400 mt-0.5"></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="previewDownloadBtn" class="h-9 px-4 rounded-lg bg-[#1e3a8a] text-white text-xs font-bold flex items-center gap-1.5 hover:bg-[#1d4ed8] transition-colors">
+          <i class="fas fa-download"></i> تحميل
+        </button>
+        <button onclick="closePreview()" class="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div id="previewContent" class="h-[78vh] overflow-auto bg-slate-100 flex items-center justify-center">
+      <i class="fas fa-spinner fa-spin text-3xl text-slate-300"></i>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="deleteModal" class="modal-overlay fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="modal-box bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+    <div class="bg-red-50 p-6 text-center">
+      <div class="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-3">
+        <i class="fas fa-trash text-red-600 text-2xl"></i>
+      </div>
+      <h3 class="font-extrabold text-lg text-red-800">تأكيد الحذف</h3>
+      <p class="text-sm text-red-600 mt-1" id="deleteConfirmText">هل أنت متأكد من حذف هذا الملف؟</p>
+    </div>
+    <div class="p-4 bg-red-50/50 border-t border-red-100">
+      <p class="text-xs text-slate-500 text-center mb-4 flex items-center justify-center gap-1.5">
+        <i class="fas fa-triangle-exclamation text-amber-500"></i>
+        لا يمكن التراجع عن هذا الإجراء
+      </p>
+      <div class="flex gap-3">
+        <button onclick="closeDeleteModal()" class="flex-1 h-11 rounded-xl border border-slate-200 font-bold text-sm hover:bg-slate-50 transition-colors">إلغاء</button>
+        <button id="deleteConfirmBtn" class="flex-1 h-11 rounded-xl bg-red-600 text-white font-extrabold text-sm hover:bg-red-700 transition-colors">
+          <i class="fas fa-trash ml-1.5"></i> حذف
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="modal-box bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+    <div class="flex items-center justify-between p-5 border-b border-slate-100">
+      <h3 class="font-extrabold flex items-center gap-2"><i class="fas fa-gear text-[#1e3a8a]"></i> الإعدادات</h3>
+      <button onclick="closeSettings()" class="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="p-5 space-y-5">
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">الحساب</h4>
+        <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
+          <div class="w-12 h-12 rounded-full bg-[#1e3a8a] flex items-center justify-center text-white font-black" id="settingsAvatar">م</div>
+          <div>
+            <div class="font-bold" id="settingsName">—</div>
+            <div class="text-xs text-slate-400" id="settingsRole">—</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">الإشعارات</h4>
+        <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl cursor-pointer">
+          <span class="text-sm font-medium">إشعارات انتهاء الوثائق</span>
+          <div class="relative">
+            <input type="checkbox" class="sr-only peer" id="notifExpiry" checked>
+            <div class="w-10 h-5 bg-slate-200 rounded-full peer-checked:bg-[#1e3a8a] transition-colors"></div>
+            <div class="absolute top-0.5 right-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:-translate-x-5"></div>
+          </div>
+        </label>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">النظام</h4>
+        <div class="text-xs text-slate-400 space-y-1 p-3 bg-slate-50 rounded-xl">
+          <div class="flex justify-between"><span>الإصدار</span><span class="font-bold text-slate-600">1.0.0</span></div>
+          <div class="flex justify-between"><span>قاعدة البيانات</span><span class="font-bold text-slate-600">Google Sheets</span></div>
+          <div class="flex justify-between"><span>التخزين</span><span class="font-bold text-slate-600">Google Drive</span></div>
+        </div>
+      </div>
+      <button onclick="doLogout()" class="w-full h-11 rounded-xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
+        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 right-6 z-[500] pointer-events-none" style="min-width:260px">
+  <div id="toastInner" class="bg-[#0f172a] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-medium
+    transition-all duration-300 translate-y-4 opacity-0">
+    <i id="toastIcon" class="fas fa-check-circle text-emerald-400 text-base shrink-0"></i>
+    <span id="toastMsg" class="flex-1"></span>
+  </div>
+</div>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+'use strict';
+
+/* ── State ── */
+let _user = null;
+let _selectedFiles = [];
+let _searchResults = [];
+let _selectedRows  = new Set();
+let _deleteTarget  = null;
+let _notifCount    = 0;
+let _sidebarCollapsed = false;
+
+/* ── Login ── */
+function doLogin() {
+  const u = document.getElementById('li-user').value.trim();
+  const p = document.getElementById('li-pass').value;
+  const errEl = document.getElementById('loginErr');
+  const btn   = document.getElementById('loginBtn');
+
+  if (!u || !p) { errEl.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور'; return; }
+  errEl.textContent = '';
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق…';
+  btn.disabled  = true;
+
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> دخول إلى النظام';
+      if (res && res.ok) {
+        _user = { name: res.name, role: res.role, username: u };
+        onLoginSuccess();
+      } else {
+        errEl.textContent = (res && res.error) || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+        document.getElementById('li-pass').value = '';
+        document.getElementById('li-pass').focus();
+      }
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> دخول إلى النظام';
+      errEl.textContent = 'فشل الاتصال: ' + e.message;
+    })
+    .login(u, p);
+}
+
+function onLoginSuccess() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').classList.remove('hidden');
+  document.getElementById('appShell').classList.add('flex');
+
+  const initials = _user.name.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('');
+  document.getElementById('userAvatar').textContent    = initials || 'م';
+  document.getElementById('userFullName').textContent  = _user.name;
+  document.getElementById('userRoleBadge').textContent = _user.role;
+  document.getElementById('settingsAvatar').textContent = initials || 'م';
+  document.getElementById('settingsName').textContent  = _user.name;
+  document.getElementById('settingsRole').textContent  = _user.role;
+
+  loadDashboard();
+  populateFilters();
+}
+
+function doLogout() {
+  _user = null;
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('flex');
+  document.getElementById('loginScreen').style.display = '';
+  document.getElementById('li-user').value = '';
+  document.getElementById('li-pass').value = '';
+  document.getElementById('li-user').focus();
+  closeSettings();
+}
+
+function togglePwd() {
+  const inp = document.getElementById('li-pass');
+  const eye = document.getElementById('pwdEye');
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  eye.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+
+/* ── Navigation ── */
+function switchPage(page) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  // Close mobile sidebar
+  document.body.classList.remove('sidebar-open');
+}
+
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const arrow = document.getElementById('sidebarArrow');
+  _sidebarCollapsed = !_sidebarCollapsed;
+  sb.classList.toggle('sidebar-collapse');
+  arrow.className = _sidebarCollapsed ? 'fas fa-angles-left' : 'fas fa-angles-right';
+}
+
+/* ── Dashboard ── */
+function loadDashboard() {
+  google.script.run
+    .withSuccessHandler(data => {
+      if (!data) { renderDashboardMock(); return; }
+      document.getElementById('stat-employees').textContent = (data.employees || 0).toLocaleString('ar-EG');
+      document.getElementById('stat-files').textContent     = (data.files     || 0).toLocaleString('ar-EG');
+      document.getElementById('stat-expiring').textContent  = data.expiring || 0;
+      document.getElementById('stat-secure').textContent    = data.secure || 0;
+      renderRecentFiles(data.recent || []);
+      renderExpiring(data.expiringList || []);
+      if ((data.expiring || 0) > 0) addNotif(`${data.expiring} وثيقة تنتهي خلال 30 يوم`, 'warning');
+    })
+    .withFailureHandler(() => renderDashboardMock())
+    .getDashboardStats();
+}
+
+function renderDashboardMock() {
+  document.getElementById('stat-employees').textContent = '247';
+  document.getElementById('stat-files').textContent     = '1,842';
+  document.getElementById('stat-expiring').textContent  = '23';
+  document.getElementById('stat-secure').textContent    = '156';
+  renderRecentFiles([
+    {name:'عقد عمل - محمد الفرجاني',type:'عقد عمل',date:'2024-01-15',size:'2.4 MB',emp:'1057'},
+    {name:'بطاقة شخصية - سارة العبيدي',type:'بطاقة شخصية',date:'2024-01-14',size:'1.1 MB',emp:'1083'},
+    {name:'مؤهل علمي - عمر المقرقز',type:'مؤهل علمي',date:'2024-01-13',size:'3.2 MB',emp:'1102'},
+    {name:'قرار تعيين - خالد البوسيفي',type:'قرار تعيين',date:'2024-01-12',size:'0.8 MB',emp:'1128'},
+  ]);
+  renderExpiring([
+    {emp:'أحمد الشريف',doc:'جواز سفر',days:5,id:'1146'},
+    {emp:'فاطمة المنصوري',doc:'رخصة قيادة',days:12,id:'1124'},
+    {emp:'نورا الزوبي',doc:'بطاقة شخصية',days:18,id:'1168'},
+    {emp:'علي العقوري',doc:'عقد عمل',days:25,id:'1133'},
+  ]);
+}
+
+function renderRecentFiles(files) {
+  const sk = document.getElementById('recent-skeleton');
+  const ct = document.getElementById('recent-files');
+  sk.classList.add('hidden');
+  ct.classList.remove('hidden');
+  const icons = { 'pdf':'fa-file-pdf text-red-500', 'doc':'fa-file-word text-blue-500', 'docx':'fa-file-word text-blue-500', 'jpg':'fa-file-image text-green-500', 'png':'fa-file-image text-green-500', 'xlsx':'fa-file-excel text-emerald-600' };
+  ct.innerHTML = files.map(f => {
+    const ext = (f.name || '').split('.').pop().toLowerCase();
+    const ico = icons[ext] || 'fa-file text-slate-400';
+    return `<div class="file-row flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50 transition-colors group">
+      <div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+        <i class="fas ${ico} text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-sm truncate">${f.name}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${f.type} • موظف #${f.emp} • ${f.date}</div>
+      </div>
+      <div class="text-xs text-slate-300 font-medium">${f.size}</div>
+      <div class="file-actions flex gap-1">
+        <button onclick="previewFile('${f.id||f.name}')" class="w-7 h-7 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-colors" title="معاينة">
+          <i class="fas fa-eye text-xs"></i>
+        </button>
+        <button onclick="downloadFile('${f.id||f.name}')" class="w-7 h-7 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 flex items-center justify-center transition-colors" title="تحميل">
+          <i class="fas fa-download text-xs"></i>
+        </button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="text-center py-10 text-slate-400 text-sm">لا توجد ملفات حديثة</div>';
+}
+
+function renderExpiring(items) {
+  const sk = document.getElementById('expiring-skeleton');
+  const ct = document.getElementById('expiring-list');
+  sk.classList.add('hidden');
+  ct.classList.remove('hidden');
+  ct.innerHTML = items.map(item => {
+    const urgent = item.days <= 7;
+    const warn   = item.days <= 14;
+    const color  = urgent ? 'border-red-200 bg-red-50/80' : warn ? 'border-amber-200 bg-amber-50/60' : 'border-orange-100 bg-orange-50/40';
+    const dayCol = urgent ? 'text-red-600' : warn ? 'text-amber-600' : 'text-orange-500';
+    return `<div class="p-3 rounded-xl border ${color} cursor-pointer hover:scale-[1.01] transition-transform active:scale-100" onclick="loadEmployeeById('${item.id}')">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="font-bold text-sm text-slate-700">${item.emp}</div>
+          <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+            <i class="fas fa-file text-[10px]"></i> ${item.doc}
+          </div>
+        </div>
+        <div class="text-left">
+          <div class="text-2xl font-black ${dayCol} leading-none">${item.days}</div>
+          <div class="text-[10px] font-bold ${dayCol} text-left">يوم</div>
+        </div>
+      </div>
+      ${urgent ? '<div class="mt-2 text-[10px] font-extrabold text-red-600 flex items-center gap-1"><i class="fas fa-triangle-exclamation"></i> تنبيه عاجل</div>' : ''}
+    </div>`;
+  }).join('') || '<div class="text-center py-8 text-slate-400 text-sm"><i class="fas fa-check-circle text-emerald-400 text-2xl mb-2 block"></i>لا توجد وثائق منتهية قريباً</div>';
+}
+
+/* ── Upload ── */
+(function setupDropzone() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const dz    = document.getElementById('dropzone');
+    const input = document.getElementById('fileInput');
+    if (!dz || !input) return;
+    ['dragenter','dragover'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('drop-active'); }));
+    ['dragleave','drop'].forEach(e => dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('drop-active'); }));
+    dz.addEventListener('drop', ev => handleFiles(ev.dataTransfer.files));
+    input.addEventListener('change', ev => handleFiles(ev.target.files));
+
+    // Validate on change
+    ['up-nationalId','up-docType','up-docDate'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', checkUploadReady);
+    });
+  });
+})();
+
+function handleFiles(files) {
+  const allowed = ['pdf','doc','docx','jpg','jpeg','png','tiff','xlsx'];
+  _selectedFiles = Array.from(files).filter(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(ext)) { showToast(`${f.name}: نوع الملف غير مدعوم`, 'error'); return false; }
+    if (f.size > 100*1024*1024) { showToast(`${f.name}: الملف أكبر من 100MB`, 'error'); return false; }
+    return true;
+  });
+  renderFileList();
+  checkUploadReady();
+}
+
+const FILE_ICONS = {pdf:'fa-file-pdf text-red-500',doc:'fa-file-word text-blue-500',docx:'fa-file-word text-blue-500',jpg:'fa-file-image text-green-500',jpeg:'fa-file-image text-green-500',png:'fa-file-image text-purple-500',xlsx:'fa-file-excel text-emerald-600',tiff:'fa-file-image text-teal-500'};
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!_selectedFiles.length) { list.classList.add('hidden'); return; }
+  list.classList.remove('hidden');
+  list.innerHTML = _selectedFiles.map((f,i) => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const ico = FILE_ICONS[ext] || 'fa-file text-slate-400';
+    const size = f.size > 1024*1024 ? (f.size/1024/1024).toFixed(1)+' MB' : Math.round(f.size/1024)+' KB';
+    return `<div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl">
+      <div class="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+        <i class="fas ${ico} text-sm"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-medium text-sm truncate">${f.name}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${size}</div>
+      </div>
+      <button onclick="removeFile(${i})" class="w-7 h-7 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 flex items-center justify-center transition-colors">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function removeFile(i) { _selectedFiles.splice(i,1); renderFileList(); checkUploadReady(); }
+
+function checkUploadReady() {
+  const nid    = document.getElementById('up-nationalId').value.trim();
+  const dtype  = document.getElementById('up-docType').value;
+  const ddate  = document.getElementById('up-docDate').value;
+  const btn    = document.getElementById('btnUpload');
+  btn.disabled = !(nid && dtype && ddate && _selectedFiles.length > 0);
+}
+
+function clearEmployeeFields() {
+  ['up-jobId','up-name','up-dept','up-title','up-phone','up-status'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  checkUploadReady();
+}
+
+function lookupEmployee() {
+  const nid = document.getElementById('up-nationalId').value.trim();
+  if (!nid) return;
+  const spinner = document.getElementById('lookup-spinner');
+  spinner.classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(emp => {
+      spinner.classList.add('hidden');
+      if (emp) {
+        document.getElementById('up-jobId').value  = emp.jobId       || '';
+        document.getElementById('up-name').value   = emp.name        || '';
+        document.getElementById('up-dept').value   = emp.department  || '';
+        document.getElementById('up-title').value  = emp.title       || '';
+        document.getElementById('up-phone').value  = emp.phone       || '';
+        document.getElementById('up-status').value = emp.status      || '';
+        showToast('تم العثور على الموظف: ' + emp.name, 'success');
+        checkUploadReady();
+      } else {
+        showToast('الموظف غير موجود في قاعدة البيانات', 'error');
+        clearEmployeeFields();
+      }
+    })
+    .withFailureHandler(e => { spinner.classList.add('hidden'); showToast('فشل البحث: '+e.message,'error'); })
+    .getEmployeeByNationalId(nid);
+}
+
+async function startUpload() {
+  const errEl = document.getElementById('uploadErrors');
+  const errors = [];
+
+  const metadata = {
+    nationalId: document.getElementById('up-nationalId').value.trim(),
+    jobId:      document.getElementById('up-jobId').value,
+    name:       document.getElementById('up-name').value,
+    docType:    document.getElementById('up-docType').value,
+    docDate:    document.getElementById('up-docDate').value,
+    expDate:    document.getElementById('up-expDate').value,
+    ref:        document.getElementById('up-ref').value,
+    issuer:     document.getElementById('up-issuer').value,
+    tags:       document.getElementById('up-tags').value,
+    secret:     document.getElementById('up-secret').checked
+  };
+
+  if (!metadata.nationalId) errors.push('الرقم الوطني مطلوب');
+  if (!metadata.docType)    errors.push('نوع الوثيقة مطلوب');
+  if (!metadata.docDate)    errors.push('تاريخ الوثيقة مطلوب');
+  if (!_selectedFiles.length) errors.push('لم يتم اختيار أي ملف');
+
+  if (errors.length) {
+    errEl.innerHTML = '<i class="fas fa-circle-xmark ml-2"></i>' + errors.join(' • ');
+    errEl.classList.remove('hidden');
+    return;
+  }
+  errEl.classList.add('hidden');
+
+  const prog  = document.getElementById('uploadProgress');
+  const pBar  = document.getElementById('progressBar');
+  const pText = document.getElementById('progressText');
+  const pStat = document.getElementById('uploadStatus');
+  const btn   = document.getElementById('btnUpload');
+
+  prog.classList.remove('hidden');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الرفع…';
+
+  const filesData = [];
+  for (let i = 0; i < _selectedFiles.length; i++) {
+    const f    = _selectedFiles[i];
+    pStat.textContent = `تحضير الملف ${i+1} من ${_selectedFiles.length}: ${f.name}`;
+    const b64  = await fileToBase64(f);
+    filesData.push({ name: f.name, type: f.type, size: f.size, data: b64.split(',')[1] });
+    const pct = Math.round(((i+1)/_selectedFiles.length)*60);
+    pBar.style.width  = pct + '%';
+    pText.textContent = pct + '%';
+  }
+
+  pStat.textContent = 'جاري الرفع على السيرفر…';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      pBar.style.width  = '100%';
+      pText.textContent = '100%';
+      pStat.textContent = 'اكتمل الرفع!';
+      showToast(`✅ تم رفع ${res.count || _selectedFiles.length} ملف بنجاح`, 'success');
+      addNotif(`تم رفع ${res.count || _selectedFiles.length} ملف جديد`, 'success');
+      setTimeout(() => { clearUpload(); loadDashboard(); }, 1500);
+    })
+    .withFailureHandler(e => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-upload"></i> رفع الملفات';
+      prog.classList.add('hidden');
+      showToast('فشل الرفع: ' + e.message, 'error');
+    })
+    .uploadFiles(filesData, metadata);
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej) => { const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+function clearUpload() {
+  _selectedFiles = [];
+  document.getElementById('fileList').classList.add('hidden');
+  document.getElementById('uploadProgress').classList.add('hidden');
+  document.getElementById('uploadErrors').classList.add('hidden');
+  document.getElementById('fileInput').value = '';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressText').textContent = '0%';
+  document.getElementById('btnUpload').innerHTML = '<i class="fas fa-upload"></i> رفع الملفات';
+  ['up-nationalId','up-docType','up-docDate','up-expDate','up-ref','up-issuer','up-tags'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('up-secret').checked = false;
+  clearEmployeeFields();
+  checkUploadReady();
+}
+
+/* ── Search ── */
+let _sortCol = 'date';
+let _sortAsc  = false;
+
+function doSearch() {
+  const query = document.getElementById('searchQuery').value;
+  const filters = {
+    type:   document.getElementById('filter-type').value,
+    dept:   document.getElementById('filter-dept').value,
+    status: document.getElementById('filter-status').value,
+    from:   document.getElementById('filter-from').value,
+    to:     document.getElementById('filter-to').value
+  };
+
+  document.getElementById('searchResults').innerHTML = `<tr><td colspan="8" class="text-center py-12">
+    <i class="fas fa-spinner fa-spin text-2xl text-slate-300"></i>
+    <p class="text-sm text-slate-400 mt-2">جاري البحث…</p>
+  </td></tr>`;
+
+  google.script.run
+    .withSuccessHandler(results => renderSearchResults(results || []))
+    .withFailureHandler(() => showToast('فشل البحث', 'error'))
+    .searchArchive(query, filters);
+}
+
+function renderSearchResults(results) {
+  _searchResults = results;
+  _selectedRows.clear();
+  const toolbar = document.getElementById('resultsToolbar');
+  const count   = document.getElementById('resultsCount');
+
+  if (!results.length) {
+    document.getElementById('searchResults').innerHTML = `<tr><td colspan="8" class="text-center py-16 text-slate-400">
+      <i class="fas fa-search text-4xl opacity-20 mb-3 block"></i>
+      <p class="font-medium">لا توجد نتائج مطابقة</p>
+      <p class="text-xs mt-1 text-slate-300">جرّب كلمات بحث مختلفة أو عدّل الفلاتر</p>
+    </td></tr>`;
+    toolbar.classList.add('hidden');
+    return;
+  }
+
+  toolbar.classList.remove('hidden');
+  count.textContent = results.length + ' نتيجة';
+
+  document.getElementById('searchResults').innerHTML = results.map((r, i) => {
+    const isExp  = r.isExpiring;
+    const isExp2 = r.isExpired;
+    const expClass = isExp2 ? 'text-red-700 font-extrabold' : isExp ? 'text-amber-600 font-bold' : '';
+    return `<tr class="tr-hover group">
+      <td class="px-4 py-3">
+        <input type="checkbox" class="row-check w-4 h-4 accent-[#1e3a8a] cursor-pointer" data-idx="${i}" onchange="updateSelection()">
+      </td>
+      <td class="px-4 py-3">
+        <div class="font-bold text-slate-700">${r.employeeName || '—'}</div>
+        <div class="text-xs text-slate-400 mt-0.5 font-mono">${r.nationalId || ''} ${r.department ? '• '+r.department : ''}</div>
+      </td>
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-file-pdf text-red-400 text-xs shrink-0"></i>
+          <span class="text-sm text-slate-700 truncate max-w-[180px]">${r.fileName || '—'}</span>
+          ${r.isSecret ? '<span class="badge bg-red-100 text-red-600 shrink-0"><i class="fas fa-lock text-[9px]"></i></span>' : ''}
+        </div>
+      </td>
+      <td class="px-4 py-3 text-center">
+        <span class="badge bg-slate-100 text-slate-600">${r.docType || '—'}</span>
+      </td>
+      <td class="px-4 py-3 text-center text-xs text-slate-500 tabular-nums">${r.docDate || '—'}</td>
+      <td class="px-4 py-3 text-center text-xs ${expClass} tabular-nums">
+        ${r.expDate || '—'}
+        ${isExp2 ? ' <i class="fas fa-circle-xmark text-red-500 text-[10px]"></i>' : isExp ? ' <i class="fas fa-triangle-exclamation text-amber-500 text-[10px]"></i>' : ''}
+      </td>
+      <td class="px-4 py-3 text-center text-xs text-slate-400">${r.size || '—'}</td>
+      <td class="px-4 py-3">
+        <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onclick="previewFile('${r.id}')" class="w-7 h-7 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-colors" title="معاينة">
+            <i class="fas fa-eye text-xs"></i>
+          </button>
+          <button onclick="downloadFile('${r.id}')" class="w-7 h-7 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 flex items-center justify-center transition-colors" title="تحميل">
+            <i class="fas fa-download text-xs"></i>
+          </button>
+          <button onclick="confirmDelete('${r.id}','${(r.fileName||'').replace(/'/g,'')}')" class="w-7 h-7 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 flex items-center justify-center transition-colors" title="حذف">
+            <i class="fas fa-trash text-xs"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateSelection() {
+  const checks = document.querySelectorAll('.row-check:checked');
+  _selectedRows = new Set(Array.from(checks).map(c => parseInt(c.dataset.idx)));
+  const cnt    = _selectedRows.size;
+  const cntEl  = document.getElementById('selectedCount');
+  const bulkEl = document.getElementById('bulkActions');
+  cntEl.textContent = cnt + ' محدد';
+  cntEl.classList.toggle('hidden', cnt === 0);
+  bulkEl.classList.toggle('hidden', cnt === 0);
+}
+
+function toggleSelectAll() {
+  const all = document.getElementById('selectAll').checked;
+  document.querySelectorAll('.row-check').forEach(c => c.checked = all);
+  updateSelection();
+}
+
+function sortBy(col) {
+  if (_sortCol === col) _sortAsc = !_sortAsc;
+  else { _sortCol = col; _sortAsc = true; }
+  renderSearchResults(_searchResults.slice().sort((a,b) => {
+    const av = col==='date' ? a.docDate : a.expDate;
+    const bv = col==='date' ? b.docDate : b.expDate;
+    return _sortAsc ? av?.localeCompare(bv||'') : bv?.localeCompare(av||'');
+  }));
+}
+
+function bulkDownload() {
+  const ids = Array.from(_selectedRows).map(i => _searchResults[i]?.id).filter(Boolean);
+  ids.forEach(id => downloadFile(id));
+  showToast(`جاري تحميل ${ids.length} ملف`, 'info');
+}
+
+function bulkDelete() {
+  const cnt = _selectedRows.size;
+  if (!cnt) return;
+  confirmDelete(null, `${cnt} ملف محدد`);
+}
+
+/* ── Employee profile ── */
+function loadEmployee() {
+  const id = document.getElementById('empSearch').value.trim();
+  if (!id) return;
+  document.getElementById('emp-empty').classList.add('hidden');
+  document.getElementById('employeeProfile').classList.add('hidden');
+  document.getElementById('emp-skeleton').classList.remove('hidden');
+  google.script.run
+    .withSuccessHandler(emp => {
+      document.getElementById('emp-skeleton').classList.add('hidden');
+      renderEmployee(emp);
+    })
+    .withFailureHandler(e => {
+      document.getElementById('emp-skeleton').classList.add('hidden');
+      document.getElementById('emp-empty').classList.remove('hidden');
+      showToast('فشل جلب البيانات: ' + e.message, 'error');
+    })
+    .getEmployeeProfile(id);
+}
+
+function loadEmployeeById(id) {
+  document.getElementById('empSearch').value = id;
+  switchPage('employee');
+  loadEmployee();
+}
+
+function renderEmployee(emp) {
+  const container = document.getElementById('employeeProfile');
+  if (!emp) {
+    document.getElementById('emp-empty').classList.remove('hidden');
+    return;
+  }
+  const initials = (emp.name||'').split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('');
+  const docGroups = {};
+  (emp.documents||[]).forEach(d => { (docGroups[d.type] = docGroups[d.type]||[]).push(d); });
+  const completeness = Math.min(100, Math.round(((emp.documents||[]).length / 10)*100));
+
+  container.innerHTML = `
+    <div class="grid md:grid-cols-3 gap-5">
+      <!-- Left: Profile card -->
+      <div class="space-y-4">
+        <div class="bg-gradient-to-br from-[#1e3a8a] to-[#0369a1] rounded-2xl p-5 text-white text-center">
+          <div class="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center text-3xl font-black mb-3">${initials||'—'}</div>
+          <h3 class="font-black text-lg leading-tight">${emp.name||'—'}</h3>
+          <p class="text-white/60 text-sm mt-0.5">${emp.title||''}</p>
+          <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${emp.status==='نشط'?'bg-emerald-400/20 text-emerald-200':'bg-white/10 text-white/60'}">
+            <div class="w-1.5 h-1.5 rounded-full ${emp.status==='نشط'?'bg-emerald-400':'bg-white/40'}"></div>
+            ${emp.status||'—'}
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-100 rounded-2xl p-4 space-y-2.5 text-sm">
+          ${[['الرقم الوطني',emp.nationalId,'font-mono'],['الرقم الوظيفي',emp.jobId,'font-mono'],['القسم',emp.department,''],['الدرجة',emp.grade,''],['الهاتف',emp.phone,'font-mono dir-ltr']].map(([l,v,c])=>`
+            <div class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+              <span class="text-slate-400 text-xs">${l}</span>
+              <span class="font-bold text-slate-700 ${c}">${v||'—'}</span>
+            </div>`).join('')}
+        </div>
+
+        <!-- Completeness -->
+        <div class="bg-white border border-slate-100 rounded-2xl p-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs font-bold text-slate-500">اكتمال الملف</span>
+            <span class="text-sm font-black ${completeness>=80?'text-emerald-600':completeness>=50?'text-amber-600':'text-red-600'}">${completeness}%</span>
+          </div>
+          <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all ${completeness>=80?'bg-emerald-500':completeness>=50?'bg-amber-500':'bg-red-500'}" style="width:${completeness}%"></div>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5">${emp.documents?.length||0} وثيقة من 10 مطلوبة</p>
+        </div>
+      </div>
+
+      <!-- Right: Documents -->
+      <div class="md:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="font-extrabold flex items-center gap-2 text-slate-700">
+            <i class="fas fa-folder-open text-amber-500"></i>
+            الوثائق (${emp.documents?.length||0})
+          </h4>
+          <button onclick="switchPage('upload');document.getElementById('up-nationalId').value='${emp.nationalId||''}'" class="h-9 px-4 rounded-xl bg-[#1e3a8a] text-white text-xs font-bold hover:bg-[#1d4ed8] transition-colors flex items-center gap-1.5">
+            <i class="fas fa-plus text-[10px]"></i> إضافة وثيقة
+          </button>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-3 max-h-[480px] overflow-y-auto pl-1">
+          ${(emp.documents||[]).map(doc => {
+            const ext = (doc.fileName||'').split('.').pop().toLowerCase();
+            const ico = FILE_ICONS[ext] || 'fa-file text-slate-400';
+            return `<div class="bg-white border border-slate-100 rounded-xl p-3.5 hover:shadow-md hover:border-slate-200 transition-all cursor-pointer group" onclick="previewFile('${doc.id}')">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-[#1e3a8a]/5 transition-colors">
+                  <i class="fas ${ico} text-sm"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-sm text-slate-700 flex items-center gap-1">
+                    ${doc.type||'—'}
+                    ${doc.isSecret ? '<i class="fas fa-lock text-red-500 text-[10px]"></i>' : ''}
+                  </div>
+                  <div class="text-xs text-slate-400 mt-1">${doc.date||''} ${doc.size?'• '+doc.size:''}</div>
+                  ${doc.expDate ? `<div class="text-xs mt-1 font-medium ${doc.isExpiring?'text-red-600':'text-slate-400'}">
+                    ${doc.isExpiring?'<i class="fas fa-triangle-exclamation text-[10px]"></i> ':''}ينتهي: ${doc.expDate}
+                  </div>` : ''}
+                </div>
+                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1">
+                  <button onclick="event.stopPropagation();downloadFile('${doc.id}')" class="w-6 h-6 rounded-lg hover:bg-emerald-50 text-slate-300 hover:text-emerald-600 flex items-center justify-center">
+                    <i class="fas fa-download text-[10px]"></i>
+                  </button>
+                </div>
+              </div>
+            </div>`;
+          }).join('') || '<div class="sm:col-span-2 text-center py-10 text-slate-400"><i class="fas fa-folder-open text-3xl opacity-20 mb-2 block"></i><p class="text-sm">لا توجد وثائق مرفوعة</p></div>'}
+        </div>
+      </div>
+    </div>`;
+  container.classList.remove('hidden');
+}
+
+/* ── Preview ── */
+function previewFile(fileId) {
+  if (!fileId) return;
+  const modal = document.getElementById('previewModal');
+  const content = document.getElementById('previewContent');
+  document.getElementById('previewTitle').textContent = 'جاري التحميل…';
+  document.getElementById('previewMeta').textContent  = '';
+  content.innerHTML = '<div class="flex items-center gap-3 text-slate-300"><i class="fas fa-spinner fa-spin text-2xl"></i><span class="text-sm">جاري تحميل المستند…</span></div>';
+  modal.classList.add('open');
+
+  const btn = document.getElementById('previewDownloadBtn');
+  btn.onclick = () => downloadFile(fileId);
+
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res && res.url) {
+        document.getElementById('previewTitle').textContent = res.fileName || 'معاينة المستند';
+        document.getElementById('previewMeta').textContent  = `${res.docType||''} • ${res.date||''}`;
+        const isImage = /\.(jpg|jpeg|png|gif)$/i.test(res.fileName||'');
+        content.innerHTML = isImage
+          ? `<img src="${res.url}" class="max-w-full max-h-full object-contain rounded-lg shadow" alt="معاينة">`
+          : `<iframe src="${res.url}" class="w-full h-full border-0"></iframe>`;
+      } else {
+        content.innerHTML = '<p class="text-sm text-slate-400">تعذّر تحميل المستند</p>';
+      }
+    })
+    .withFailureHandler(e => {
+      content.innerHTML = `<p class="text-sm text-red-500">خطأ: ${e.message}</p>`;
+    })
+    .getFilePreviewUrl(fileId);
+}
+
+function closePreview() {
+  document.getElementById('previewModal').classList.remove('open');
+  document.getElementById('previewContent').innerHTML = '';
+}
+
+function downloadFile(fileId) {
+  if (!fileId) return;
+  google.script.run.withSuccessHandler(url => { if(url) window.open(url,'_blank'); })
+    .getFileDownloadUrl(fileId);
+}
+
+/* ── Delete confirm ── */
+function confirmDelete(id, name) {
+  _deleteTarget = id;
+  document.getElementById('deleteConfirmText').textContent = `هل تريد حذف "${name}"؟ لا يمكن التراجع.`;
+  document.getElementById('deleteConfirmBtn').onclick = () => {
+    closeDeleteModal();
+    if (!_deleteTarget) return;
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.ok) { showToast('تم الحذف بنجاح', 'success'); doSearch(); }
+        else showToast(res?.error || 'فشل الحذف', 'error');
+      })
+      .deleteFile(_deleteTarget);
+  };
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+
+/* ── Reports ── */
+function generateReport(type) {
+  showToast('جاري إنشاء التقرير…', 'info');
+  google.script.run
+    .withSuccessHandler(url => { if(url) window.open(url,'_blank'); showToast('اكتمل إنشاء التقرير ✅', 'success'); })
+    .withFailureHandler(() => showToast('فشل إنشاء التقرير', 'error'))
+    .generateReport(type);
+}
+
+function exportAll() { generateReport('full_export'); }
+
+/* ── Notifications ── */
+function addNotif(msg, type='info') {
+  _notifCount++;
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = _notifCount > 9 ? '9+' : _notifCount;
+  badge.classList.remove('hidden');
+
+  const list = document.getElementById('notifList');
+  const colors = {success:'text-emerald-600 bg-emerald-50',warning:'text-amber-600 bg-amber-50',error:'text-red-600 bg-red-50',info:'text-blue-600 bg-blue-50'};
+  const icons  = {success:'fa-check-circle',warning:'fa-triangle-exclamation',error:'fa-circle-xmark',info:'fa-info-circle'};
+  const item = document.createElement('div');
+  item.className = `flex items-start gap-3 p-3 rounded-xl ${colors[type]||colors.info} text-sm`;
+  item.innerHTML = `<i class="fas ${icons[type]||icons.info} mt-0.5 shrink-0"></i><span class="flex-1 font-medium">${msg}</span>`;
+  list.prepend(item);
+}
+
+function clearNotifs() {
+  _notifCount = 0;
+  document.getElementById('notifBadge').classList.add('hidden');
+  document.getElementById('notifList').innerHTML = '<div class="p-4 text-center text-slate-400 text-sm mt-8"><i class="fas fa-bell-slash text-3xl opacity-20 mb-2 block"></i>لا توجد إشعارات</div>';
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  const overlay = document.getElementById('notifOverlay');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  overlay.classList.toggle('hidden', isOpen);
+}
+
+/* ── Settings ── */
+function showSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
+
+/* ── Filters init ── */
+const DOC_TYPES = ['بطاقة شخصية','جواز سفر','عقد عمل','مباشرة عمل','قرار تعيين','قرار نقل','قرار ترقية','مؤهل علمي','شهادة خبرة','دورة تدريبية','تقرير طبي','إجازة','إنذار','إخلاء طرف','رخصة قيادة','صورة شخصية','أخرى'];
+
+function populateFilters() {
+  // Populate static doc-type lists
+  ['filter-type', 'up-docType'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    DOC_TYPES.forEach(t => { const o = document.createElement('option'); o.value = o.textContent = t; sel.appendChild(o); });
+  });
+
+  // Dynamically populate department filter from backend
+  google.script.run
+    .withSuccessHandler(opts => {
+      if (!opts) return;
+      const deptSel = document.getElementById('filter-dept');
+      if (deptSel && opts.departments) {
+        opts.departments.forEach(d => {
+          const o = document.createElement('option'); o.value = o.textContent = d; deptSel.appendChild(o);
+        });
+      }
+    })
+    .getFilterOptions();
+}
+
+/* ── Toast ── */
+let _toastTimer = null;
+function showToast(msg, type='success') {
+  const inner = document.getElementById('toastInner');
+  const icon  = document.getElementById('toastIcon');
+  const msgEl = document.getElementById('toastMsg');
+  const configs = {
+    success: {icon:'fa-check-circle text-emerald-400',  bg:'bg-[#0f172a]'},
+    error:   {icon:'fa-circle-xmark text-red-400',      bg:'bg-red-950'},
+    info:    {icon:'fa-info-circle text-blue-400',       bg:'bg-slate-800'},
+    warning: {icon:'fa-triangle-exclamation text-amber-400', bg:'bg-slate-800'}
+  };
+  const cfg = configs[type] || configs.info;
+  msgEl.textContent = msg;
+  icon.className = 'fas ' + cfg.icon + ' text-base shrink-0';
+  inner.className = `${inner.className.replace(/bg-\S+/,'').trim()} ${cfg.bg} px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-medium transition-all duration-300`;
+  inner.style.transform = 'translateY(0)';
+  inner.style.opacity = '1';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    inner.style.transform = 'translateY(8px)';
+    inner.style.opacity   = '0';
+  }, 3500);
+}
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closePreview();
+    closeDeleteModal();
+    closeSettings();
+  }
+  if ((e.ctrlKey||e.metaKey) && e.key==='k') {
+    e.preventDefault();
+    document.getElementById('quickSearch')?.focus();
+  }
+});
+
+/* ── Close modals on overlay click ── */
+document.getElementById('settingsModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeDeleteModal();
+});
+</script>
+</body>
+</html>
