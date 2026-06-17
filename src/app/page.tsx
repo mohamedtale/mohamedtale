@@ -194,12 +194,35 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [dbProjects, setDbProjects] = useState<typeof PROJECTS | null>(null);
+  const [dbStats, setDbStats] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     const fn = () => { setScrolled(window.scrollY > 50); setScrollY(window.scrollY); };
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
+
+  useEffect(() => {
+    fetch("/api/content/projects").then(r => r.json()).then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        setDbProjects(data.map((p: any) => ({
+          img: p.imageUrl || IMAGES.proj1,
+          title: p.title,
+          date: p.date,
+          region: p.region,
+          count: p.count,
+          desc: p.description || "",
+        })));
+      }
+    }).catch(() => {});
+    fetch("/api/content/stats").then(r => r.json()).then(data => {
+      if (data && Object.keys(data).length > 0) setDbStats(data);
+    }).catch(() => {});
+  }, []);
+
+  const displayProjects = dbProjects ?? PROJECTS;
+  const stat = (key: string, fallback: number) => dbStats?.[key] ? parseInt(dbStats[key]) : fallback;
 
   return (
     <div className="min-h-screen bg-white" dir="rtl">
@@ -468,10 +491,10 @@ export default function HomePage() {
             <p className="text-blue-300">مسيرة حافلة في خدمة المواطن الليبي</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-            <Counter target={1500} prefix="+" label="تقرير فني" />
-            <Counter target={300}  prefix="+" label="مشروع منجز" />
-            <Counter target={24}              label="منطقة جغرافية" />
-            <Counter target={15}  prefix="+" suffix=" عام" label="سنوات الخبرة" />
+            <Counter target={stat("reports", 1500)} prefix="+" label="تقرير فني" />
+            <Counter target={stat("projects", 300)} prefix="+" label="مشروع منجز" />
+            <Counter target={stat("regions", 24)} label="منطقة جغرافية" />
+            <Counter target={stat("years", 15)} prefix="+" suffix=" عام" label="سنوات الخبرة" />
           </div>
         </div>
       </section>
@@ -579,7 +602,7 @@ export default function HomePage() {
             <p className="text-gray-500">إنجازات حقيقية على أرض الواقع في خدمة الشعب الليبي</p>
           </div>
           <div className="grid md:grid-cols-3 gap-7">
-            {PROJECTS.map((p, i) => (
+            {displayProjects.map((p, i) => (
               <div key={i} className="bg-white rounded-3xl overflow-hidden transition-all duration-400 cursor-pointer"
                 style={{ boxShadow: "0 4px 24px rgba(21,101,192,0.07)", border: "1px solid #e8f0fe" }}
                 onMouseEnter={e => {
