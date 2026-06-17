@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST() {
+  try {
   // Clear existing data
   await prisma.maintenanceLog.deleteMany();
   await prisma.report.deleteMany();
@@ -51,4 +52,7 @@ export async function POST() {
   ]);
 
   return NextResponse.json({ success: true, message: "تم إدخال البيانات التجريبية بنجاح" });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });
+  }
 }
