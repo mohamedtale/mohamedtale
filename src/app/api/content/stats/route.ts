@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const configs = await prisma.siteConfig.findMany();
     const map: Record<string, string> = {};
     for (const c of configs) map[c.key] = c.value;
-    return NextResponse.json(map);
+    return NextResponse.json(map, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+    });
   } catch {
     return NextResponse.json({});
   }

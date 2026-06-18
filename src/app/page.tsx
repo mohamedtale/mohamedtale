@@ -151,7 +151,7 @@ export default function HomePage() {
         })));
       }
     }).catch(() => {});
-    fetch("/api/content/stats").then(r => r.json()).then(d => {
+    fetch("/api/content/stats", { cache: "no-store" }).then(r => r.json()).then(d => {
       if (d && Object.keys(d).length > 0) setCfg(d);
     }).catch(() => {});
   }, []);
