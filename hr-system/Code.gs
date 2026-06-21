@@ -16,6 +16,7 @@ var SHEET_LEAVES       = 'الإجازات';
 // أنواع الإجازات كما هي مكتوبة في عمود نوع الإجازة
 var LEAVE_TYPE_SICK   = 'مرضية';
 var LEAVE_TYPE_UNPAID = 'بدون مرتب';
+var PERMIT_TYPE_EXIT  = 'إذن خروج';
 
 // أعمدة ورقة الموظفين (تبدأ من العمود A = index 0)
 // الترتيب الفعلي: الاسم | الرقم الوظيفي | الرقم السري | الرصيد | المؤهل | المسمى الوظيفي
@@ -111,10 +112,6 @@ var LEAVE_COL = {
   BDF        : 10  // K — BDF
 };
 
-// أنواع الإجازات
-var LEAVE_TYPE_SICK    = 'مرضية';
-var LEAVE_TYPE_UNPAID  = 'بدون مرتب';
-var PERMIT_TYPE_EXIT   = 'إذن خروج';
 
 // ─────────────────────────────────────────────
 // جلب شعار الجهة من Google Drive بصيغة Base64
@@ -219,83 +216,96 @@ function toDate(value) {
 // البحث عن موظف بالرقم الوظيفي مع إحصاءات الفترة
 // ─────────────────────────────────────────────
 function searchEmployee(empId, period) {
-  if (!empId || empId.toString().trim() === '') {
-    return { success: false, message: 'يرجى إدخال الرقم الوظيفي.' };
-  }
-
-  empId = empId.toString().trim();
-
-  // ── بيانات الموظف الأساسية ──
-  var employees = getSheetData(SHEET_EMPLOYEES);
-  var empRow    = null;
-
-  for (var i = 0; i < employees.length; i++) {
-    if (employees[i][EMP_COL.EMP_ID].toString().trim() === empId) {
-      empRow = employees[i];
-      break;
+  try {
+    if (!empId || empId.toString().trim() === '') {
+      return { success: false, message: 'يرجى إدخال الرقم الوظيفي.' };
     }
+
+    empId = empId.toString().trim();
+
+    // ── بيانات الموظف الأساسية ──
+    var employees = getSheetData(SHEET_EMPLOYEES);
+    if (!employees || employees.length === 0) {
+      return { success: false, message: 'تعذّر قراءة بيانات الموظفين. تحقق من اسم الشيت.' };
+    }
+
+    var empRow = null;
+    for (var i = 0; i < employees.length; i++) {
+      var rowId = employees[i][EMP_COL.EMP_ID];
+      if (rowId !== null && rowId !== undefined && rowId.toString().trim() === empId) {
+        empRow = employees[i];
+        break;
+      }
+    }
+
+    if (!empRow) {
+      return { success: false, message: 'لم يتم العثور على الموظف برقم: ' + empId + '. تحقق من الرقم الوظيفي.' };
+    }
+
+    // ── نطاق التاريخ ──
+    var range = getDateRange(period || 'month');
+
+    // ── إحصاءات التكليفات ──
+    var assignmentsCount = 0;
+    try { assignmentsCount = countAssignments(empId, range); } catch(e) { Logger.log('assignments err: ' + e); }
+
+    // ── إحصاءات أذونات الخروج ──
+    var exitPermitsCount = 0;
+    try { exitPermitsCount = countExitPermits(empId, range); } catch(e) { Logger.log('exit permits err: ' + e); }
+
+    // ── إحصاءات الإجازات ──
+    var leaveStats = { count: 0, totalDays: 0, unpaidDays: 0, sickDays: 0 };
+    try { leaveStats = calcLeaveStats(empId, range); } catch(e) { Logger.log('leave stats err: ' + e); }
+
+    // ── تنسيق الأوقات المخصصة ──
+    var checkInFormatted  = formatTime(empRow[EMP_COL.CHECKIN_TIME]);
+    var checkOutFormatted = formatTime(empRow[EMP_COL.CHECKOUT_TIME]);
+
+    // ── سجلات الحضور والانصراف والتأخير ──
+    var attendanceRecords = { rows: [], lateCount: 0, totalLateMinutes: 0, earlyExitCount: 0 };
+    try {
+      attendanceRecords = getAttendanceRecords(empId, range, empRow[EMP_COL.CHECKIN_TIME], empRow[EMP_COL.CHECKOUT_TIME]);
+    } catch(e) {
+      Logger.log('attendance err: ' + e);
+    }
+
+    return {
+      success: true,
+      employee: {
+        name                 : (empRow[EMP_COL.NAME]             || '').toString(),
+        empId                : (empRow[EMP_COL.EMP_ID]           || '').toString(),
+        jobTitle             : (empRow[EMP_COL.JOB_TITLE]        || '').toString(),
+        departmentOffice     : (empRow[EMP_COL.DEPARTMENT_OFFICE]|| '').toString(),
+        section              : (empRow[EMP_COL.SECTION]          || '').toString(),
+        grade                : (empRow[EMP_COL.GRADE]            || '').toString(),
+        manager              : (empRow[EMP_COL.MANAGER]          || '').toString(),
+        qualification        : (empRow[EMP_COL.QUALIFICATION]    || '').toString(),
+        location             : (empRow[EMP_COL.LOCATION]         || '').toString(),
+        status               : (empRow[EMP_COL.STATUS]           || '').toString(),
+        checkInTime          : checkInFormatted,
+        checkOutTime         : checkOutFormatted,
+        emergencyLeaveBalance: (empRow[EMP_COL.EMERGENCY_LEAVE]  || '0').toString()
+      },
+      stats: {
+        period              : period,
+        periodLabel         : getPeriodLabel(period),
+        assignmentsCount    : assignmentsCount,
+        exitPermitsCount    : exitPermitsCount,
+        leavesCount         : leaveStats.count,
+        totalLeaveDays      : leaveStats.totalDays,
+        unpaidLeaveDays     : leaveStats.unpaidDays,
+        sickLeaveDays       : leaveStats.sickDays,
+        lateCount           : attendanceRecords.lateCount,
+        totalLateMinutes    : attendanceRecords.totalLateMinutes,
+        earlyExitCount      : attendanceRecords.earlyExitCount
+      },
+      attendance: attendanceRecords.rows
+    };
+
+  } catch(e) {
+    Logger.log('searchEmployee fatal error: ' + e.toString());
+    return { success: false, message: 'خطأ في النظام: ' + e.message };
   }
-
-  if (!empRow) {
-    return { success: false, message: 'لم يتم العثور على الموظف. تحقق من الرقم الوظيفي.' };
-  }
-
-  // ── نطاق التاريخ ──
-  var range = getDateRange(period);
-
-  // ── إحصاءات التكليفات ──
-  var assignmentsCount = countAssignments(empId, range);
-
-  // ── إحصاءات أذونات الخروج ──
-  var exitPermitsCount = countExitPermits(empId, range);
-
-  // ── إحصاءات الإجازات ──
-  var leaveStats = calcLeaveStats(empId, range);
-
-  // ── تنسيق الأوقات المخصصة ──
-  var checkInFormatted  = formatTime(empRow[EMP_COL.CHECKIN_TIME]);
-  var checkOutFormatted = formatTime(empRow[EMP_COL.CHECKOUT_TIME]);
-
-  // ── سجلات الحضور والانصراف والتأخير ──
-  var attendanceRecords = getAttendanceRecords(
-    empId,
-    range,
-    empRow[EMP_COL.CHECKIN_TIME],
-    empRow[EMP_COL.CHECKOUT_TIME]
-  );
-
-  return {
-    success: true,
-    employee: {
-      name                 : empRow[EMP_COL.NAME].toString(),
-      empId                : empRow[EMP_COL.EMP_ID].toString(),
-      jobTitle             : empRow[EMP_COL.JOB_TITLE].toString(),
-      departmentOffice     : empRow[EMP_COL.DEPARTMENT_OFFICE].toString(),
-      section              : empRow[EMP_COL.SECTION].toString(),
-      grade                : empRow[EMP_COL.GRADE].toString(),
-      manager              : empRow[EMP_COL.MANAGER].toString(),
-      qualification        : empRow[EMP_COL.QUALIFICATION].toString(),
-      location             : empRow[EMP_COL.LOCATION].toString(),
-      status               : empRow[EMP_COL.STATUS].toString(),
-      checkInTime          : checkInFormatted,
-      checkOutTime         : checkOutFormatted,
-      emergencyLeaveBalance: empRow[EMP_COL.EMERGENCY_LEAVE].toString()
-    },
-    stats: {
-      period              : period,
-      periodLabel         : getPeriodLabel(period),
-      assignmentsCount    : assignmentsCount,
-      exitPermitsCount    : exitPermitsCount,
-      leavesCount         : leaveStats.count,
-      totalLeaveDays      : leaveStats.totalDays,
-      unpaidLeaveDays     : leaveStats.unpaidDays,
-      sickLeaveDays       : leaveStats.sickDays,
-      lateCount           : attendanceRecords.lateCount,
-      totalLateMinutes    : attendanceRecords.totalLateMinutes,
-      earlyExitCount      : attendanceRecords.earlyExitCount
-    },
-    attendance: attendanceRecords.rows
-  };
 }
 
 // ─────────────────────────────────────────────
