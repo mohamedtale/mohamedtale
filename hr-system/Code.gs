@@ -298,17 +298,16 @@ function searchEmployee(empId, period) {
 }
 
 // ─────────────────────────────────────────────
-// سجلات الحضور اليومي مع حساب التأخير
+// سجلات الحضور اليومي مع حساب التأخير (بدون تكرار)
 // ─────────────────────────────────────────────
 function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut) {
   var data        = getSheetData(SHEET_ATTENDANCE);
+  var seen        = {};   // لمنع التكرار — المفتاح: التاريخ
   var rows        = [];
   var lateCount   = 0;
   var totalLateMin= 0;
 
-  // استخراج دقائق الوقت المخصص من كائن Date أو نص
-  var scheduledInMinutes  = extractMinutesFromDay(scheduledCheckIn);
-  var scheduledOutMinutes = extractMinutesFromDay(scheduledCheckOut);
+  var scheduledInMinutes = extractMinutesFromDay(scheduledCheckIn);
 
   for (var i = 0; i < data.length; i++) {
     var row = data[i];
@@ -318,13 +317,18 @@ function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut)
     if (!d) continue;
     if (d < range.start || d > range.end) continue;
 
+    // مفتاح التاريخ لإزالة التكرار
+    var dateKey = formatDateAr(d);
+    if (seen[dateKey]) continue;
+    seen[dateKey] = true;
+
     var checkInVal  = row[ATT_COL.CHECKIN];
     var checkOutVal = row[ATT_COL.CHECKOUT];
 
     var checkInFormatted  = formatTime(checkInVal);
     var checkOutFormatted = formatTime(checkOutVal);
 
-    // حساب التأخير بالدقائق
+    // حساب التأخير
     var actualInMinutes = extractMinutesFromDay(checkInVal);
     var lateMinutes     = 0;
     var isLate          = false;
@@ -340,18 +344,21 @@ function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut)
     }
 
     rows.push({
-      date        : formatDateAr(d),
-      dayName     : getDayNameAr(d),
-      checkIn     : checkInFormatted,
-      checkOut    : checkOutFormatted,
-      isLate      : isLate,
-      lateMinutes : lateMinutes,
-      lateText    : lateMinutes > 0 ? formatLateTime(lateMinutes) : '—'
+      date       : dateKey,
+      dayName    : getDayNameAr(d),
+      checkIn    : checkInFormatted,
+      checkOut   : checkOutFormatted,
+      isLate     : isLate,
+      lateMinutes: lateMinutes,
+      lateText   : lateMinutes > 0 ? formatLateTime(lateMinutes) : '—',
+      _dateObj   : d
     });
   }
 
   // ترتيب تنازلي (الأحدث أولاً)
-  rows.sort(function(a, b) { return b.date > a.date ? 1 : -1; });
+  rows.sort(function(a, b) {
+    return b._dateObj - a._dateObj;
+  });
 
   return {
     rows            : rows,
