@@ -38,21 +38,52 @@
 </header>
 
 <!-- ══════════════════════════════════════════
-     رأس قسم الطباعة (يظهر عند الطباعة فقط)
+     رأس نموذج الطباعة الرسمي الحكومي
 ════════════════════════════════════════════ -->
 <div class="print-header">
-  <div class="print-logo-row">
-    <div class="print-org-name">المملكة العربية السعودية</div>
-    <div style="font-size:22pt; color:#1a3a5c;">🏛️</div>
-    <div class="print-org-name" style="text-align:left;">وزارة الموارد البشرية</div>
+
+  <!-- الشريط العلوي الوطني -->
+  <div class="gov-top-bar">
+    <div class="gov-top-right">المملكة العربية السعودية</div>
+    <div class="gov-emblem">⚜️</div>
+    <div class="gov-top-left">Kingdom of Saudi Arabia</div>
   </div>
-  <div class="print-report-title">تقرير بيانات الموظف — الموارد البشرية</div>
-  <div class="print-report-subtitle">
-    الموظف: <strong id="print-emp-name"></strong> &nbsp;|&nbsp;
-    الرقم الوظيفي: <strong id="print-emp-id"></strong> &nbsp;|&nbsp;
-    الفترة: <strong id="print-period"></strong> &nbsp;|&nbsp;
-    تاريخ الإصدار: <strong id="print-date"></strong>
+
+  <!-- اسم الجهة والقسم -->
+  <div class="gov-org-row">
+    <div class="gov-org-block">
+      <div class="gov-org-main" id="print-org-name">جهاز الرقابة ومكافحة الفساد</div>
+      <div class="gov-org-sub">قسم شؤون الموظفين</div>
+      <div class="gov-org-sub">Department of Human Resources Affairs</div>
+    </div>
   </div>
+
+  <!-- عنوان الوثيقة -->
+  <div class="gov-doc-title-row">
+    <div class="gov-doc-number">رقم: <span id="print-doc-number">___________</span></div>
+    <div class="gov-doc-title">كشف بيانات موظف</div>
+    <div class="gov-doc-date">التاريخ: <span id="print-date"></span></div>
+  </div>
+
+  <!-- بيانات الوثيقة -->
+  <div class="gov-doc-info-row">
+    <div class="gov-doc-info-item">
+      <span class="gov-label">اسم الموظف:</span>
+      <span class="gov-value" id="print-emp-name">—</span>
+    </div>
+    <div class="gov-doc-info-item">
+      <span class="gov-label">الرقم الوظيفي:</span>
+      <span class="gov-value" id="print-emp-id">—</span>
+    </div>
+    <div class="gov-doc-info-item">
+      <span class="gov-label">الفترة الزمنية:</span>
+      <span class="gov-value" id="print-period">—</span>
+    </div>
+  </div>
+
+  <!-- خط فاصل مزدوج -->
+  <div class="gov-divider-double"></div>
+
 </div>
 
 <!-- ══════════════════════════════════════════
@@ -311,32 +342,43 @@
       </button>
     </div>
 
-    <!-- ── قسم التوقيع والختم (يظهر عند الطباعة فقط) ── -->
+    <!-- ── التذييل الرسمي الحكومي (يظهر عند الطباعة فقط) ── -->
     <div class="print-footer">
-      <div class="print-sign-row">
 
-        <div>
-          <div class="print-stamp-area">الختم الرسمي</div>
-          <div class="print-sign-box">ختم الجهة</div>
-          <div class="print-sign-label">Official Stamp</div>
+      <div class="gov-sign-bar">
+
+        <!-- مدير شؤون الموظفين -->
+        <div class="gov-sign-box">
+          <div class="gov-sign-title">مدير قسم شؤون الموظفين</div>
+          <div class="gov-sign-name">الاسم: ___________________</div>
+          <div class="gov-sign-name" style="margin-top:4pt;">التوقيع: ___________________</div>
         </div>
 
-        <div>
-          <div class="print-sign-box">مدير إدارة الموارد البشرية</div>
-          <div class="print-sign-label">HR Manager Signature</div>
+        <!-- الختم الرسمي -->
+        <div class="gov-sign-box gov-stamp-col">
+          <div class="gov-stamp-circle">الختم الرسمي</div>
+          <div class="gov-sign-name" style="font-size:7pt;color:#888;">Official Seal</div>
         </div>
 
-        <div>
-          <div class="print-sign-box">مدير القسم</div>
-          <div class="print-sign-label">Department Head Signature</div>
+        <!-- مدير الموارد البشرية -->
+        <div class="gov-sign-box">
+          <div class="gov-sign-title">مدير إدارة الموارد البشرية</div>
+          <div class="gov-sign-name">الاسم: ___________________</div>
+          <div class="gov-sign-name" style="margin-top:4pt;">التوقيع: ___________________</div>
         </div>
 
+      </div><!-- /gov-sign-bar -->
+
+      <div class="gov-footer-bar">
+        <span>هذه الوثيقة صادرة من نظام إدارة الموارد البشرية — قسم شؤون الموظفين</span>
+        <span id="print-footer-date"></span>
       </div>
 
       <div class="print-meta">
-        <span>صدر من نظام إدارة الموارد البشرية</span>
-        <span id="print-footer-date"></span>
+        <span>السرية: للاستخدام الرسمي فقط</span>
+        <span>Confidential — Official Use Only</span>
       </div>
+
     </div><!-- /print-footer -->
 
   </div><!-- /results-section -->

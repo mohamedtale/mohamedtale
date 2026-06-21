@@ -304,19 +304,39 @@ function formatFileDate() {
   return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2);
 }
 
-// ── طباعة التقرير ──
+// ── طباعة التقرير الحكومي الرسمي ──
 function printReport() {
   if (!currentEmployee) {
     showAlert('يرجى البحث عن موظف أولاً قبل الطباعة.', 'danger');
     return;
   }
 
-  setText('print-emp-name', currentEmployee.name);
-  setText('print-emp-id',   currentEmployee.empId);
-  setText('print-period',   currentStats ? currentStats.periodLabel : '');
-  setText('print-date',     formatPrintDate(new Date()));
+  var now     = new Date();
+  var docNum  = currentEmployee.empId + '/' + (now.getFullYear()) + '/' + generateDocSerial();
+
+  setText('print-emp-name',    currentEmployee.name);
+  setText('print-emp-id',      currentEmployee.empId);
+  setText('print-period',      currentStats ? currentStats.periodLabel : '');
+  setText('print-date',        formatPrintDate(now));
+  setText('print-doc-number',  docNum);
+  setText('print-footer-date', 'تاريخ الطباعة: ' + formatPrintDate(now));
+
+  // تحديث اسم الجهة في رأس الطباعة (يمكن تعديله)
+  var orgEl = document.getElementById('print-org-name');
+  if (orgEl && orgEl.textContent.indexOf('جهاز') !== -1) {
+    // الاسم محدد مسبقاً في HTML
+  }
 
   window.print();
+}
+
+// ── توليد رقم مسلسل للوثيقة ──
+function generateDocSerial() {
+  var now = new Date();
+  return String(now.getMonth() + 1).padStart(2,'0') +
+         String(now.getDate()).padStart(2,'0') +
+         String(now.getHours()).padStart(2,'0') +
+         String(now.getMinutes()).padStart(2,'0');
 }
 
 // ── مسح النتائج ──
