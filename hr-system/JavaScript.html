@@ -1,0 +1,193 @@
+<script>
+/* ============================================================
+   JavaScript.html — HR System Frontend Logic
+   ============================================================ */
+
+// ── الحالة العامة ──
+var currentEmployee = null;
+var currentStats    = null;
+
+// ── عند تحميل الصفحة ──
+document.addEventListener('DOMContentLoaded', function () {
+  renderCurrentDate();
+  setupEnterKey();
+});
+
+// ── عرض التاريخ الحالي في الرأس ──
+function renderCurrentDate() {
+  var el = document.getElementById('current-date-display');
+  if (!el) return;
+  var now  = new Date();
+  var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  el.textContent = now.toLocaleDateString('ar-SA', opts);
+}
+
+// ── تفعيل البحث بضغط Enter ──
+function setupEnterKey() {
+  var empInput = document.getElementById('emp-id-input');
+  if (empInput) {
+    empInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') triggerSearch();
+    });
+  }
+}
+
+// ── تشغيل البحث ──
+function triggerSearch() {
+  var empId  = document.getElementById('emp-id-input').value.trim();
+  var period = document.getElementById('period-select').value;
+
+  clearAlerts();
+
+  if (!empId) {
+    showAlert('يرجى إدخال الرقم الوظيفي قبل البحث.', 'danger');
+    document.getElementById('emp-id-input').focus();
+    return;
+  }
+
+  showLoader(true);
+  hideResults();
+
+  google.script.run
+    .withSuccessHandler(handleSearchSuccess)
+    .withFailureHandler(handleSearchError)
+    .searchEmployee(empId, period);
+}
+
+// ── معالجة نجاح البحث ──
+function handleSearchSuccess(result) {
+  showLoader(false);
+
+  if (!result.success) {
+    showAlert(result.message, 'danger');
+    return;
+  }
+
+  currentEmployee = result.employee;
+  currentStats    = result.stats;
+
+  renderEmployeeCard(result.employee);
+  renderStats(result.stats);
+  showResults();
+}
+
+// ── معالجة خطأ البحث ──
+function handleSearchError(error) {
+  showLoader(false);
+  showAlert('حدث خطأ أثناء الاتصال بالخادم: ' + (error.message || error), 'danger');
+}
+
+// ── رسم بيانات الموظف ──
+function renderEmployeeCard(emp) {
+  setText('emp-name',         emp.name);
+  setText('emp-title',        emp.jobTitle);
+  setText('emp-id-display',   'رقم وظيفي: ' + emp.empId);
+  setText('emp-dept',         emp.departmentOffice);
+  setText('emp-section',      emp.section);
+  setText('emp-grade',        emp.grade);
+  setText('emp-checkin',      emp.checkInTime);
+  setText('emp-checkout',     emp.checkOutTime);
+  setText('emp-emergency-leave', emp.emergencyLeaveBalance + ' يوم');
+}
+
+// ── رسم الإحصاءات ──
+function renderStats(stats) {
+  setText('period-label', stats.periodLabel);
+  setText('stat-assignments',  stats.assignmentsCount);
+  setText('stat-exit-permits', stats.exitPermitsCount);
+  setText('stat-leaves-count', stats.leavesCount);
+  setText('stat-total-days',   stats.totalLeaveDays);
+  setText('stat-unpaid-days',  stats.unpaidLeaveDays);
+  setText('stat-sick-days',    stats.sickLeaveDays);
+}
+
+// ── تغيير الفترة الزمنية وإعادة الحساب ──
+function onPeriodChange() {
+  if (!currentEmployee) return;
+  triggerSearch();
+}
+
+// ── طباعة / تصدير التقرير ──
+function printReport() {
+  if (!currentEmployee) {
+    showAlert('يرجى البحث عن موظف أولاً قبل الطباعة.', 'danger');
+    return;
+  }
+
+  // تحديث بيانات قسم الطباعة
+  setText('print-emp-name',    currentEmployee.name);
+  setText('print-emp-id',      currentEmployee.empId);
+  setText('print-period',      currentStats ? currentStats.periodLabel : '');
+  setText('print-date',        formatPrintDate(new Date()));
+
+  window.print();
+}
+
+// ── مسح النتائج ──
+function clearResults() {
+  currentEmployee = null;
+  currentStats    = null;
+  document.getElementById('emp-id-input').value = '';
+  clearAlerts();
+  hideResults();
+  document.getElementById('emp-id-input').focus();
+}
+
+// ── إظهار/إخفاء النتائج ──
+function showResults() {
+  var resultsSection = document.getElementById('results-section');
+  if (resultsSection) resultsSection.classList.remove('hidden');
+}
+
+function hideResults() {
+  var resultsSection = document.getElementById('results-section');
+  if (resultsSection) resultsSection.classList.add('hidden');
+}
+
+// ── مؤشر التحميل ──
+function showLoader(show) {
+  var loader = document.getElementById('loader-overlay');
+  if (!loader) return;
+  if (show) {
+    loader.classList.remove('hidden');
+  } else {
+    loader.classList.add('hidden');
+  }
+}
+
+// ── تنبيهات ──
+function showAlert(message, type) {
+  var container = document.getElementById('alert-container');
+  if (!container) return;
+  var icon = type === 'danger' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+  container.innerHTML =
+    '<div class="alert alert-' + type + '">' +
+      '<span>' + icon + '</span>' +
+      '<span>' + escapeHtml(message) + '</span>' +
+    '</div>';
+}
+
+function clearAlerts() {
+  var container = document.getElementById('alert-container');
+  if (container) container.innerHTML = '';
+}
+
+// ── مساعدات ──
+function setText(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = (value !== undefined && value !== null) ? value : '—';
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatPrintDate(date) {
+  var opts = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('ar-SA', opts);
+}
+</script>

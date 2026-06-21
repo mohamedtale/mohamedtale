@@ -1,0 +1,668 @@
+<style>
+/* ============================================================
+   CSS.html — HR System Styles (Screen + Print)
+   ============================================================ */
+
+/* ── المتغيرات ── */
+:root {
+  --primary        : #1a3a5c;
+  --primary-light  : #2d6a9f;
+  --accent         : #c8972a;
+  --accent-light   : #e8b84b;
+  --bg             : #f0f4f8;
+  --card-bg        : #ffffff;
+  --text-main      : #1e2b3a;
+  --text-muted     : #6b7a8d;
+  --border         : #dce4ef;
+  --success        : #2e7d52;
+  --danger         : #c0392b;
+  --shadow-sm      : 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md      : 0 6px 24px rgba(0,0,0,0.12);
+  --radius         : 12px;
+  --radius-sm      : 8px;
+}
+
+/* ── إعادة التهيئة ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  background : var(--bg);
+  color      : var(--text-main);
+  direction  : rtl;
+  min-height : 100vh;
+}
+
+/* ── رأس الصفحة ── */
+.app-header {
+  background   : linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding      : 20px 32px;
+  display      : flex;
+  align-items  : center;
+  gap          : 16px;
+  box-shadow   : 0 4px 16px rgba(26,58,92,0.3);
+  position     : sticky;
+  top          : 0;
+  z-index      : 100;
+}
+
+.header-logo {
+  width           : 52px;
+  height          : 52px;
+  background      : rgba(255,255,255,0.15);
+  border-radius   : 50%;
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  font-size       : 24px;
+  flex-shrink     : 0;
+}
+
+.header-text h1 {
+  font-size   : 20px;
+  font-weight : 700;
+  color       : #ffffff;
+  line-height : 1.2;
+}
+
+.header-text p {
+  font-size : 13px;
+  color     : rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+.header-date {
+  margin-right  : auto;
+  text-align    : left;
+  color         : rgba(255,255,255,0.8);
+  font-size     : 13px;
+  line-height   : 1.6;
+}
+
+/* ── الحاوية الرئيسية ── */
+.main-container {
+  max-width : 980px;
+  margin    : 32px auto;
+  padding   : 0 20px 60px;
+}
+
+/* ── بطاقة ── */
+.card {
+  background    : var(--card-bg);
+  border-radius : var(--radius);
+  box-shadow    : var(--shadow-sm);
+  border        : 1px solid var(--border);
+  overflow      : hidden;
+}
+
+.card-header {
+  background  : linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  padding     : 16px 24px;
+  display     : flex;
+  align-items : center;
+  gap         : 10px;
+}
+
+.card-header h2 {
+  font-size   : 16px;
+  font-weight : 700;
+  color       : #ffffff;
+}
+
+.card-header .icon {
+  font-size : 20px;
+}
+
+.card-body {
+  padding : 24px;
+}
+
+/* ── منطقة البحث ── */
+.search-card {
+  margin-bottom : 24px;
+}
+
+.search-grid {
+  display               : grid;
+  grid-template-columns : 1fr 1fr auto;
+  gap                   : 16px;
+  align-items           : end;
+}
+
+.form-group {
+  display        : flex;
+  flex-direction : column;
+  gap            : 6px;
+}
+
+.form-group label {
+  font-size   : 13px;
+  font-weight : 600;
+  color       : var(--text-muted);
+}
+
+.form-group label span.required {
+  color : var(--danger);
+}
+
+.form-control {
+  border        : 1.5px solid var(--border);
+  border-radius : var(--radius-sm);
+  padding       : 11px 14px;
+  font-size     : 14px;
+  font-family   : inherit;
+  color         : var(--text-main);
+  background    : #fafbfd;
+  transition    : border-color 0.2s, box-shadow 0.2s;
+  width         : 100%;
+  direction     : rtl;
+}
+
+.form-control:focus {
+  outline      : none;
+  border-color : var(--primary-light);
+  box-shadow   : 0 0 0 3px rgba(45,106,159,0.15);
+  background   : #ffffff;
+}
+
+select.form-control { appearance: none; cursor: pointer; }
+
+/* ── الأزرار ── */
+.btn {
+  display         : inline-flex;
+  align-items     : center;
+  justify-content : center;
+  gap             : 8px;
+  padding         : 11px 24px;
+  border-radius   : var(--radius-sm);
+  font-size       : 14px;
+  font-weight     : 600;
+  font-family     : inherit;
+  cursor          : pointer;
+  border          : none;
+  transition      : all 0.2s;
+  white-space     : nowrap;
+  text-decoration : none;
+}
+
+.btn-primary {
+  background : linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color      : #ffffff;
+  box-shadow : 0 3px 12px rgba(26,58,92,0.3);
+}
+
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,58,92,0.35); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-accent {
+  background : linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  color      : #ffffff;
+  box-shadow : 0 3px 12px rgba(200,151,42,0.3);
+}
+
+.btn-accent:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(200,151,42,0.35); }
+
+.btn-outline {
+  background : transparent;
+  color      : var(--primary);
+  border     : 1.5px solid var(--primary);
+}
+.btn-outline:hover { background: var(--primary); color: #fff; }
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+.btn-row {
+  display    : flex;
+  gap        : 12px;
+  margin-top : 20px;
+  flex-wrap  : wrap;
+}
+
+/* ── الإشعارات ── */
+.alert {
+  border-radius : var(--radius-sm);
+  padding       : 14px 18px;
+  font-size     : 14px;
+  font-weight   : 500;
+  display       : flex;
+  align-items   : center;
+  gap           : 10px;
+  margin-bottom : 20px;
+}
+
+.alert-danger  { background: #fdf0ee; border: 1px solid #f5c6c2; color: var(--danger); }
+.alert-success { background: #edf7f2; border: 1px solid #b8deca; color: var(--success); }
+.alert-info    { background: #eef4fb; border: 1px solid #bdd4eb; color: var(--primary); }
+
+/* ── بطاقة معلومات الموظف ── */
+.employee-card {
+  margin-bottom : 24px;
+}
+
+.employee-header {
+  background  : linear-gradient(135deg, #1a3a5c 0%, #2d6a9f 60%, #3a85c8 100%);
+  padding     : 28px 28px 24px;
+  position    : relative;
+  overflow    : hidden;
+}
+
+.employee-header::before {
+  content    : '';
+  position   : absolute;
+  top        : -30px;
+  left       : -30px;
+  width      : 140px;
+  height     : 140px;
+  border-radius: 50%;
+  background : rgba(255,255,255,0.05);
+}
+
+.employee-header::after {
+  content    : '';
+  position   : absolute;
+  bottom     : -40px;
+  right      : -20px;
+  width      : 180px;
+  height     : 180px;
+  border-radius: 50%;
+  background : rgba(255,255,255,0.04);
+}
+
+.emp-main-info {
+  display     : flex;
+  align-items : center;
+  gap         : 20px;
+  position    : relative;
+  z-index     : 1;
+}
+
+.emp-avatar {
+  width           : 72px;
+  height          : 72px;
+  border-radius   : 50%;
+  background      : rgba(255,255,255,0.18);
+  display         : flex;
+  align-items     : center;
+  justify-content : center;
+  font-size       : 32px;
+  flex-shrink     : 0;
+  border          : 2px solid rgba(255,255,255,0.3);
+}
+
+.emp-name {
+  font-size   : 22px;
+  font-weight : 700;
+  color       : #ffffff;
+  line-height : 1.2;
+}
+
+.emp-title {
+  font-size  : 14px;
+  color      : rgba(255,255,255,0.8);
+  margin-top : 4px;
+}
+
+.emp-id-badge {
+  margin-right : auto;
+  background   : rgba(255,255,255,0.15);
+  border       : 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding      : 6px 16px;
+  color        : #ffffff;
+  font-size    : 13px;
+  font-weight  : 600;
+}
+
+/* ── شبكة التفاصيل ── */
+.details-grid {
+  display               : grid;
+  grid-template-columns : repeat(3, 1fr);
+  gap                   : 1px;
+  background            : var(--border);
+}
+
+.detail-item {
+  background  : var(--card-bg);
+  padding     : 16px 20px;
+  display     : flex;
+  flex-direction: column;
+  gap         : 4px;
+}
+
+.detail-label {
+  font-size  : 11px;
+  font-weight: 600;
+  color      : var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size  : 15px;
+  font-weight: 600;
+  color      : var(--text-main);
+}
+
+/* ── قسم الإحصاءات ── */
+.stats-section {
+  margin-bottom: 24px;
+}
+
+.stats-header {
+  display      : flex;
+  align-items  : center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap    : wrap;
+  gap          : 10px;
+}
+
+.stats-header h3 {
+  font-size  : 16px;
+  font-weight: 700;
+  color      : var(--primary);
+  display    : flex;
+  align-items: center;
+  gap        : 8px;
+}
+
+.period-badge {
+  background   : linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  color        : #ffffff;
+  font-size    : 12px;
+  font-weight  : 700;
+  padding      : 4px 14px;
+  border-radius: 20px;
+}
+
+.stats-grid {
+  display              : grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap                  : 16px;
+}
+
+.stat-card {
+  background   : var(--card-bg);
+  border-radius: var(--radius);
+  border       : 1px solid var(--border);
+  padding      : 20px 18px;
+  text-align   : center;
+  box-shadow   : var(--shadow-sm);
+  transition   : transform 0.2s, box-shadow 0.2s;
+  position     : relative;
+  overflow     : hidden;
+}
+
+.stat-card::before {
+  content      : '';
+  position     : absolute;
+  top          : 0;
+  right        : 0;
+  left         : 0;
+  height       : 4px;
+  background   : var(--stat-color, var(--primary));
+}
+
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+.stat-icon {
+  font-size    : 28px;
+  margin-bottom: 8px;
+  display      : block;
+}
+
+.stat-value {
+  font-size  : 32px;
+  font-weight: 800;
+  color      : var(--stat-color, var(--primary));
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size : 12px;
+  color     : var(--text-muted);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ألوان بطاقات الإحصاء */
+.stat-card.color-blue   { --stat-color: #1a6fa8; }
+.stat-card.color-teal   { --stat-color: #0d7a6e; }
+.stat-card.color-purple { --stat-color: #6a3d9a; }
+.stat-card.color-orange { --stat-color: #c86a1a; }
+.stat-card.color-red    { --stat-color: #b5371f; }
+.stat-card.color-green  { --stat-color: #2e7d52; }
+
+/* ── مؤشر التحميل ── */
+.loader-overlay {
+  position        : fixed;
+  inset           : 0;
+  background      : rgba(240,244,248,0.85);
+  display         : flex;
+  flex-direction  : column;
+  align-items     : center;
+  justify-content : center;
+  z-index         : 999;
+  backdrop-filter : blur(4px);
+  gap             : 16px;
+}
+
+.loader-spinner {
+  width        : 52px;
+  height       : 52px;
+  border       : 4px solid var(--border);
+  border-top   : 4px solid var(--primary-light);
+  border-radius: 50%;
+  animation    : spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loader-text {
+  font-size  : 15px;
+  font-weight: 600;
+  color      : var(--primary);
+}
+
+/* ── قسم مخفي ── */
+.hidden { display: none !important; }
+
+/* ── تذييل الصفحة ── */
+.app-footer {
+  text-align : center;
+  padding    : 20px;
+  font-size  : 12px;
+  color      : var(--text-muted);
+  border-top : 1px solid var(--border);
+  margin-top : 40px;
+}
+
+/* ─────────────────────────────────────────────
+   تنسيقات الطباعة الرسمية
+   ───────────────────────────────────────────── */
+@media print {
+
+  /* إخفاء عناصر الواجهة */
+  .app-header,
+  .search-card,
+  .btn-row,
+  .app-footer,
+  .loader-overlay,
+  .no-print {
+    display : none !important;
+  }
+
+  body {
+    background : #ffffff;
+    font-size  : 12pt;
+    color      : #000000;
+    direction  : rtl;
+  }
+
+  .main-container {
+    max-width : 100%;
+    margin    : 0;
+    padding   : 0;
+  }
+
+  /* رأس التقرير الرسمي */
+  .print-header {
+    display       : block !important;
+    text-align    : center;
+    border-bottom : 2.5pt solid #1a3a5c;
+    padding-bottom: 16pt;
+    margin-bottom : 20pt;
+  }
+
+  .print-logo-row {
+    display         : flex;
+    align-items     : center;
+    justify-content : space-between;
+    margin-bottom   : 10pt;
+  }
+
+  .print-org-name {
+    font-size  : 15pt;
+    font-weight: 700;
+    color      : #1a3a5c;
+  }
+
+  .print-report-title {
+    font-size  : 13pt;
+    font-weight: 700;
+    color      : #1a3a5c;
+    margin-top : 6pt;
+  }
+
+  .print-report-subtitle {
+    font-size  : 10pt;
+    color      : #555555;
+    margin-top : 3pt;
+  }
+
+  /* بيانات الموظف */
+  .employee-card {
+    border        : 1.5pt solid #1a3a5c;
+    border-radius : 0;
+    margin-bottom : 16pt;
+    page-break-inside: avoid;
+  }
+
+  .employee-header {
+    background   : #1a3a5c !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .emp-name  { color: #ffffff !important; font-size: 14pt; }
+  .emp-title { color: #ccddee !important; }
+  .emp-id-badge { border-color: rgba(255,255,255,0.5) !important; }
+
+  .details-grid {
+    border : 1pt solid #cccccc;
+  }
+
+  .detail-label { font-size: 8pt; }
+  .detail-value { font-size: 11pt; }
+
+  /* إحصاءات الفترة */
+  .stats-section { page-break-inside: avoid; }
+
+  .stats-header h3 { font-size: 12pt; color: #1a3a5c; }
+
+  .stats-grid {
+    grid-template-columns : repeat(3, 1fr);
+    gap                   : 10pt;
+  }
+
+  .stat-card {
+    border        : 1pt solid #cccccc;
+    border-radius : 0;
+    padding       : 10pt;
+    box-shadow    : none;
+    page-break-inside: avoid;
+  }
+
+  .stat-card::before {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .stat-value { font-size: 22pt; }
+  .stat-label { font-size: 9pt;  }
+
+  /* قسم التوقيع والختم */
+  .print-footer {
+    display       : block !important;
+    margin-top    : 40pt;
+    border-top    : 1.5pt solid #1a3a5c;
+    padding-top   : 16pt;
+  }
+
+  .print-sign-row {
+    display               : grid;
+    grid-template-columns : 1fr 1fr 1fr;
+    gap                   : 20pt;
+    text-align            : center;
+  }
+
+  .print-sign-box {
+    border-top  : 1pt solid #333333;
+    padding-top : 8pt;
+    margin-top  : 40pt;
+    font-size   : 10pt;
+    font-weight : 600;
+    color       : #1a3a5c;
+  }
+
+  .print-sign-label {
+    font-size : 9pt;
+    color     : #555555;
+    margin-top: 3pt;
+  }
+
+  .print-stamp-area {
+    width        : 90pt;
+    height       : 90pt;
+    border       : 2pt dashed #cccccc;
+    border-radius: 50%;
+    margin       : 0 auto 8pt;
+    display      : flex;
+    align-items  : center;
+    justify-content: center;
+    font-size    : 9pt;
+    color        : #aaaaaa;
+  }
+
+  .print-meta {
+    margin-top : 16pt;
+    font-size  : 9pt;
+    color      : #777777;
+    text-align : left;
+    display    : flex;
+    justify-content: space-between;
+  }
+}
+
+/* ── تظهر فقط عند الطباعة ── */
+.print-header,
+.print-footer {
+  display: none;
+}
+
+/* ── استجابة الشاشات الصغيرة ── */
+@media (max-width: 700px) {
+  .search-grid               { grid-template-columns: 1fr; }
+  .details-grid              { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid                { grid-template-columns: repeat(2, 1fr); }
+  .app-header                { padding: 14px 16px; }
+  .main-container            { padding: 0 12px 40px; }
+}
+
+@media (max-width: 480px) {
+  .details-grid { grid-template-columns: 1fr; }
+  .stats-grid   { grid-template-columns: 1fr; }
+  .emp-id-badge { display: none; }
+}
+</style>

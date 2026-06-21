@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام إدارة الموارد البشرية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <?!= include('CSS'); ?>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════
+     مؤشر التحميل
+════════════════════════════════════════════ -->
+<div id="loader-overlay" class="loader-overlay hidden">
+  <div class="loader-spinner"></div>
+  <div class="loader-text">جارٍ تحميل البيانات…</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     رأس التطبيق
+════════════════════════════════════════════ -->
+<header class="app-header no-print">
+  <div class="header-logo">🏛️</div>
+  <div class="header-text">
+    <h1>نظام إدارة الموارد البشرية</h1>
+    <p>Human Resources Management System</p>
+  </div>
+  <div class="header-date">
+    <div id="current-date-display"></div>
+    <div style="font-size:11px; opacity:0.65;">المملكة العربية السعودية</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     رأس قسم الطباعة (يظهر عند الطباعة فقط)
+════════════════════════════════════════════ -->
+<div class="print-header">
+  <div class="print-logo-row">
+    <div class="print-org-name">المملكة العربية السعودية</div>
+    <div style="font-size:22pt; color:#1a3a5c;">🏛️</div>
+    <div class="print-org-name" style="text-align:left;">وزارة الموارد البشرية</div>
+  </div>
+  <div class="print-report-title">تقرير بيانات الموظف — الموارد البشرية</div>
+  <div class="print-report-subtitle">
+    الموظف: <strong id="print-emp-name"></strong> &nbsp;|&nbsp;
+    الرقم الوظيفي: <strong id="print-emp-id"></strong> &nbsp;|&nbsp;
+    الفترة: <strong id="print-period"></strong> &nbsp;|&nbsp;
+    تاريخ الإصدار: <strong id="print-date"></strong>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     الحاوية الرئيسية
+════════════════════════════════════════════ -->
+<main class="main-container">
+
+  <!-- ── تنبيهات ── -->
+  <div id="alert-container"></div>
+
+  <!-- ── بطاقة البحث ── -->
+  <div class="card search-card no-print">
+    <div class="card-header">
+      <span class="icon">🔍</span>
+      <h2>البحث عن موظف</h2>
+    </div>
+    <div class="card-body">
+      <div class="search-grid">
+
+        <!-- الرقم الوظيفي -->
+        <div class="form-group">
+          <label for="emp-id-input">
+            الرقم الوظيفي <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="emp-id-input"
+            class="form-control"
+            placeholder="أدخل الرقم الوظيفي…"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- الفترة الزمنية -->
+        <div class="form-group">
+          <label for="period-select">الفترة الزمنية</label>
+          <select id="period-select" class="form-control" onchange="onPeriodChange()">
+            <option value="month">آخر شهر</option>
+            <option value="3months">آخر 3 أشهر</option>
+            <option value="6months">آخر 6 أشهر</option>
+            <option value="year">آخر سنة كاملة</option>
+          </select>
+        </div>
+
+        <!-- زر البحث -->
+        <div class="form-group">
+          <label style="visibility:hidden;">بحث</label>
+          <button class="btn btn-primary" onclick="triggerSearch()">
+            <span>🔍</span>
+            <span>بحث</span>
+          </button>
+        </div>
+
+      </div><!-- /search-grid -->
+    </div><!-- /card-body -->
+  </div><!-- /search-card -->
+
+  <!-- ══════════════════════════════════════════
+       قسم النتائج (مخفي حتى يتم البحث)
+  ════════════════════════════════════════════ -->
+  <div id="results-section" class="hidden">
+
+    <!-- ── بطاقة معلومات الموظف ── -->
+    <div class="card employee-card">
+
+      <!-- رأس البطاقة -->
+      <div class="employee-header">
+        <div class="emp-main-info">
+          <div class="emp-avatar">👤</div>
+          <div>
+            <div class="emp-name"  id="emp-name">—</div>
+            <div class="emp-title" id="emp-title">—</div>
+          </div>
+          <div class="emp-id-badge" id="emp-id-display">—</div>
+        </div>
+      </div>
+
+      <!-- شبكة التفاصيل -->
+      <div class="details-grid">
+
+        <div class="detail-item">
+          <div class="detail-label">الإدارة / المكتب</div>
+          <div class="detail-value" id="emp-dept">—</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">القسم</div>
+          <div class="detail-value" id="emp-section">—</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">الدرجة الوظيفية</div>
+          <div class="detail-value" id="emp-grade">—</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">وقت الحضور المخصص</div>
+          <div class="detail-value" id="emp-checkin">—</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">وقت الانصراف المخصص</div>
+          <div class="detail-value" id="emp-checkout">—</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">رصيد الإجازة الطارئة</div>
+          <div class="detail-value" id="emp-emergency-leave">—</div>
+        </div>
+
+      </div><!-- /details-grid -->
+    </div><!-- /employee-card -->
+
+    <!-- ── قسم الإحصاءات ── -->
+    <div class="stats-section">
+      <div class="stats-header">
+        <h3>
+          <span>📊</span>
+          <span>الإحصاءات والمؤشرات</span>
+        </h3>
+        <div class="period-badge" id="period-label">—</div>
+      </div>
+
+      <div class="stats-grid">
+
+        <!-- عدد التكليفات -->
+        <div class="stat-card color-blue">
+          <span class="stat-icon">📋</span>
+          <div class="stat-value" id="stat-assignments">0</div>
+          <div class="stat-label">عدد التكليفات</div>
+        </div>
+
+        <!-- أذونات الخروج -->
+        <div class="stat-card color-teal">
+          <span class="stat-icon">🚪</span>
+          <div class="stat-value" id="stat-exit-permits">0</div>
+          <div class="stat-label">أذونات الخروج</div>
+        </div>
+
+        <!-- عدد مرات الإجازة -->
+        <div class="stat-card color-purple">
+          <span class="stat-icon">🗓️</span>
+          <div class="stat-value" id="stat-leaves-count">0</div>
+          <div class="stat-label">عدد مرات الإجازة</div>
+        </div>
+
+        <!-- المدة الإجمالية للإجازات -->
+        <div class="stat-card color-orange">
+          <span class="stat-icon">⏳</span>
+          <div class="stat-value" id="stat-total-days">0</div>
+          <div class="stat-label">إجمالي أيام الإجازة</div>
+        </div>
+
+        <!-- إجازة بدون مرتب -->
+        <div class="stat-card color-red">
+          <span class="stat-icon">💼</span>
+          <div class="stat-value" id="stat-unpaid-days">0</div>
+          <div class="stat-label">أيام الإجازة بدون مرتب</div>
+        </div>
+
+        <!-- الأيام المرضية -->
+        <div class="stat-card color-green">
+          <span class="stat-icon">🏥</span>
+          <div class="stat-value" id="stat-sick-days">0</div>
+          <div class="stat-label">إجمالي الأيام المرضية</div>
+        </div>
+
+      </div><!-- /stats-grid -->
+    </div><!-- /stats-section -->
+
+    <!-- ── أزرار الإجراءات ── -->
+    <div class="btn-row no-print">
+      <button class="btn btn-accent" onclick="printReport()">
+        <span>🖨️</span>
+        <span>تصدير / طباعة التقرير</span>
+      </button>
+      <button class="btn btn-outline" onclick="clearResults()">
+        <span>🔄</span>
+        <span>بحث جديد</span>
+      </button>
+    </div>
+
+    <!-- ── قسم التوقيع والختم (يظهر عند الطباعة فقط) ── -->
+    <div class="print-footer">
+      <div class="print-sign-row">
+
+        <div>
+          <div class="print-stamp-area">الختم الرسمي</div>
+          <div class="print-sign-box">ختم الجهة</div>
+          <div class="print-sign-label">Official Stamp</div>
+        </div>
+
+        <div>
+          <div class="print-sign-box">مدير إدارة الموارد البشرية</div>
+          <div class="print-sign-label">HR Manager Signature</div>
+        </div>
+
+        <div>
+          <div class="print-sign-box">مدير القسم</div>
+          <div class="print-sign-label">Department Head Signature</div>
+        </div>
+
+      </div>
+
+      <div class="print-meta">
+        <span>صدر من نظام إدارة الموارد البشرية</span>
+        <span id="print-footer-date"></span>
+      </div>
+    </div><!-- /print-footer -->
+
+  </div><!-- /results-section -->
+
+</main>
+
+<!-- ── تذييل الصفحة ── -->
+<footer class="app-footer no-print">
+  <p>نظام إدارة الموارد البشرية &copy; <span id="footer-year"></span> — جميع الحقوق محفوظة</p>
+</footer>
+
+<?!= include('JavaScript'); ?>
+
+<script>
+  // تحديث سنة التذييل
+  var y = document.getElementById('footer-year');
+  if (y) y.textContent = new Date().getFullYear();
+
+  var pfd = document.getElementById('print-footer-date');
+  if (pfd) {
+    pfd.textContent = 'تاريخ الطباعة: ' +
+      new Date().toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+  }
+</script>
+
+</body>
+</html>
