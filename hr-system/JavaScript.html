@@ -215,12 +215,12 @@ function exportPDF() {
     pdf.rect(0, 0, pageW, 22, 'F');
 
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(13);
+    pdf.setFontSize(11);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('HR Report - ' + currentEmployee.name, margin, 9);
+    pdf.text('State of Libya - Ministry of Water Resources', margin, 8);
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('ID: ' + currentEmployee.empId + '   |   Period: ' + (currentStats ? currentStats.periodLabel : ''), margin, 15);
+    pdf.text('Executive Device for Drilling & Maintenance of Water Wells  |  HR Dept.', margin, 14);
 
     // تاريخ الإصدار يميناً
     var dateStr = 'Issued: ' + new Date().toLocaleDateString('en-SA');
