@@ -3,7 +3,7 @@
 // ============================================================
 
 var SPREADSHEET_ID    = '18SyUPB3tlLxHR7h5m4s7T5ktTwTna4CbDrNsJ0Cwtnk';
-var LOGO_FILE_ID      = '1lASyvunt77aZJu4ucsIOSYFilegLAnEW';
+// لا حاجة لـ Drive — الشعار يُضاف مباشرة في Index.html كـ base64 أو رابط
 
 var SHEET_EMPLOYEES    = 'الموظفين';
 var SHEET_ATTENDANCE   = 'الحضور_اليومي';
@@ -116,30 +116,11 @@ function _sanitizePeriod(raw) {
 }
 
 // ─────────────────────────────────────────────
-// جلب شعار الجهة — يقبل صور فقط
-// ─────────────────────────────────────────────
-function getLogoBase64() {
-  if (!LOGO_FILE_ID || LOGO_FILE_ID.trim() === '') return '';
-  try {
-    var file     = DriveApp.getFileById(LOGO_FILE_ID.trim());
-    var blob     = file.getBlob();
-    var mimeType = blob.getContentType();
-    // قبول أنواع الصور فقط
-    if (!mimeType || mimeType.indexOf('image/') !== 0) return '';
-    var b64 = Utilities.base64Encode(blob.getBytes());
-    return 'data:' + mimeType + ';base64,' + b64;
-  } catch (e) {
-    Logger.log('getLogoBase64 error: ' + e);
-    return '';
-  }
-}
-
-// ─────────────────────────────────────────────
 // نقطة الدخول الرئيسية
 // ─────────────────────────────────────────────
 function doGet() {
-  var template     = HtmlService.createTemplateFromFile('Index');
-  template.logoSrc = getLogoBase64();
+  var template = HtmlService.createTemplateFromFile('Index');
+  template.logoSrc = '';  // الشعار معطّل — DriveApp يحتاج صلاحيات إضافية
   return template
     .evaluate()
     .setTitle('نظام إدارة الموارد البشرية')
