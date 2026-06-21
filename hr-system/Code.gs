@@ -5,7 +5,7 @@
 var SPREADSHEET_ID = '18SyUPB3tlLxHR7h5m4s7T5ktTwTna4CbDrNsJ0Cwtnk';
 
 // ضع هنا معرّف ملف الشعار من Google Drive (الجزء بعد /d/ في الرابط)
-var LOGO_FILE_ID = '';
+var LOGO_FILE_ID = '1lASyvunt77aZJu4ucsIOSYFilegLAnEW';
 
 var SHEET_EMPLOYEES    = 'الموظفين';
 var SHEET_ATTENDANCE   = 'الحضور_اليومي';
