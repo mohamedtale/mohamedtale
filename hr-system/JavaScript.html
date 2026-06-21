@@ -114,9 +114,10 @@ function renderAttendanceTable(rows, stats) {
 
   // تحديث الملخص السريع
   setText('att-total-days',  rows.length);
-  setText('att-late-count',  stats.lateCount || 0);
+  setText('att-late-count',  stats.lateCount      || 0);
   setText('att-late-total',  formatLateDisplay(stats.totalLateMinutes || 0));
-  setText('att-period-badge', stats.periodLabel || '');
+  setText('att-early-exit',  stats.earlyExitCount || 0);
+  setText('att-period-badge', stats.periodLabel   || '');
 
   if (!rows || rows.length === 0) {
     tbody.innerHTML =
@@ -126,24 +127,49 @@ function renderAttendanceTable(rows, stats) {
 
   var html = '';
   for (var i = 0; i < rows.length; i++) {
-    var r          = rows[i];
-    var isWeekend  = (r.dayName === 'الجمعة' || r.dayName === 'السبت');
-    var rowClass   = isWeekend ? 'weekend-row' : '';
-    var badgeHtml  = r.isLate
-      ? '<span class="badge-late">متأخر</span>'
-      : '<span class="badge-ok">في الوقت</span>';
-    var lateHtml   = r.isLate
+    var r         = rows[i];
+    var isWeekend = (r.dayName === 'الجمعة' || r.dayName === 'السبت');
+    var rowClass  = isWeekend ? 'weekend-row' : '';
+
+    // تلوين صف حسب الحالة
+    if      (r.status === 'both')  rowClass += ' row-both';
+    else if (r.status === 'late')  rowClass += ' row-late';
+    else if (r.status === 'early') rowClass += ' row-early';
+
+    // badge الحالة
+    var badgeHtml;
+    switch (r.status) {
+      case 'both':
+        badgeHtml = '<span class="badge-both">متأخر + خروج مبكر</span>';
+        break;
+      case 'late':
+        badgeHtml = '<span class="badge-late">متأخر</span>';
+        break;
+      case 'early':
+        badgeHtml = '<span class="badge-early-exit">خروج بغير إذن</span>';
+        break;
+      default:
+        badgeHtml = '<span class="badge-ok">في الوقت</span>';
+    }
+
+    // عمود التأخير
+    var lateHtml = r.isLate
       ? '<span class="late-minutes">' + escapeHtml(r.lateText) + '</span>'
       : '<span style="color:var(--text-muted);">—</span>';
 
+    // تمييز وقت الانصراف إذا كان مبكراً
+    var checkOutHtml = r.isEarlyExit
+      ? '<span style="color:#6a3d9a;font-weight:700;">' + escapeHtml(r.checkOut) + ' ⚠️</span>'
+      : escapeHtml(r.checkOut);
+
     html +=
       '<tr class="' + rowClass + '">' +
-        '<td>' + escapeHtml(r.dayName)   + '</td>' +
-        '<td>' + escapeHtml(r.date)      + '</td>' +
-        '<td>' + escapeHtml(r.checkIn)   + '</td>' +
-        '<td>' + escapeHtml(r.checkOut)  + '</td>' +
-        '<td>' + lateHtml                + '</td>' +
-        '<td>' + badgeHtml               + '</td>' +
+        '<td>' + escapeHtml(r.dayName) + '</td>' +
+        '<td>' + escapeHtml(r.date)    + '</td>' +
+        '<td>' + escapeHtml(r.checkIn) + '</td>' +
+        '<td>' + checkOutHtml          + '</td>' +
+        '<td>' + lateHtml              + '</td>' +
+        '<td>' + badgeHtml             + '</td>' +
       '</tr>';
   }
   tbody.innerHTML = html;

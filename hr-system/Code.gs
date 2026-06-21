@@ -291,23 +291,34 @@ function searchEmployee(empId, period) {
       unpaidLeaveDays     : leaveStats.unpaidDays,
       sickLeaveDays       : leaveStats.sickDays,
       lateCount           : attendanceRecords.lateCount,
-      totalLateMinutes    : attendanceRecords.totalLateMinutes
+      totalLateMinutes    : attendanceRecords.totalLateMinutes,
+      earlyExitCount      : attendanceRecords.earlyExitCount
     },
     attendance: attendanceRecords.rows
   };
 }
 
 // ─────────────────────────────────────────────
+// حدود الحضور والانصراف الثابتة
+// ─────────────────────────────────────────────
+var LATE_THRESHOLD_HOUR    = 8;   // بعد 08:30 = تأخير
+var LATE_THRESHOLD_MINUTE  = 30;
+var EARLY_EXIT_HOUR        = 14;  // قبل 14:20 = خروج بغير إذن
+var EARLY_EXIT_MINUTE      = 20;
+
+// ─────────────────────────────────────────────
 // سجلات الحضور اليومي مع حساب التأخير (بدون تكرار)
 // ─────────────────────────────────────────────
 function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut) {
   var data        = getSheetData(SHEET_ATTENDANCE);
-  var seen        = {};   // لمنع التكرار — المفتاح: التاريخ
+  var seen        = {};
   var rows        = [];
-  var lateCount   = 0;
-  var totalLateMin= 0;
+  var lateCount      = 0;
+  var totalLateMin   = 0;
+  var earlyExitCount = 0;
 
-  var scheduledInMinutes = extractMinutesFromDay(scheduledCheckIn);
+  var lateThreshold      = LATE_THRESHOLD_HOUR  * 60 + LATE_THRESHOLD_MINUTE;  // 510 دقيقة
+  var earlyExitThreshold = EARLY_EXIT_HOUR * 60 + EARLY_EXIT_MINUTE;           // 860 دقيقة
 
   for (var i = 0; i < data.length; i++) {
     var row = data[i];
@@ -317,7 +328,6 @@ function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut)
     if (!d) continue;
     if (d < range.start || d > range.end) continue;
 
-    // مفتاح التاريخ لإزالة التكرار
     var dateKey = formatDateAr(d);
     if (seen[dateKey]) continue;
     seen[dateKey] = true;
@@ -328,30 +338,50 @@ function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut)
     var checkInFormatted  = formatTime(checkInVal);
     var checkOutFormatted = formatTime(checkOutVal);
 
-    // حساب التأخير
+    // ── حساب التأخير (بعد 08:30) ──
     var actualInMinutes = extractMinutesFromDay(checkInVal);
     var lateMinutes     = 0;
     var isLate          = false;
 
-    if (actualInMinutes !== null && scheduledInMinutes !== null) {
-      var diff = actualInMinutes - scheduledInMinutes;
-      if (diff > 0) {
-        lateMinutes = diff;
-        isLate      = true;
-        lateCount++;
-        totalLateMin += lateMinutes;
-      }
+    if (actualInMinutes !== null && actualInMinutes > lateThreshold) {
+      lateMinutes = actualInMinutes - lateThreshold;
+      isLate      = true;
+      lateCount++;
+      totalLateMin += lateMinutes;
+    }
+
+    // ── حساب الخروج بغير إذن (قبل 14:20) ──
+    var actualOutMinutes = extractMinutesFromDay(checkOutVal);
+    var isEarlyExit      = false;
+
+    if (actualOutMinutes !== null && actualOutMinutes < earlyExitThreshold) {
+      isEarlyExit = true;
+      earlyExitCount++;
+    }
+
+    // ── تحديد حالة الصف ──
+    var status;
+    if (isLate && isEarlyExit) {
+      status = 'both';
+    } else if (isLate) {
+      status = 'late';
+    } else if (isEarlyExit) {
+      status = 'early';
+    } else {
+      status = 'ok';
     }
 
     rows.push({
-      date       : dateKey,
-      dayName    : getDayNameAr(d),
-      checkIn    : checkInFormatted,
-      checkOut   : checkOutFormatted,
-      isLate     : isLate,
-      lateMinutes: lateMinutes,
-      lateText   : lateMinutes > 0 ? formatLateTime(lateMinutes) : '—',
-      _dateObj   : d
+      date        : dateKey,
+      dayName     : getDayNameAr(d),
+      checkIn     : checkInFormatted,
+      checkOut    : checkOutFormatted,
+      isLate      : isLate,
+      isEarlyExit : isEarlyExit,
+      status      : status,
+      lateMinutes : lateMinutes,
+      lateText    : lateMinutes > 0 ? formatLateTime(lateMinutes) : '—',
+      _dateObj    : d
     });
   }
 
@@ -361,9 +391,10 @@ function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut)
   });
 
   return {
-    rows            : rows,
-    lateCount       : lateCount,
-    totalLateMinutes: totalLateMin
+    rows           : rows,
+    lateCount      : lateCount,
+    totalLateMinutes: totalLateMin,
+    earlyExitCount : earlyExitCount
   };
 }
 
