@@ -4,10 +4,11 @@
 
 var SPREADSHEET_ID = '18SyUPB3tlLxHR7h5m4s7T5ktTwTna4CbDrNsJ0Cwtnk';
 
-var SHEET_EMPLOYEES   = 'الموظفين';
-var SHEET_ATTENDANCE  = 'الحضور_اليومي';
-var SHEET_ASSIGNMENTS = 'التكليفات';
-var SHEET_LEAVES      = 'الإجازات';
+var SHEET_EMPLOYEES    = 'الموظفين';
+var SHEET_ATTENDANCE   = 'الحضور_اليومي';
+var SHEET_ASSIGNMENTS  = 'التكليفات';
+var SHEET_EXIT_PERMITS = 'أذونات_الخروج';
+var SHEET_LEAVES       = 'رصيد الإجازات';
 
 // أعمدة ورقة الموظفين (تبدأ من العمود A = index 0)
 // الترتيب الفعلي: الاسم | الرقم الوظيفي | الرقم السري | الرصيد | المؤهل | المسمى الوظيفي
@@ -61,20 +62,29 @@ var ATT_COL = {
 };
 
 // أعمدة ورقة التكليفات
-// الترتيب الفعلي: الاسم | الرقم الوظيفي | نوع الإجراء (إذن خروج / تكليف عمل)
-//               | من تاريخ | إلى تاريخ | رقم التكليف
+// الترتيب الفعلي: الاسم | الرقم الوظيفي | نوع الإجراء | من تاريخ | إلى تاريخ | رقم التكليف
 var ASSIGN_COL = {
-  EMP_NAME    : 0,  // الاسم
-  EMP_ID      : 1,  // الرقم الوظيفي
-  TYPE        : 2,  // نوع الإجراء (إذن خروج / تكليف عمل)
-  DATE_FROM   : 3,  // من تاريخ
-  DATE_TO     : 4,  // إلى تاريخ
-  ORDER_NUM   : 5   // رقم التكليف
+  EMP_NAME  : 0,  // الاسم
+  EMP_ID    : 1,  // الرقم الوظيفي
+  TYPE      : 2,  // نوع الإجراء (مهمة عمل، ...)
+  DATE_FROM : 3,  // من تاريخ
+  DATE_TO   : 4,  // إلى تاريخ
+  ORDER_NUM : 5   // رقم التكليف
 };
 
-// قيمة نوع التكليف في العمود
-var ASSIGN_TYPE_PERMIT = 'إذن خروج';
-var ASSIGN_TYPE_TASK   = 'تكليف عمل';
+// أعمدة ورقة أذونات_الخروج
+// الترتيب الفعلي: الاسم | الرقم الوظيفي | النوع (شخصي/عمل) | تاريخ
+//               | وقت الخروج | وقت العودة | السبب | وقت الادخال
+var EXIT_COL = {
+  EMP_NAME    : 0,  // الاسم
+  EMP_ID      : 1,  // الرقم الوظيفي
+  TYPE        : 2,  // النوع (شخصي/عمل)
+  DATE        : 3,  // تاريخ
+  EXIT_TIME   : 4,  // وقت الخروج
+  RETURN_TIME : 5,  // وقت العودة
+  REASON      : 6,  // السبب
+  ENTRY_TIME  : 7   // وقت الادخال
+};
 
 // أعمدة ورقة الإجازات
 // الترتيب الفعلي: اسم الموظف | الرقم الوظيفي | نوع الإجازة | بداية الإجازة | نهاية الإجازة
@@ -254,17 +264,15 @@ function searchEmployee(empId, period) {
 }
 
 // ─────────────────────────────────────────────
-// عدد تكليفات العمل في الفترة (نوع = تكليف عمل)
+// عدد التكليفات في الفترة (من ورقة التكليفات)
 // ─────────────────────────────────────────────
 function countAssignments(empId, range) {
   var data  = getSheetData(SHEET_ASSIGNMENTS);
   var count = 0;
 
   for (var i = 0; i < data.length; i++) {
-    var row  = data[i];
+    var row = data[i];
     if (row[ASSIGN_COL.EMP_ID].toString().trim() !== empId) continue;
-    var type = row[ASSIGN_COL.TYPE].toString().trim();
-    if (type !== ASSIGN_TYPE_TASK) continue;
     var d = toDate(row[ASSIGN_COL.DATE_FROM]);
     if (!d) continue;
     if (d >= range.start && d <= range.end) count++;
@@ -273,18 +281,16 @@ function countAssignments(empId, range) {
 }
 
 // ─────────────────────────────────────────────
-// عدد أذونات الخروج في الفترة (نوع = إذن خروج)
+// عدد أذونات الخروج في الفترة (من ورقة أذونات_الخروج)
 // ─────────────────────────────────────────────
 function countExitPermits(empId, range) {
-  var data  = getSheetData(SHEET_ASSIGNMENTS);
+  var data  = getSheetData(SHEET_EXIT_PERMITS);
   var count = 0;
 
   for (var i = 0; i < data.length; i++) {
-    var row  = data[i];
-    if (row[ASSIGN_COL.EMP_ID].toString().trim() !== empId) continue;
-    var type = row[ASSIGN_COL.TYPE].toString().trim();
-    if (type !== ASSIGN_TYPE_PERMIT) continue;
-    var d = toDate(row[ASSIGN_COL.DATE_FROM]);
+    var row = data[i];
+    if (row[EXIT_COL.EMP_ID].toString().trim() !== empId) continue;
+    var d = toDate(row[EXIT_COL.DATE]);
     if (!d) continue;
     if (d >= range.start && d <= range.end) count++;
   }
