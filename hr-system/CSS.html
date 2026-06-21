@@ -350,8 +350,7 @@ select.form-control { appearance: none; cursor: pointer; }
   font-size  : 11px;
   font-weight: 600;
   color      : var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .detail-value {
@@ -683,15 +682,6 @@ select.form-control { appearance: none; cursor: pointer; }
     opacity    : 0.85;
   }
 
-  /* اسم الجهة والقسم */
-  .gov-org-row {
-    display    : block !important;
-    text-align : center;
-    padding    : 10pt 0 6pt;
-    border-bottom: 1.5pt solid #1a3a5c;
-    margin-bottom: 8pt;
-  }
-
   /* شعار الجهة في نموذج الطباعة */
   .gov-logo-img {
     width      : 65pt;
@@ -701,11 +691,15 @@ select.form-control { appearance: none; cursor: pointer; }
     print-color-adjust: exact;
   }
 
+  /* اسم الجهة والقسم */
   .gov-org-row {
     display         : flex !important;
     align-items     : center;
     justify-content : center;
     gap             : 14pt;
+    padding         : 10pt 0 6pt;
+    border-bottom   : 1.5pt solid #1a3a5c;
+    margin-bottom   : 8pt;
   }
 
   .gov-org-block { text-align: center; }

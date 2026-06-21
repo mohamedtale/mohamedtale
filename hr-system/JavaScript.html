@@ -3,36 +3,28 @@
    JavaScript.html — HR System Frontend Logic
    ============================================================ */
 
-// ── الحالة العامة ──
 var currentEmployee = null;
 var currentStats    = null;
 
-// ── عند تحميل الصفحة ──
 document.addEventListener('DOMContentLoaded', function () {
   renderCurrentDate();
   setupEnterKey();
 });
 
-// ── عرض التاريخ الحالي في الرأس ──
 function renderCurrentDate() {
   var el = document.getElementById('current-date-display');
   if (!el) return;
-  var now  = new Date();
-  var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  el.textContent = now.toLocaleDateString('ar-SA', opts);
+  el.textContent = new Date().toLocaleDateString('ar-SA', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 }
 
-// ── تفعيل البحث بضغط Enter ──
 function setupEnterKey() {
-  var empInput = document.getElementById('emp-id-input');
-  if (empInput) {
-    empInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') triggerSearch();
-    });
-  }
+  var el = document.getElementById('emp-id-input');
+  if (el) el.addEventListener('keydown', function(e) { if (e.key === 'Enter') triggerSearch(); });
 }
 
-// ── تشغيل البحث ──
+// ── البحث ──
 function triggerSearch() {
   var empId  = document.getElementById('emp-id-input').value.trim();
   var period = document.getElementById('period-select').value;
@@ -45,6 +37,12 @@ function triggerSearch() {
     return;
   }
 
+  // التحقق المبدئي على جانب العميل
+  if (empId.length > 30 || !/^[a-zA-Z0-9؀-ۿ\-_]+$/.test(empId)) {
+    showAlert('الرقم الوظيفي يحتوي على أحرف غير مسموح بها.', 'danger');
+    return;
+  }
+
   showLoader(true);
   hideResults();
 
@@ -54,12 +52,17 @@ function triggerSearch() {
     .searchEmployee(empId, period);
 }
 
-// ── معالجة نجاح البحث ──
 function handleSearchSuccess(result) {
   showLoader(false);
 
+  // حماية من null أو نتيجة فارغة
+  if (!result || typeof result !== 'object') {
+    showAlert('استجابة غير متوقعة من الخادم. يرجى المحاولة مرة أخرى.', 'danger');
+    return;
+  }
+
   if (!result.success) {
-    showAlert(result.message, 'danger');
+    showAlert(result.message || 'حدث خطأ غير معروف.', 'danger');
     return;
   }
 
@@ -72,92 +75,76 @@ function handleSearchSuccess(result) {
   showResults();
 }
 
-// ── معالجة خطأ البحث ──
 function handleSearchError(error) {
   showLoader(false);
-  showAlert('حدث خطأ أثناء الاتصال بالخادم: ' + (error.message || error), 'danger');
+  showAlert('حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.', 'danger');
+  if (error && error.message) Logger.log && Logger.log(error.message);
 }
 
 // ── رسم بيانات الموظف ──
 function renderEmployeeCard(emp) {
-  setText('emp-name',          emp.name);
-  setText('emp-title',         emp.jobTitle);
-  setText('emp-title-detail',  emp.jobTitle);
-  setText('emp-id-display',    'رقم وظيفي: ' + emp.empId);
-  setText('emp-dept',          emp.departmentOffice);
-  setText('emp-section',       emp.section);
-  setText('emp-grade',         emp.grade);
-  setText('emp-qualification', emp.qualification);
-  setText('emp-manager',       emp.manager);
-  setText('emp-location',      emp.location);
-  setText('emp-status',        emp.status);
-  setText('emp-checkin',       emp.checkInTime);
-  setText('emp-checkout',      emp.checkOutTime);
+  setText('emp-name',            emp.name);
+  setText('emp-title',           emp.jobTitle);
+  setText('emp-title-detail',    emp.jobTitle);
+  setText('emp-id-display',      'رقم وظيفي: ' + emp.empId);
+  setText('emp-dept',            emp.departmentOffice);
+  setText('emp-section',         emp.section);
+  setText('emp-grade',           emp.grade);
+  setText('emp-qualification',   emp.qualification);
+  setText('emp-manager',         emp.manager);
+  setText('emp-location',        emp.location);
+  setText('emp-status',          emp.status);
+  setText('emp-checkin',         emp.checkInTime);
+  setText('emp-checkout',        emp.checkOutTime);
   setText('emp-emergency-leave', emp.emergencyLeaveBalance + ' يوم');
 }
 
 // ── رسم الإحصاءات ──
 function renderStats(stats) {
-  setText('period-label', stats.periodLabel);
-  setText('stat-assignments',  stats.assignmentsCount);
-  setText('stat-exit-permits', stats.exitPermitsCount);
-  setText('stat-leaves-count', stats.leavesCount);
-  setText('stat-total-days',   stats.totalLeaveDays);
-  setText('stat-unpaid-days',  stats.unpaidLeaveDays);
-  setText('stat-sick-days',    stats.sickLeaveDays);
+  setText('period-label',       stats.periodLabel);
+  setText('stat-assignments',   stats.assignmentsCount);
+  setText('stat-exit-permits',  stats.exitPermitsCount);
+  setText('stat-leaves-count',  stats.leavesCount);
+  setText('stat-total-days',    stats.totalLeaveDays);
+  setText('stat-unpaid-days',   stats.unpaidLeaveDays);
+  setText('stat-sick-days',     stats.sickLeaveDays);
 }
 
-// ── رسم جدول الحضور والانصراف والتأخير ──
+// ── رسم جدول الحضور ──
 function renderAttendanceTable(rows, stats) {
   var tbody = document.getElementById('att-table-body');
   if (!tbody) return;
 
-  // تحديث الملخص السريع
-  setText('att-total-days',  rows.length);
-  setText('att-late-count',  stats.lateCount      || 0);
-  setText('att-late-total',  formatLateDisplay(stats.totalLateMinutes || 0));
-  setText('att-early-exit',  stats.earlyExitCount || 0);
-  setText('att-period-badge', stats.periodLabel   || '');
+  setText('att-total-days',   rows.length);
+  setText('att-late-count',   stats.lateCount      || 0);
+  setText('att-late-total',   formatLateDisplay(stats.totalLateMinutes || 0));
+  setText('att-early-exit',   stats.earlyExitCount || 0);
+  setText('att-period-badge', stats.periodLabel    || '');
 
   if (!rows || rows.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد سجلات حضور في هذه الفترة</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:24px;">لا توجد سجلات حضور في هذه الفترة</td></tr>';
     return;
   }
 
   var html = '';
   for (var i = 0; i < rows.length; i++) {
-    var r         = rows[i];
-    var isWeekend = (r.dayName === 'الجمعة' || r.dayName === 'السبت');
-    var rowClass  = isWeekend ? 'weekend-row' : '';
+    var r        = rows[i];
+    var rowClass = '';
 
-    // تلوين صف حسب الحالة
-    if      (r.status === 'both')  rowClass += ' row-both';
-    else if (r.status === 'late')  rowClass += ' row-late';
-    else if (r.status === 'early') rowClass += ' row-early';
+    if      (r.status === 'both')  rowClass = 'row-both';
+    else if (r.status === 'late')  rowClass = 'row-late';
+    else if (r.status === 'early') rowClass = 'row-early';
 
-    // badge الحالة
     var badgeHtml;
-    switch (r.status) {
-      case 'both':
-        badgeHtml = '<span class="badge-both">متأخر + خروج مبكر</span>';
-        break;
-      case 'late':
-        badgeHtml = '<span class="badge-late">متأخر</span>';
-        break;
-      case 'early':
-        badgeHtml = '<span class="badge-early-exit">خروج بغير إذن</span>';
-        break;
-      default:
-        badgeHtml = '<span class="badge-ok">في الوقت</span>';
-    }
+    if      (r.status === 'both')  badgeHtml = '<span class="badge-both">متأخر + خروج مبكر</span>';
+    else if (r.status === 'late')  badgeHtml = '<span class="badge-late">متأخر</span>';
+    else if (r.status === 'early') badgeHtml = '<span class="badge-early-exit">خروج بغير إذن</span>';
+    else                           badgeHtml = '<span class="badge-ok">في الوقت</span>';
 
-    // عمود التأخير
     var lateHtml = r.isLate
       ? '<span class="late-minutes">' + escapeHtml(r.lateText) + '</span>'
-      : '<span style="color:var(--text-muted);">—</span>';
+      : '<span style="color:#aaa;">—</span>';
 
-    // تمييز وقت الانصراف إذا كان مبكراً
     var checkOutHtml = r.isEarlyExit
       ? '<span style="color:#6a3d9a;font-weight:700;">' + escapeHtml(r.checkOut) + ' ⚠️</span>'
       : escapeHtml(r.checkOut);
@@ -175,7 +162,6 @@ function renderAttendanceTable(rows, stats) {
   tbody.innerHTML = html;
 }
 
-// ── تنسيق وقت التأخير الإجمالي ──
 function formatLateDisplay(totalMinutes) {
   if (!totalMinutes || totalMinutes === 0) return '—';
   if (totalMinutes < 60) return totalMinutes + ' دقيقة';
@@ -184,7 +170,6 @@ function formatLateDisplay(totalMinutes) {
   return h + ' ساعة' + (m > 0 ? ' و' + m + ' دقيقة' : '');
 }
 
-// ── تغيير الفترة الزمنية وإعادة الحساب ──
 function onPeriodChange() {
   if (!currentEmployee) return;
   triggerSearch();
@@ -193,30 +178,29 @@ function onPeriodChange() {
 // ── تصدير PDF ──
 function exportPDF() {
   if (!currentEmployee) {
-    showAlert('يرجى البحث عن موظف أولاً قبل التصدير.', 'danger');
+    showAlert('يرجى البحث عن موظف أولاً.', 'danger');
     return;
   }
 
   var btn = document.getElementById('btn-export-pdf');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳</span><span>جارٍ التصدير…</span>'; }
 
-  var { jsPDF } = window.jspdf;
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    showAlert('مكتبة PDF غير محملة. يرجى تحديث الصفحة.', 'danger');
+    resetPdfBtn(btn);
+    return;
+  }
 
-  // إعداد PDF بحجم A4
-  var pdf      = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-  var pageW    = 210;
-  var pageH    = 297;
-  var margin   = 14;
+  var jsPDF   = window.jspdf.jsPDF;
+  var pdf     = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+  var pageW   = 210;
+  var pageH   = 297;
+  var margin  = 14;
   var contentW = pageW - margin * 2;
-  var y        = margin;
-
-  // ── خط Cairo (latin fallback — الأرقام والنصوص الإنجليزية) ──
-  // نستخدم html2canvas لالتقاط القسم المرئي بدقة عالية
 
   var section = document.getElementById('results-section');
   if (!section) { resetPdfBtn(btn); return; }
 
-  // إخفاء الأزرار مؤقتاً أثناء الالتقاط
   var btnRow = section.querySelector('.btn-row');
   if (btnRow) btnRow.style.display = 'none';
 
@@ -227,19 +211,17 @@ function exportPDF() {
     backgroundColor: '#f0f4f8',
     logging        : false
   }).then(function(canvas) {
-
-    // إعادة الأزرار
     if (btnRow) btnRow.style.display = '';
 
-    var imgData  = canvas.toDataURL('image/jpeg', 0.92);
-    var imgW     = contentW;
-    var imgH     = (canvas.height * imgW) / canvas.width;
-    var maxH     = pageH - margin * 2;
+    var imgData = canvas.toDataURL('image/jpeg', 0.92);
+    var imgW    = contentW;
+    var imgH    = (canvas.height * imgW) / canvas.width;
+    var maxH    = pageH - margin * 2 - 30; // هامش للتذييل
+    var y       = margin;
 
-    // ── رأس الصفحة الرسمي ──
+    // رأس الصفحة
     pdf.setFillColor(26, 58, 92);
     pdf.rect(0, 0, pageW, 22, 'F');
-
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(11);
     pdf.setFont('helvetica', 'bold');
@@ -247,37 +229,25 @@ function exportPDF() {
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
     pdf.text('Executive Device for Drilling & Maintenance of Water Wells  |  HR Dept.', margin, 14);
-
-    // تاريخ الإصدار يميناً
-    var dateStr = 'Issued: ' + new Date().toLocaleDateString('en-SA');
+    var dateStr = 'Issued: ' + new Date().toLocaleDateString('en-GB');
     pdf.text(dateStr, pageW - margin - pdf.getTextWidth(dateStr), 15);
-
     y = 26;
 
-    // ── لصق محتوى الصورة (مقسّم على صفحات إذا طال) ──
     if (imgH <= maxH) {
       pdf.addImage(imgData, 'JPEG', margin, y, imgW, imgH);
-      y += imgH + 6;
     } else {
-      // تقسيم الصورة على صفحات
       var sourceY    = 0;
       var sliceRatio = canvas.width / imgW;
-
       while (sourceY < canvas.height) {
-        var sliceH       = Math.min(maxH * sliceRatio, canvas.height - sourceY);
-        var sliceCanvas  = document.createElement('canvas');
-        sliceCanvas.width  = canvas.width;
-        sliceCanvas.height = sliceH;
-        sliceCanvas.getContext('2d').drawImage(canvas, 0, sourceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        var sliceData    = sliceCanvas.toDataURL('image/jpeg', 0.92);
-        var sliceImgH    = sliceH / sliceRatio;
-
-        pdf.addImage(sliceData, 'JPEG', margin, y, imgW, sliceImgH);
+        var sliceH = Math.min(maxH * sliceRatio, canvas.height - sourceY);
+        var sc     = document.createElement('canvas');
+        sc.width   = canvas.width;
+        sc.height  = sliceH;
+        sc.getContext('2d').drawImage(canvas, 0, sourceY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        pdf.addImage(sc.toDataURL('image/jpeg', 0.92), 'JPEG', margin, y, imgW, sliceH / sliceRatio);
         sourceY += sliceH;
-
         if (sourceY < canvas.height) {
           pdf.addPage();
-          // رأس الصفحات التالية
           pdf.setFillColor(26, 58, 92);
           pdf.rect(0, 0, pageW, 10, 'F');
           pdf.setTextColor(255, 255, 255);
@@ -288,36 +258,33 @@ function exportPDF() {
       }
     }
 
-    // ── تذييل رسمي في آخر صفحة ──
-    var footerY = pageH - 20;
+    // تذييل آخر صفحة
+    var fy = pageH - 22;
     pdf.setFillColor(240, 244, 248);
-    pdf.rect(0, footerY - 2, pageW, 22, 'F');
-
+    pdf.rect(0, fy - 2, pageW, 24, 'F');
     pdf.setDrawColor(26, 58, 92);
     pdf.setLineWidth(0.5);
-    pdf.line(margin, footerY - 2, pageW - margin, footerY - 2);
-
+    pdf.line(margin, fy - 2, pageW - margin, fy - 2);
     pdf.setTextColor(26, 58, 92);
     pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('HR Manager Signature: ____________________', margin, footerY + 4);
-    pdf.text('Department Head: ____________________', pageW / 2 - 10, footerY + 4);
-
+    pdf.text('HR Manager Signature: ____________________', margin, fy + 5);
+    pdf.text('Department Head: ____________________', pageW / 2 - 10, fy + 5);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(120, 120, 120);
     pdf.setFontSize(7);
-    pdf.text('Generated by HR Management System  |  ' + new Date().toLocaleString('en-SA'), margin, footerY + 11);
+    pdf.text('Generated by HR Management System  |  ' + new Date().toLocaleString('en-GB'), margin, fy + 12);
 
-    // ── حفظ الملف ──
-    var fileName = 'HR_' + currentEmployee.empId + '_' + currentEmployee.name.replace(/\s+/g, '_') + '_' + formatFileDate() + '.pdf';
+    // اسم الملف — تنقية الأحرف الخطيرة
+    var safeName = currentEmployee.name.replace(/[^a-zA-Z0-9؀-ۿ\s]/g, '').replace(/\s+/g, '_').substring(0, 40);
+    var fileName = 'HR_' + currentEmployee.empId + '_' + safeName + '_' + _formatFileDate() + '.pdf';
     pdf.save(fileName);
-
     resetPdfBtn(btn);
 
   }).catch(function(err) {
     if (btnRow) btnRow.style.display = '';
     resetPdfBtn(btn);
-    showAlert('حدث خطأ أثناء إنشاء PDF: ' + err.message, 'danger');
+    showAlert('حدث خطأ أثناء إنشاء PDF. يرجى المحاولة مرة أخرى.', 'danger');
   });
 }
 
@@ -325,44 +292,37 @@ function resetPdfBtn(btn) {
   if (btn) { btn.disabled = false; btn.innerHTML = '<span>📄</span><span>تصدير PDF</span>'; }
 }
 
-function formatFileDate() {
+function _formatFileDate() {
   var d = new Date();
   return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2);
 }
 
-// ── طباعة التقرير الحكومي الرسمي ──
+// ── طباعة التقرير الرسمي ──
 function printReport() {
   if (!currentEmployee) {
-    showAlert('يرجى البحث عن موظف أولاً قبل الطباعة.', 'danger');
+    showAlert('يرجى البحث عن موظف أولاً.', 'danger');
     return;
   }
 
-  var now     = new Date();
-  var docNum  = currentEmployee.empId + '/' + (now.getFullYear()) + '/' + generateDocSerial();
+  var now    = new Date();
+  var docNum = currentEmployee.empId + '/' + now.getFullYear() + '/' + _generateDocSerial();
 
   setText('print-emp-name',    currentEmployee.name);
   setText('print-emp-id',      currentEmployee.empId);
   setText('print-period',      currentStats ? currentStats.periodLabel : '');
-  setText('print-date',        formatPrintDate(now));
+  setText('print-date',        _formatPrintDate(now));
   setText('print-doc-number',  docNum);
-  setText('print-footer-date', 'تاريخ الطباعة: ' + formatPrintDate(now));
-
-  // تحديث اسم الجهة في رأس الطباعة (يمكن تعديله)
-  var orgEl = document.getElementById('print-org-name');
-  if (orgEl && orgEl.textContent.indexOf('جهاز') !== -1) {
-    // الاسم محدد مسبقاً في HTML
-  }
+  setText('print-footer-date', 'تاريخ الطباعة: ' + _formatPrintDate(now));
 
   window.print();
 }
 
-// ── توليد رقم مسلسل للوثيقة ──
-function generateDocSerial() {
+function _generateDocSerial() {
   var now = new Date();
-  return String(now.getMonth() + 1).padStart(2,'0') +
-         String(now.getDate()).padStart(2,'0') +
-         String(now.getHours()).padStart(2,'0') +
-         String(now.getMinutes()).padStart(2,'0');
+  return String(now.getMonth() + 1).padStart(2, '0') +
+         String(now.getDate()).padStart(2, '0') +
+         String(now.getHours()).padStart(2, '0') +
+         String(now.getMinutes()).padStart(2, '0');
 }
 
 // ── مسح النتائج ──
@@ -375,43 +335,47 @@ function clearResults() {
   document.getElementById('emp-id-input').focus();
 }
 
-// ── إظهار/إخفاء النتائج ──
+// ── إظهار/إخفاء ──
 function showResults() {
-  var resultsSection = document.getElementById('results-section');
-  if (resultsSection) resultsSection.classList.remove('hidden');
+  var el = document.getElementById('results-section');
+  if (el) el.classList.remove('hidden');
 }
 
 function hideResults() {
-  var resultsSection = document.getElementById('results-section');
-  if (resultsSection) resultsSection.classList.add('hidden');
+  var el = document.getElementById('results-section');
+  if (el) el.classList.add('hidden');
 }
 
-// ── مؤشر التحميل ──
 function showLoader(show) {
-  var loader = document.getElementById('loader-overlay');
-  if (!loader) return;
-  if (show) {
-    loader.classList.remove('hidden');
-  } else {
-    loader.classList.add('hidden');
-  }
+  var el = document.getElementById('loader-overlay');
+  if (!el) return;
+  if (show) el.classList.remove('hidden');
+  else      el.classList.add('hidden');
 }
 
 // ── تنبيهات ──
+var ALERT_TYPES = { danger: true, success: true, info: true };
+
 function showAlert(message, type) {
   var container = document.getElementById('alert-container');
   if (!container) return;
-  var icon = type === 'danger' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
-  container.innerHTML =
-    '<div class="alert alert-' + type + '">' +
-      '<span>' + icon + '</span>' +
-      '<span>' + escapeHtml(message) + '</span>' +
-    '</div>';
+  var safeType = ALERT_TYPES[type] ? type : 'info';
+  var icon = safeType === 'danger' ? '⚠️' : safeType === 'success' ? '✅' : 'ℹ️';
+  var div = document.createElement('div');
+  div.className = 'alert alert-' + safeType;
+  var iconSpan = document.createElement('span');
+  iconSpan.textContent = icon;
+  var msgSpan = document.createElement('span');
+  msgSpan.textContent = message;  // textContent — آمن من XSS
+  div.appendChild(iconSpan);
+  div.appendChild(msgSpan);
+  container.innerHTML = '';
+  container.appendChild(div);
 }
 
 function clearAlerts() {
-  var container = document.getElementById('alert-container');
-  if (container) container.innerHTML = '';
+  var el = document.getElementById('alert-container');
+  if (el) el.innerHTML = '';
 }
 
 // ── مساعدات ──
@@ -420,16 +384,17 @@ function setText(id, value) {
   if (el) el.textContent = (value !== undefined && value !== null) ? value : '—';
 }
 
+// escapeHtml كامل — يشمل single quote
 function escapeHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#039;');
 }
 
-function formatPrintDate(date) {
-  var opts = { year: 'numeric', month: 'long', day: 'numeric' };
-  return date.toLocaleDateString('ar-SA', opts);
+function _formatPrintDate(date) {
+  return date.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 </script>
