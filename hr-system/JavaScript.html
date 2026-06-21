@@ -68,6 +68,7 @@ function handleSearchSuccess(result) {
 
   renderEmployeeCard(result.employee);
   renderStats(result.stats);
+  renderAttendanceTable(result.attendance || [], result.stats);
   showResults();
 }
 
@@ -104,6 +105,57 @@ function renderStats(stats) {
   setText('stat-total-days',   stats.totalLeaveDays);
   setText('stat-unpaid-days',  stats.unpaidLeaveDays);
   setText('stat-sick-days',    stats.sickLeaveDays);
+}
+
+// ── رسم جدول الحضور والانصراف والتأخير ──
+function renderAttendanceTable(rows, stats) {
+  var tbody = document.getElementById('att-table-body');
+  if (!tbody) return;
+
+  // تحديث الملخص السريع
+  setText('att-total-days',  rows.length);
+  setText('att-late-count',  stats.lateCount || 0);
+  setText('att-late-total',  formatLateDisplay(stats.totalLateMinutes || 0));
+  setText('att-period-badge', stats.periodLabel || '');
+
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">لا توجد سجلات حضور في هذه الفترة</td></tr>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r          = rows[i];
+    var isWeekend  = (r.dayName === 'الجمعة' || r.dayName === 'السبت');
+    var rowClass   = isWeekend ? 'weekend-row' : '';
+    var badgeHtml  = r.isLate
+      ? '<span class="badge-late">متأخر</span>'
+      : '<span class="badge-ok">في الوقت</span>';
+    var lateHtml   = r.isLate
+      ? '<span class="late-minutes">' + escapeHtml(r.lateText) + '</span>'
+      : '<span style="color:var(--text-muted);">—</span>';
+
+    html +=
+      '<tr class="' + rowClass + '">' +
+        '<td>' + escapeHtml(r.dayName)   + '</td>' +
+        '<td>' + escapeHtml(r.date)      + '</td>' +
+        '<td>' + escapeHtml(r.checkIn)   + '</td>' +
+        '<td>' + escapeHtml(r.checkOut)  + '</td>' +
+        '<td>' + lateHtml                + '</td>' +
+        '<td>' + badgeHtml               + '</td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+// ── تنسيق وقت التأخير الإجمالي ──
+function formatLateDisplay(totalMinutes) {
+  if (!totalMinutes || totalMinutes === 0) return '—';
+  if (totalMinutes < 60) return totalMinutes + ' دقيقة';
+  var h = Math.floor(totalMinutes / 60);
+  var m = totalMinutes % 60;
+  return h + ' ساعة' + (m > 0 ? ' و' + m + ' دقيقة' : '');
 }
 
 // ── تغيير الفترة الزمنية وإعادة الحساب ──

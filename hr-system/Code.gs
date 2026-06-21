@@ -223,15 +223,23 @@ function searchEmployee(empId, period) {
   // ── إحصاءات التكليفات ──
   var assignmentsCount = countAssignments(empId, range);
 
-  // ── إحصاءات الحضور (أذونات الخروج) ──
+  // ── إحصاءات أذونات الخروج ──
   var exitPermitsCount = countExitPermits(empId, range);
 
   // ── إحصاءات الإجازات ──
   var leaveStats = calcLeaveStats(empId, range);
 
-  // ── تنسيق الأوقات ──
+  // ── تنسيق الأوقات المخصصة ──
   var checkInFormatted  = formatTime(empRow[EMP_COL.CHECKIN_TIME]);
   var checkOutFormatted = formatTime(empRow[EMP_COL.CHECKOUT_TIME]);
+
+  // ── سجلات الحضور والانصراف والتأخير ──
+  var attendanceRecords = getAttendanceRecords(
+    empId,
+    range,
+    empRow[EMP_COL.CHECKIN_TIME],
+    empRow[EMP_COL.CHECKOUT_TIME]
+  );
 
   return {
     success: true,
@@ -251,16 +259,130 @@ function searchEmployee(empId, period) {
       emergencyLeaveBalance: empRow[EMP_COL.EMERGENCY_LEAVE].toString()
     },
     stats: {
-      period          : period,
-      periodLabel     : getPeriodLabel(period),
-      assignmentsCount: assignmentsCount,
-      exitPermitsCount: exitPermitsCount,
-      leavesCount     : leaveStats.count,
-      totalLeaveDays  : leaveStats.totalDays,
-      unpaidLeaveDays : leaveStats.unpaidDays,
-      sickLeaveDays   : leaveStats.sickDays
-    }
+      period              : period,
+      periodLabel         : getPeriodLabel(period),
+      assignmentsCount    : assignmentsCount,
+      exitPermitsCount    : exitPermitsCount,
+      leavesCount         : leaveStats.count,
+      totalLeaveDays      : leaveStats.totalDays,
+      unpaidLeaveDays     : leaveStats.unpaidDays,
+      sickLeaveDays       : leaveStats.sickDays,
+      lateCount           : attendanceRecords.lateCount,
+      totalLateMinutes    : attendanceRecords.totalLateMinutes
+    },
+    attendance: attendanceRecords.rows
   };
+}
+
+// ─────────────────────────────────────────────
+// سجلات الحضور اليومي مع حساب التأخير
+// ─────────────────────────────────────────────
+function getAttendanceRecords(empId, range, scheduledCheckIn, scheduledCheckOut) {
+  var data        = getSheetData(SHEET_ATTENDANCE);
+  var rows        = [];
+  var lateCount   = 0;
+  var totalLateMin= 0;
+
+  // استخراج دقائق الوقت المخصص من كائن Date أو نص
+  var scheduledInMinutes  = extractMinutesFromDay(scheduledCheckIn);
+  var scheduledOutMinutes = extractMinutesFromDay(scheduledCheckOut);
+
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+    if (row[ATT_COL.EMP_ID].toString().trim() !== empId) continue;
+
+    var d = toDate(row[ATT_COL.DATE]);
+    if (!d) continue;
+    if (d < range.start || d > range.end) continue;
+
+    var checkInVal  = row[ATT_COL.CHECKIN];
+    var checkOutVal = row[ATT_COL.CHECKOUT];
+
+    var checkInFormatted  = formatTime(checkInVal);
+    var checkOutFormatted = formatTime(checkOutVal);
+
+    // حساب التأخير بالدقائق
+    var actualInMinutes = extractMinutesFromDay(checkInVal);
+    var lateMinutes     = 0;
+    var isLate          = false;
+
+    if (actualInMinutes !== null && scheduledInMinutes !== null) {
+      var diff = actualInMinutes - scheduledInMinutes;
+      if (diff > 0) {
+        lateMinutes = diff;
+        isLate      = true;
+        lateCount++;
+        totalLateMin += lateMinutes;
+      }
+    }
+
+    rows.push({
+      date        : formatDateAr(d),
+      dayName     : getDayNameAr(d),
+      checkIn     : checkInFormatted,
+      checkOut    : checkOutFormatted,
+      isLate      : isLate,
+      lateMinutes : lateMinutes,
+      lateText    : lateMinutes > 0 ? formatLateTime(lateMinutes) : '—'
+    });
+  }
+
+  // ترتيب تنازلي (الأحدث أولاً)
+  rows.sort(function(a, b) { return b.date > a.date ? 1 : -1; });
+
+  return {
+    rows            : rows,
+    lateCount       : lateCount,
+    totalLateMinutes: totalLateMin
+  };
+}
+
+// ─────────────────────────────────────────────
+// استخراج عدد الدقائق من بداية اليوم
+// ─────────────────────────────────────────────
+function extractMinutesFromDay(value) {
+  if (!value) return null;
+  var d;
+  if (value instanceof Date) {
+    d = value;
+  } else {
+    d = new Date(value);
+    if (isNaN(d.getTime())) {
+      // محاولة تفسير النص كـ HH:MM
+      var parts = value.toString().match(/(\d{1,2}):(\d{2})/);
+      if (!parts) return null;
+      return parseInt(parts[1]) * 60 + parseInt(parts[2]);
+    }
+  }
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+// ─────────────────────────────────────────────
+// تنسيق التأخير (ساعات ودقائق)
+// ─────────────────────────────────────────────
+function formatLateTime(minutes) {
+  if (minutes < 60) return minutes + ' د';
+  var h = Math.floor(minutes / 60);
+  var m = minutes % 60;
+  return h + ' س' + (m > 0 ? ' ' + m + ' د' : '');
+}
+
+// ─────────────────────────────────────────────
+// تنسيق التاريخ بالعربية
+// ─────────────────────────────────────────────
+function formatDateAr(date) {
+  var d = date.getDate().toString().padStart(2, '0');
+  var m = (date.getMonth() + 1).toString().padStart(2, '0');
+  var y = date.getFullYear();
+  return y + '-' + m + '-' + d;
+}
+
+// ─────────────────────────────────────────────
+// اسم اليوم بالعربية
+// ─────────────────────────────────────────────
+function getDayNameAr(date) {
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  return days[date.getDay()];
 }
 
 // ─────────────────────────────────────────────

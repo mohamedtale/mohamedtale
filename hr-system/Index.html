@@ -246,6 +246,53 @@
       </div><!-- /stats-grid -->
     </div><!-- /stats-section -->
 
+    <!-- ── جدول الحضور والانصراف والتأخير ── -->
+    <div class="card attendance-section" style="margin-bottom:24px;">
+      <div class="card-header">
+        <span class="icon">📅</span>
+        <h2>سجل الحضور والانصراف والتأخير</h2>
+        <span id="att-period-badge" class="period-badge" style="margin-right:auto;"></span>
+      </div>
+      <div class="card-body" style="padding:0;">
+
+        <!-- ملخص سريع -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);">
+          <div style="background:#fff;padding:14px 20px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">إجمالي أيام الحضور</div>
+            <div id="att-total-days" style="font-size:26px;font-weight:800;color:var(--primary);">0</div>
+          </div>
+          <div style="background:#fff;padding:14px 20px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">مرات التأخير</div>
+            <div id="att-late-count" style="font-size:26px;font-weight:800;color:#c86a1a;">0</div>
+          </div>
+          <div style="background:#fff;padding:14px 20px;text-align:center;">
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">إجمالي وقت التأخير</div>
+            <div id="att-late-total" style="font-size:26px;font-weight:800;color:#b5371f;">—</div>
+          </div>
+        </div>
+
+        <!-- الجدول -->
+        <div style="overflow-x:auto;">
+          <table class="att-table">
+            <thead>
+              <tr>
+                <th>اليوم</th>
+                <th>التاريخ</th>
+                <th>وقت الحضور</th>
+                <th>وقت الانصراف</th>
+                <th>التأخير</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="att-table-body">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">لا توجد سجلات</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div><!-- /attendance-section -->
+
     <!-- ── أزرار الإجراءات ── -->
     <div class="btn-row no-print">
       <button class="btn btn-accent" onclick="printReport()">
