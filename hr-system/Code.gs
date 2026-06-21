@@ -350,11 +350,11 @@ function _getAttendanceRecords(empId, range) {
       status      : status,
       lateMinutes : lateMinutes,
       lateText    : lateMinutes > 0 ? _formatLateTime(lateMinutes) : '—',
-      _dateObj    : d
+      _ts         : d.getTime()
     });
   }
 
-  rows.sort(function(a, b) { return b._dateObj - a._dateObj; });
+  rows.sort(function(a, b) { return b._ts - a._ts; });
 
   return {
     rows            : rows,

@@ -55,9 +55,13 @@ function triggerSearch() {
 function handleSearchSuccess(result) {
   showLoader(false);
 
-  // حماية من null أو نتيجة فارغة
-  if (!result || typeof result !== 'object') {
-    showAlert('استجابة غير متوقعة من الخادم. يرجى المحاولة مرة أخرى.', 'danger');
+  if (result === null || result === undefined) {
+    showAlert('لم يصل رد من الخادم. تأكد من نشر المشروع كـ Web App وأن الصلاحيات محدّثة، ثم حاول مرة أخرى.', 'danger');
+    return;
+  }
+
+  if (typeof result !== 'object') {
+    showAlert('استجابة غير متوقعة من الخادم: ' + typeof result, 'danger');
     return;
   }
 
@@ -77,8 +81,8 @@ function handleSearchSuccess(result) {
 
 function handleSearchError(error) {
   showLoader(false);
-  showAlert('حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة مرة أخرى.', 'danger');
-  if (error && error.message) Logger.log && Logger.log(error.message);
+  var msg = error && error.message ? error.message : 'خطأ غير معروف';
+  showAlert('خطأ من الخادم: ' + msg, 'danger');
 }
 
 // ── رسم بيانات الموظف ──
