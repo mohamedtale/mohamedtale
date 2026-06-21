@@ -11,7 +11,11 @@ var SHEET_EMPLOYEES    = 'الموظفين';
 var SHEET_ATTENDANCE   = 'الحضور_اليومي';
 var SHEET_ASSIGNMENTS  = 'التكليفات';
 var SHEET_EXIT_PERMITS = 'أذونات_الخروج';
-var SHEET_LEAVES       = 'رصيد الإجازات';
+var SHEET_LEAVES       = 'الإجازات';
+
+// أنواع الإجازات كما هي مكتوبة في عمود نوع الإجازة
+var LEAVE_TYPE_SICK   = 'مرضية';
+var LEAVE_TYPE_UNPAID = 'بدون مرتب';
 
 // أعمدة ورقة الموظفين (تبدأ من العمود A = index 0)
 // الترتيب الفعلي: الاسم | الرقم الوظيفي | الرقم السري | الرصيد | المؤهل | المسمى الوظيفي
@@ -89,24 +93,22 @@ var EXIT_COL = {
   ENTRY_TIME  : 7   // وقت الادخال
 };
 
-// أعمدة ورقة الإجازات
-// الترتيب الفعلي: اسم الموظف | الرقم الوظيفي | نوع الإجازة | بداية الإجازة | نهاية الإجازة
-//               | تاريخ العودة | عدد الأيام الفعلي | ملاحظات | الحالة | رسالة المباشرة
-//               | رابط BDF | الاجازة بدون مرتب | التقرير الطبي BDF
+// أعمدة ورقة الإجازات (الترتيب الفعلي المؤكد من الشيت)
+// A=اسم الموظف | B=الرقم الوظيفي | C=نوع الإجازة | D=بداية الإجازة
+// E=نهاية الإجازة | F=تاريخ العودة | G=عدد الأيام الفعلي
+// H=ملاحظات | I=الحالة | J=رسالة المباشرة | K=BDF
 var LEAVE_COL = {
-  EMP_NAME   : 0,  // اسم الموظف
-  EMP_ID     : 1,  // الرقم الوظيفي
-  TYPE       : 2,  // نوع الإجازة
-  START_DATE : 3,  // بداية الإجازة
-  END_DATE   : 4,  // نهاية الإجازة
-  RETURN_DATE: 5,  // تاريخ العودة
-  DAYS       : 6,  // عدد الأيام الفعلي
-  NOTES      : 7,  // ملاحظات
-  STATUS     : 8,  // الحالة
-  MSG        : 9,  // رسالة المباشرة
-  BDF_LINK   : 10, // رابط BDF
-  UNPAID     : 11, // الاجازة بدون مرتب
-  MEDICAL    : 12  // التقرير الطبي BDF
+  EMP_NAME   : 0,  // A — اسم الموظف
+  EMP_ID     : 1,  // B — الرقم الوظيفي
+  TYPE       : 2,  // C — نوع الإجازة (سنوية/طارئة/مرضية/بدون مرتب)
+  START_DATE : 3,  // D — بداية الإجازة
+  END_DATE   : 4,  // E — نهاية الإجازة
+  RETURN_DATE: 5,  // F — تاريخ العودة
+  DAYS       : 6,  // G — عدد الأيام الفعلي
+  NOTES      : 7,  // H — ملاحظات
+  STATUS     : 8,  // I — الحالة
+  MSG        : 9,  // J — رسالة المباشرة
+  BDF        : 10  // K — BDF
 };
 
 // أنواع الإجازات
@@ -442,6 +444,7 @@ function countExitPermits(empId, range) {
 
 // ─────────────────────────────────────────────
 // إحصاءات الإجازات في الفترة (من ورقة الإجازات)
+// الأعمدة الفعلية: A=اسم | B=رقم وظيفي | C=نوع | D=بداية | E=نهاية | F=عودة | G=أيام
 // ─────────────────────────────────────────────
 function calcLeaveStats(empId, range) {
   var data       = getSheetData(SHEET_LEAVES);
@@ -455,24 +458,21 @@ function calcLeaveStats(empId, range) {
     if (row[LEAVE_COL.EMP_ID].toString().trim() !== empId) continue;
 
     var startDate = toDate(row[LEAVE_COL.START_DATE]);
-    var endDate   = toDate(row[LEAVE_COL.END_DATE]);
     if (!startDate) continue;
 
+    var endDate  = toDate(row[LEAVE_COL.END_DATE]);
     var leaveEnd = endDate || startDate;
     if (startDate > range.end || leaveEnd < range.start) continue;
 
     var days      = parseFloat(row[LEAVE_COL.DAYS]) || 0;
     var leaveType = row[LEAVE_COL.TYPE].toString().trim();
-    // عمود "الاجازة بدون مرتب" — إذا كانت قيمته غير فارغة تُحسب بدون مرتب
-    var isUnpaid  = row[LEAVE_COL.UNPAID].toString().trim() !== '';
-    // نوع مرضية
-    var isSick    = leaveType.indexOf(LEAVE_TYPE_SICK) !== -1;
 
     count++;
     totalDays += days;
 
-    if (isSick)    sickDays   += days;
-    if (isUnpaid)  unpaidDays += days;
+    // التحقق من النوع مباشرةً من عمود نوع الإجازة
+    if (leaveType === LEAVE_TYPE_SICK)   sickDays   += days;
+    if (leaveType === LEAVE_TYPE_UNPAID) unpaidDays += days;
   }
 
   return {
