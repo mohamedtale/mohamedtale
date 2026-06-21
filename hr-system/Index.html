@@ -26,14 +26,18 @@
      رأس التطبيق
 ════════════════════════════════════════════ -->
 <header class="app-header no-print">
-  <div class="header-logo">🏛️</div>
+  <? if (logoSrc) { ?>
+    <img src="<?= logoSrc ?>" class="header-logo-img" alt="شعار الجهة" />
+  <? } else { ?>
+    <div class="header-logo">🏛️</div>
+  <? } ?>
   <div class="header-text">
-    <h1>نظام إدارة الموارد البشرية</h1>
-    <p>Human Resources Management System</p>
+    <h1>الجهاز التنفيذي لحفر وصيانة أبار المياه</h1>
+    <p>قسم شؤون الموظفين — نظام إدارة الموارد البشرية</p>
   </div>
   <div class="header-date">
     <div id="current-date-display"></div>
-    <div style="font-size:11px; opacity:0.65;">المملكة العربية السعودية</div>
+    <div style="font-size:11px; opacity:0.65;">دولة ليبيا — وزارة الموارد المائية</div>
   </div>
 </header>
 
@@ -49,13 +53,19 @@
     <div class="gov-top-left">State of Libya</div>
   </div>
 
-  <!-- اسم الجهة والقسم -->
+  <!-- اسم الجهة والقسم مع الشعار -->
   <div class="gov-org-row">
+    <? if (logoSrc) { ?>
+      <img src="<?= logoSrc ?>" class="gov-logo-img" alt="شعار الجهة" />
+    <? } ?>
     <div class="gov-org-block">
       <div class="gov-org-ministry">وزارة الموارد المائية</div>
       <div class="gov-org-main" id="print-org-name">الجهاز التنفيذي لحفر وصيانة أبار المياه</div>
       <div class="gov-org-sub">قسم شؤون الموظفين</div>
     </div>
+    <? if (logoSrc) { ?>
+      <img src="<?= logoSrc ?>" class="gov-logo-img" alt="شعار الجهة" style="opacity:0;" />
+    <? } ?>
   </div>
 
   <!-- عنوان الوثيقة -->

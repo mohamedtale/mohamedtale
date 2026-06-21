@@ -58,6 +58,15 @@ body {
   flex-shrink     : 0;
 }
 
+.header-logo-img {
+  width        : 58px;
+  height       : 58px;
+  object-fit   : contain;
+  flex-shrink  : 0;
+  filter       : brightness(0) invert(1);
+  border-radius: 4px;
+}
+
 .header-text h1 {
   font-size   : 20px;
   font-weight : 700;
@@ -656,6 +665,24 @@ select.form-control { appearance: none; cursor: pointer; }
     border-bottom: 1.5pt solid #1a3a5c;
     margin-bottom: 8pt;
   }
+
+  /* شعار الجهة في نموذج الطباعة */
+  .gov-logo-img {
+    width      : 65pt;
+    height     : 65pt;
+    object-fit : contain;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .gov-org-row {
+    display         : flex !important;
+    align-items     : center;
+    justify-content : center;
+    gap             : 14pt;
+  }
+
+  .gov-org-block { text-align: center; }
 
   .gov-org-ministry {
     font-size    : 12pt;

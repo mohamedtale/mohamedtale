@@ -4,6 +4,9 @@
 
 var SPREADSHEET_ID = '18SyUPB3tlLxHR7h5m4s7T5ktTwTna4CbDrNsJ0Cwtnk';
 
+// ضع هنا معرّف ملف الشعار من Google Drive (الجزء بعد /d/ في الرابط)
+var LOGO_FILE_ID = '';
+
 var SHEET_EMPLOYEES    = 'الموظفين';
 var SHEET_ATTENDANCE   = 'الحضور_اليومي';
 var SHEET_ASSIGNMENTS  = 'التكليفات';
@@ -112,11 +115,29 @@ var LEAVE_TYPE_UNPAID  = 'بدون مرتب';
 var PERMIT_TYPE_EXIT   = 'إذن خروج';
 
 // ─────────────────────────────────────────────
+// جلب شعار الجهة من Google Drive بصيغة Base64
+// ─────────────────────────────────────────────
+function getLogoBase64() {
+  if (!LOGO_FILE_ID || LOGO_FILE_ID.trim() === '') return '';
+  try {
+    var file     = DriveApp.getFileById(LOGO_FILE_ID.trim());
+    var blob     = file.getBlob();
+    var mimeType = blob.getContentType();
+    var bytes    = blob.getBytes();
+    var b64      = Utilities.base64Encode(bytes);
+    return 'data:' + mimeType + ';base64,' + b64;
+  } catch (e) {
+    return '';
+  }
+}
+
+// ─────────────────────────────────────────────
 // نقطة الدخول الرئيسية للتطبيق
 // ─────────────────────────────────────────────
 function doGet() {
-  return HtmlService
-    .createTemplateFromFile('Index')
+  var template       = HtmlService.createTemplateFromFile('Index');
+  template.logoSrc   = getLogoBase64();
+  return template
     .evaluate()
     .setTitle('نظام إدارة الموارد البشرية')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
