@@ -79,14 +79,19 @@ function handleSearchError(error) {
 
 // ── رسم بيانات الموظف ──
 function renderEmployeeCard(emp) {
-  setText('emp-name',         emp.name);
-  setText('emp-title',        emp.jobTitle);
-  setText('emp-id-display',   'رقم وظيفي: ' + emp.empId);
-  setText('emp-dept',         emp.departmentOffice);
-  setText('emp-section',      emp.section);
-  setText('emp-grade',        emp.grade);
-  setText('emp-checkin',      emp.checkInTime);
-  setText('emp-checkout',     emp.checkOutTime);
+  setText('emp-name',          emp.name);
+  setText('emp-title',         emp.jobTitle);
+  setText('emp-title-detail',  emp.jobTitle);
+  setText('emp-id-display',    'رقم وظيفي: ' + emp.empId);
+  setText('emp-dept',          emp.departmentOffice);
+  setText('emp-section',       emp.section);
+  setText('emp-grade',         emp.grade);
+  setText('emp-qualification', emp.qualification);
+  setText('emp-manager',       emp.manager);
+  setText('emp-location',      emp.location);
+  setText('emp-status',        emp.status);
+  setText('emp-checkin',       emp.checkInTime);
+  setText('emp-checkout',      emp.checkOutTime);
   setText('emp-emergency-leave', emp.emergencyLeaveBalance + ' يوم');
 }
 
