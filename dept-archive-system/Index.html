@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام أرشفة القسم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <?!= include('CSS'); ?>
+</head>
+<body>
+
+<!-- مؤشر التحميل -->
+<div id="loader-overlay" class="loader-overlay hidden">
+  <div class="loader-spinner"></div>
+  <div class="loader-text" id="loader-text">جارٍ التحميل…</div>
+</div>
+
+<!-- رأس الصفحة -->
+<header class="app-header">
+  <div class="header-logo">🏛️</div>
+  <div class="header-text">
+    <h1 id="header-title">نظام أرشفة القسم</h1>
+    <p>الجهاز التنفيذي لحفر وصيانة أبار المياه — قسم شؤون الموظفين</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn-back" id="btn-back" onclick="goHome()">
+      <span>🏠</span><span>الرئيسية</span>
+    </button>
+    <div class="header-badge" id="header-badge">جارٍ التحميل…</div>
+  </div>
+</header>
+
+<main class="main-container">
+
+  <!-- ══════════════════════════════════════
+       شاشة الرئيسية
+  ══════════════════════════════════════ -->
+  <div id="screen-home">
+    <div class="home-title">
+      <span>📂</span>
+      <span>أنواع الملفات — اختر النوع للبدء</span>
+    </div>
+    <div class="types-grid" id="types-grid">
+      <div style="text-align:center;padding:40px;color:#999;grid-column:1/-1;">جارٍ التحميل…</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       شاشة النوع
+  ══════════════════════════════════════ -->
+  <div id="screen-type">
+
+    <div class="type-screen-header">
+      <span class="type-screen-icon" id="type-icon">📄</span>
+      <span class="type-screen-title" id="type-title">—</span>
+      <span class="type-screen-count" id="type-count">0 سجل</span>
+    </div>
+
+    <div id="type-alert"></div>
+
+    <!-- شريط الأدوات -->
+    <div class="toolbar">
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="بحث بالموضوع أو رقم القيد…"
+               oninput="liveSearch(this.value)" />
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <span>➕</span><span>إضافة مستند</span>
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="exportCurrentType()">
+        <span>📥</span><span>تصدير CSV</span>
+      </button>
+    </div>
+
+    <!-- الجدول -->
+    <div class="card">
+      <div class="table-wrap">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>رقم القيد</th>
+              <th>تاريخ الوثيقة</th>
+              <th>الموضوع</th>
+              <th id="th-field1">—</th>
+              <th id="th-field2">—</th>
+              <th>ملاحظات</th>
+              <th>PDF</th>
+              <th>تاريخ الإدخال</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="records-tbody">
+            <tr class="empty-row"><td colspan="10">جارٍ التحميل…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="app-footer">
+  <p>نظام أرشفة القسم &copy; <span id="footer-year"></span> — الجهاز التنفيذي لحفر وصيانة أبار المياه</p>
+</footer>
+
+<!-- ══════════════════════════════════════
+     مودال الإضافة / التعديل
+══════════════════════════════════════ -->
+<div id="record-modal" class="modal-overlay" style="display:none;" onclick="closeModalOutside(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">➕ إضافة مستند</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-alert"></div>
+      <input type="hidden" id="modal-mode" value="add" />
+      <input type="hidden" id="modal-seq"  value="" />
+
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label>رقم القيد</label>
+          <input type="text" id="f-refnum" class="form-control" placeholder="كما هو في الوثيقة" />
+        </div>
+
+        <div class="form-group">
+          <label>تاريخ الوثيقة</label>
+          <input type="date" id="f-docdate" class="form-control" />
+        </div>
+
+        <div class="form-group full">
+          <label>الموضوع <span class="req">*</span></label>
+          <input type="text" id="f-subject" class="form-control" placeholder="موضوع الوثيقة" />
+        </div>
+
+        <div class="form-group" id="field1-group">
+          <label id="field1-label">الحقل 1</label>
+          <input type="text" id="f-field1" class="form-control" />
+        </div>
+
+        <div class="form-group" id="field2-group">
+          <label id="field2-label">الحقل 2</label>
+          <input type="text" id="f-field2" class="form-control" />
+        </div>
+
+        <div class="form-group full">
+          <label>ملاحظات</label>
+          <textarea id="f-notes" class="form-control" rows="2"></textarea>
+        </div>
+
+        <div class="form-group full">
+          <label>ملف PDF / صورة</label>
+          <div class="file-upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+            <div>📎 <strong>اضغط لاختيار ملف</strong> أو اسحب وأفلت</div>
+            <p>PDF، JPG، PNG — الحد الأقصى 150 ميجابايت</p>
+          </div>
+          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFileSelect(this)" />
+          <div class="progress-bar-wrap" id="progress-wrap">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div id="file-preview" style="display:none;" class="file-preview">
+            <span>📄</span>
+            <span id="file-preview-name"></span>
+            <button onclick="clearFile()">✕</button>
+          </div>
+          <input type="hidden" id="f-pdfurl" />
+          <input type="hidden" id="f-fileid" />
+        </div>
+
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+        <button class="btn btn-outline" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="modal-save-btn" onclick="saveRecord()">
+          <span>💾</span><span>حفظ</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     نموذج الطباعة
+══════════════════════════════════════ -->
+<div class="print-view" id="print-view">
+  <div class="prt-republic-bar">
+    <span>بسم الله الرحمن الرحيم</span>
+    <span>دولة ليبيا</span>
+  </div>
+  <div class="prt-org-header">
+    <div class="prt-org-logo">🏛️</div>
+    <div>
+      <div class="prt-org-ministry">وزارة الموارد المائية</div>
+      <div class="prt-org-name">الجهاز التنفيذي لحفر وصيانة أبار المياه</div>
+      <div class="prt-org-dept">إدارة الموارد البشرية — قسم شؤون الموظفين</div>
+    </div>
+  </div>
+  <div class="prt-divider-double"></div>
+  <div class="prt-doc-title-wrap">
+    <div class="prt-doc-title">بيان وثيقة رسمية</div>
+    <div class="prt-doc-type" id="prt-doc-type">—</div>
+  </div>
+  <div class="prt-meta-row">
+    <div class="prt-meta-box">
+      <span class="prt-meta-label">رقم القيد</span>
+      <span class="prt-meta-value" id="prt-refnum">—</span>
+    </div>
+    <div class="prt-meta-box">
+      <span class="prt-meta-label">تاريخ الإصدار</span>
+      <span class="prt-meta-value" id="prt-print-date">—</span>
+    </div>
+  </div>
+  <table class="prt-data-table">
+    <tr>
+      <td class="prt-td-label">تاريخ الوثيقة</td>
+      <td class="prt-td-value" id="prt-docdate"></td>
+      <td class="prt-td-label">نوع الملف</td>
+      <td class="prt-td-value" id="prt-type"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label">الموضوع</td>
+      <td class="prt-td-value" colspan="3" id="prt-subject"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label" id="prt-label-f1">—</td>
+      <td class="prt-td-value" id="prt-field1"></td>
+      <td class="prt-td-label" id="prt-label-f2">—</td>
+      <td class="prt-td-value" id="prt-field2"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label">ملاحظات</td>
+      <td class="prt-td-value" colspan="3" id="prt-notes"></td>
+    </tr>
+  </table>
+  <div class="prt-divider-single"></div>
+  <div class="prt-sign-section">
+    <div class="prt-sign-box">
+      <div class="prt-sign-title">مدير قسم شؤون الموظفين</div>
+      <div class="prt-sign-line">الاسم: ________________________</div>
+      <div class="prt-sign-line">التوقيع: _______________________</div>
+      <div class="prt-sign-line">التاريخ: _______________________</div>
+    </div>
+    <div class="prt-stamp-box">
+      <div class="prt-stamp-circle">الختم<br/>الرسمي</div>
+    </div>
+    <div class="prt-sign-box">
+      <div class="prt-sign-title">مدير إدارة الموارد البشرية</div>
+      <div class="prt-sign-line">الاسم: ________________________</div>
+      <div class="prt-sign-line">التوقيع: _______________________</div>
+      <div class="prt-sign-line">التاريخ: _______________________</div>
+    </div>
+  </div>
+  <div class="prt-divider-double"></div>
+  <div class="prt-footer">
+    <span>صادرة من نظام أرشفة القسم — للاستخدام الرسمي فقط</span>
+    <span id="prt-footer-date"></span>
+  </div>
+</div>
+
+<?!= include('JavaScript'); ?>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
