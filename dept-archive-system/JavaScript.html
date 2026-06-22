@@ -66,9 +66,9 @@ function renderHomeGrid(types, stats) {
     var color = CARD_COLORS[i % CARD_COLORS.length];
     html += '<div class="type-card" style="--card-color:' + color + ';" ' +
             'onclick="openType(' + _esc(t.name) + ',' + _esc(t.icon) + ',' + _esc(t.field1) + ',' + _esc(t.field2) + ')">' +
-            '<div class="type-card-icon">' + t.icon + '</div>' +
-            '<div class="type-card-name">' + _h(t.name) + '</div>' +
-            '<div class="type-card-count">' + count + ' وثيقة</div>' +
+            '<div class="type-icon">' + t.icon + '</div>' +
+            '<div class="type-name">' + _h(t.name) + '</div>' +
+            '<div class="type-count">' + count + ' وثيقة</div>' +
             '</div>';
   }
   grid.innerHTML = html;
@@ -112,7 +112,7 @@ function showScreen(id) {
   document.getElementById('screen-home').style.display = id === 'screen-home' ? '' : 'none';
   document.getElementById('screen-type').style.display = id === 'screen-type' ? '' : 'none';
   document.getElementById('header-title').textContent  = id === 'screen-home' ? 'نظام أرشفة القسم' : _currentType;
-  document.getElementById('btn-back').style.display    = id === 'screen-home' ? 'none' : '';
+  document.getElementById('btn-back').style.display    = id === 'screen-home' ? 'none' : 'flex';
 }
 
 // ══════════════════════════════════════
@@ -123,7 +123,7 @@ function loadRecords() {
   google.script.run
     .withSuccessHandler(function(res) {
       hideLoader();
-      if (!res.success) { showTypeAlert(res.message, 'error'); return; }
+      if (!res.success) { showTypeAlert(res.message, 'danger'); return; }
       _allRecords = res.records || [];
       renderTable(_allRecords);
       document.getElementById('type-count').textContent = _allRecords.length + ' سجل';
@@ -131,7 +131,7 @@ function loadRecords() {
     })
     .withFailureHandler(function(e) {
       hideLoader();
-      showTypeAlert('خطأ في جلب السجلات: ' + e.message, 'error');
+      showTypeAlert('خطأ في جلب السجلات: ' + e.message, 'danger');
     })
     .getRecords(_currentType);
 }
@@ -149,7 +149,7 @@ function renderTable(records) {
   for (var i = 0; i < records.length; i++) {
     var r = records[i];
     var pdfCell = r.pdfUrl
-      ? '<a href="' + _h(r.pdfUrl) + '" target="_blank" class="btn-link-pdf">📄 عرض</a>'
+      ? '<a href="' + _h(r.pdfUrl) + '" target="_blank" class="pdf-link">📄 عرض</a>'
       : '—';
     html += '<tr>' +
       '<td>' + (i + 1) + '</td>' +
@@ -253,7 +253,7 @@ function clearModalForm() {
 // ══════════════════════════════════════
 function saveRecord() {
   var subject = document.getElementById('f-subject').value.trim();
-  if (!subject) { showModalAlert('الموضوع مطلوب.', 'error'); return; }
+  if (!subject) { showModalAlert('الموضوع مطلوب.', 'danger'); return; }
 
   if (_currentFile) {
     uploadFileThenSave();
@@ -286,11 +286,11 @@ function _doSave() {
       .withSuccessHandler(function(res) {
         hideLoader(); btn.disabled = false;
         if (res.success) { closeModal(); loadRecords(); }
-        else showModalAlert(res.message, 'error');
+        else showModalAlert(res.message, 'danger');
       })
       .withFailureHandler(function(e) {
         hideLoader(); btn.disabled = false;
-        showModalAlert('خطأ: ' + e.message, 'error');
+        showModalAlert('خطأ: ' + e.message, 'danger');
       })
       .updateRecord(_currentType, seq, data);
   } else {
@@ -298,11 +298,11 @@ function _doSave() {
       .withSuccessHandler(function(res) {
         hideLoader(); btn.disabled = false;
         if (res.success) { closeModal(); loadRecords(); }
-        else showModalAlert(res.message, 'error');
+        else showModalAlert(res.message, 'danger');
       })
       .withFailureHandler(function(e) {
         hideLoader(); btn.disabled = false;
-        showModalAlert('خطأ: ' + e.message, 'error');
+        showModalAlert('خطأ: ' + e.message, 'danger');
       })
       .addRecord(_currentType, data);
   }
@@ -317,10 +317,10 @@ function handleFileSelect(input) {
 
   var allowed = ['application/pdf','image/jpeg','image/png'];
   if (allowed.indexOf(file.type) === -1) {
-    showModalAlert('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'error'); return;
+    showModalAlert('نوع الملف غير مدعوم. PDF أو JPG أو PNG فقط.', 'danger'); return;
   }
   if (file.size > 150 * 1024 * 1024) {
-    showModalAlert('حجم الملف يتجاوز 150 ميجابايت.', 'error'); return;
+    showModalAlert('حجم الملف يتجاوز 150 ميجابايت.', 'danger'); return;
   }
 
   _currentFile = file;
@@ -365,18 +365,18 @@ function uploadFileThenSave() {
           _doSave();
         } else {
           hideLoader();
-          showModalAlert('فشل رفع الملف: ' + res.message, 'error');
+          showModalAlert('فشل رفع الملف: ' + res.message, 'danger');
         }
       })
       .withFailureHandler(function(err) {
         hideLoader();
-        showModalAlert('خطأ في رفع الملف: ' + err.message, 'error');
+        showModalAlert('خطأ في رفع الملف: ' + err.message, 'danger');
       })
       .uploadPDF(base64, file.name, file.type, _currentType);
   };
   reader.onerror = function() {
     hideLoader();
-    showModalAlert('تعذّر قراءة الملف.', 'error');
+    showModalAlert('تعذّر قراءة الملف.', 'danger');
   };
   reader.readAsDataURL(file);
 }
@@ -391,11 +391,11 @@ function confirmDelete(typeName, seq) {
     .withSuccessHandler(function(res) {
       hideLoader();
       if (res.success) loadRecords();
-      else showTypeAlert(res.message, 'error');
+      else showTypeAlert(res.message, 'danger');
     })
     .withFailureHandler(function(e) {
       hideLoader();
-      showTypeAlert('خطأ في الحذف: ' + e.message, 'error');
+      showTypeAlert('خطأ في الحذف: ' + e.message, 'danger');
     })
     .deleteRecord(typeName, seq);
 }
@@ -434,12 +434,12 @@ function exportCurrentType() {
   google.script.run
     .withSuccessHandler(function(res) {
       hideLoader();
-      if (!res.success) { showTypeAlert(res.message, 'error'); return; }
+      if (!res.success) { showTypeAlert(res.message, 'danger'); return; }
       _downloadCsv(res.data, res.typeName);
     })
     .withFailureHandler(function(e) {
       hideLoader();
-      showTypeAlert('خطأ في التصدير: ' + e.message, 'error');
+      showTypeAlert('خطأ في التصدير: ' + e.message, 'danger');
     })
     .exportRecords(_currentType);
 }
@@ -486,12 +486,12 @@ function showBadge(text) {
 }
 function showTypeAlert(msg, type) {
   var el = document.getElementById('type-alert');
-  el.innerHTML = '<div class="alert alert-' + (type||'info') + '">' + _h(msg) + '</div>';
+  el.innerHTML = '<div class="alert alert-' + (type||'warning') + '">' + _h(msg) + '</div>';
   setTimeout(function(){ el.innerHTML = ''; }, 5000);
 }
 function showModalAlert(msg, type) {
   document.getElementById('modal-alert').innerHTML =
-    '<div class="alert alert-' + (type||'info') + '">' + _h(msg) + '</div>';
+    '<div class="alert alert-' + (type||'warning') + '">' + _h(msg) + '</div>';
 }
 
 // ══════════════════════════════════════

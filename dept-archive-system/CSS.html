@@ -474,6 +474,26 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   border-top: 1px solid var(--border); margin-top: 40px;
 }
 
+/* ── أزرار إجراءات الجدول ── */
+.btn-action {
+  background   : transparent;
+  border       : 1px solid var(--border);
+  border-radius: 6px;
+  padding      : 4px 7px;
+  cursor       : pointer;
+  font-size    : 14px;
+  line-height  : 1;
+  transition   : all 0.15s;
+  margin-inline-start: 3px;
+}
+.btn-action:hover   { transform: scale(1.15); }
+.btn-edit:hover     { background: #eef3f9; border-color: var(--primary); }
+.btn-print:hover    { background: #f0faf3; border-color: var(--success); }
+.btn-delete:hover   { background: #fdf3f2; border-color: var(--danger);  }
+
+.subject-cell { max-width: 240px; word-break: break-word; }
+.actions-cell { white-space: nowrap; text-align: center; }
+
 /* ── رابط PDF ── */
 .pdf-link {
   display      : inline-flex;

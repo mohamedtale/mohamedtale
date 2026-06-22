@@ -5,19 +5,19 @@
 var SPREADSHEET_ID = '1lqcxBy7pzC-ahMjFO6WwpTfUkXE2qq9ZtI_sL_LQiwM';
 var ROOT_FOLDER_ID = '1qvVAEA9uV069UgtFQegYKXehLIcuW1hP';
 
-// أعمدة كل ورقة
+// أعمدة كل ورقة (تتطابق مع ما أنشأه Setup.gs)
 var COL = {
-  SEQ       : 0,  // رقم تسلسلي داخلي
-  REF_NUM   : 1,  // رقم القيد
-  DOC_DATE  : 2,  // تاريخ الوثيقة
-  SUBJECT   : 3,  // الموضوع
-  FIELD1    : 4,  // الحقل الإضافي 1
-  FIELD2    : 5,  // الحقل الإضافي 2
-  NOTES     : 6,  // ملاحظات
-  PDF_URL   : 7,  // رابط PDF
-  FILE_ID   : 8,  // Drive File ID
-  ENTRY_DATE: 9   // تاريخ الإدخال
+  REF_NUM   : 0,  // رقم القيد
+  DOC_DATE  : 1,  // تاريخ الوثيقة
+  SUBJECT   : 2,  // الموضوع
+  FIELD1    : 3,  // الحقل الإضافي 1
+  FIELD2    : 4,  // الحقل الإضافي 2
+  NOTES     : 5,  // ملاحظات
+  PDF_URL   : 6,  // رابط PDF
+  FILE_ID   : 7,  // Drive File ID
+  ENTRY_DATE: 8   // تاريخ الإدخال
 };
+var NUM_COLS = 9;
 
 // ─────────────────────────────────────────────
 function doGet() {
@@ -68,7 +68,7 @@ function getFileTypes() {
 // ─────────────────────────────────────────────
 function getStats() {
   try {
-    var res   = getFileTypes();
+    var res = getFileTypes();
     if (!res.success) return res;
 
     var ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -105,10 +105,11 @@ function getRecords(typeName) {
     var lastRow = sheet.getLastRow();
     if (lastRow < 2) return { success: true, records: [] };
 
-    var rows    = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
+    var rows    = sheet.getRange(2, 1, lastRow - 1, NUM_COLS).getValues();
     var records = [];
     for (var i = 0; i < rows.length; i++) {
-      records.push(_rowToObj(rows[i]));
+      // seq = رقم الصف الفعلي في الورقة (يُستخدم للتعديل والحذف)
+      records.push(_rowToObj(rows[i], i + 2));
     }
     return { success: true, records: records };
   } catch (e) {
@@ -126,23 +127,24 @@ function addRecord(typeName, data) {
     var sheet = ss.getSheetByName(typeName);
     if (!sheet) return { success: false, message: 'الورقة غير موجودة.' };
 
-    var refNum   = _sanitize(data.refNum);
-    var docDate  = _sanitize(data.docDate);
-    var subject  = _sanitize(data.subject);
-    var field1   = _sanitize(data.field1 || '');
-    var field2   = _sanitize(data.field2 || '');
-    var notes    = _sanitize(data.notes  || '');
-    var pdfUrl   = _sanitize(data.pdfUrl || '');
-    var fileId   = _sanitize(data.fileId || '');
-
+    var subject = _sanitize(data.subject);
     if (!subject) return { success: false, message: 'الموضوع مطلوب.' };
 
-    var seq   = _getNextSeq(sheet);
     var today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
-    sheet.appendRow([seq, refNum, docDate, subject, field1, field2, notes, pdfUrl, fileId, today]);
+    sheet.appendRow([
+      _sanitize(data.refNum  || ''),
+      _sanitize(data.docDate || ''),
+      subject,
+      _sanitize(data.field1  || ''),
+      _sanitize(data.field2  || ''),
+      _sanitize(data.notes   || ''),
+      _sanitize(data.pdfUrl  || ''),
+      _sanitize(data.fileId  || ''),
+      today
+    ]);
 
-    return { success: true, message: 'تم الحفظ بنجاح برقم تسلسلي ' + seq + '.', seq: seq };
+    return { success: true, message: 'تم الحفظ بنجاح.' };
   } catch (e) {
     Logger.log('addRecord: ' + e);
     return { success: false, message: 'خطأ في الحفظ: ' + e.message };
@@ -150,7 +152,7 @@ function addRecord(typeName, data) {
 }
 
 // ─────────────────────────────────────────────
-// تعديل سجل
+// تعديل سجل (seq = رقم الصف في الورقة)
 // ─────────────────────────────────────────────
 function updateRecord(typeName, seq, data) {
   try {
@@ -159,24 +161,24 @@ function updateRecord(typeName, seq, data) {
     if (!sheet) return { success: false, message: 'الورقة غير موجودة.' };
 
     seq = parseInt(seq);
-    var rows     = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
-    var rowIndex = -1;
-    for (var i = 0; i < rows.length; i++) {
-      if (parseInt(rows[i][COL.SEQ]) === seq) { rowIndex = i; break; }
-    }
-    if (rowIndex === -1) return { success: false, message: 'السجل غير موجود.' };
+    if (isNaN(seq) || seq < 2) return { success: false, message: 'رقم الصف غير صحيح.' };
+    if (seq > sheet.getLastRow()) return { success: false, message: 'السجل غير موجود.' };
 
-    var newFileId = _sanitize(data.fileId || rows[rowIndex][COL.FILE_ID]);
+    // الاحتفاظ بالملف القديم إن لم يُرفع ملف جديد
+    var oldFileId = sheet.getRange(seq, COL.FILE_ID + 1).getValue().toString();
+    var fileId    = _sanitize(data.fileId || oldFileId);
+    var pdfUrl    = _sanitize(data.pdfUrl || sheet.getRange(seq, COL.PDF_URL + 1).getValue().toString());
 
-    sheet.getRange(rowIndex + 2, 2, 1, 8).setValues([[
-      _sanitize(data.refNum),
-      _sanitize(data.docDate),
-      _sanitize(data.subject),
-      _sanitize(data.field1 || ''),
-      _sanitize(data.field2 || ''),
-      _sanitize(data.notes  || ''),
-      _sanitize(data.pdfUrl || ''),
-      newFileId
+    sheet.getRange(seq, 1, 1, NUM_COLS).setValues([[
+      _sanitize(data.refNum  || ''),
+      _sanitize(data.docDate || ''),
+      _sanitize(data.subject || ''),
+      _sanitize(data.field1  || ''),
+      _sanitize(data.field2  || ''),
+      _sanitize(data.notes   || ''),
+      pdfUrl,
+      fileId,
+      sheet.getRange(seq, COL.ENTRY_DATE + 1).getValue()  // الاحتفاظ بتاريخ الإدخال الأصلي
     ]]);
 
     return { success: true, message: 'تم التعديل بنجاح.' };
@@ -187,7 +189,7 @@ function updateRecord(typeName, seq, data) {
 }
 
 // ─────────────────────────────────────────────
-// حذف سجل
+// حذف سجل (seq = رقم الصف في الورقة)
 // ─────────────────────────────────────────────
 function deleteRecord(typeName, seq) {
   try {
@@ -196,20 +198,16 @@ function deleteRecord(typeName, seq) {
     if (!sheet) return { success: false, message: 'الورقة غير موجودة.' };
 
     seq = parseInt(seq);
-    var rows     = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
-    var rowIndex = -1;
-    for (var i = 0; i < rows.length; i++) {
-      if (parseInt(rows[i][COL.SEQ]) === seq) { rowIndex = i; break; }
-    }
-    if (rowIndex === -1) return { success: false, message: 'السجل غير موجود.' };
+    if (isNaN(seq) || seq < 2) return { success: false, message: 'رقم الصف غير صحيح.' };
+    if (seq > sheet.getLastRow()) return { success: false, message: 'السجل غير موجود.' };
 
     // حذف ملف Drive إن وجد
-    var driveFileId = rows[rowIndex][COL.FILE_ID].toString().trim();
+    var driveFileId = sheet.getRange(seq, COL.FILE_ID + 1).getValue().toString().trim();
     if (driveFileId) {
       try { DriveApp.getFileById(driveFileId).setTrashed(true); } catch (e) {}
     }
 
-    sheet.deleteRow(rowIndex + 2);
+    sheet.deleteRow(seq);
     return { success: true, message: 'تم الحذف بنجاح.' };
   } catch (e) {
     Logger.log('deleteRecord: ' + e);
@@ -228,12 +226,11 @@ function searchRecords(typeName, query) {
     var res = getRecords(typeName);
     if (!res.success) return res;
 
-    var results = res.records.filter(function (r) {
+    var results = res.records.filter(function(r) {
       return r.subject.toLowerCase().indexOf(query)  !== -1 ||
              r.refNum.toLowerCase().indexOf(query)   !== -1 ||
              r.field1.toLowerCase().indexOf(query)   !== -1 ||
-             r.field2.toLowerCase().indexOf(query)   !== -1 ||
-             r.seq.toString() === query;
+             r.field2.toLowerCase().indexOf(query)   !== -1;
     });
 
     if (results.length === 0) return { success: false, message: 'لا توجد نتائج لـ "' + query + '".' };
@@ -245,7 +242,7 @@ function searchRecords(typeName, query) {
 }
 
 // ─────────────────────────────────────────────
-// رفع PDF إلى Drive
+// رفع ملف إلى Drive
 // ─────────────────────────────────────────────
 function uploadPDF(base64Data, fileName, mimeType, typeName) {
   try {
@@ -257,7 +254,6 @@ function uploadPDF(base64Data, fileName, mimeType, typeName) {
     var bytes = Utilities.base64Decode(base64Data);
     if (bytes.length > 150 * 1024 * 1024) return { success: false, message: 'حجم الملف يتجاوز 150 ميجابايت.' };
 
-    // البحث عن مجلد النوع في Drive
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     var folders    = rootFolder.getFoldersByName(typeName);
     var folder     = folders.hasNext() ? folders.next() : rootFolder;
@@ -305,29 +301,17 @@ function _fmtDate(val) {
   return val.toString().trim();
 }
 
-function _rowToObj(row) {
+function _rowToObj(row, sheetRowNum) {
   return {
-    seq      : row[COL.SEQ]        !== undefined ? row[COL.SEQ].toString()        : '',
-    refNum   : row[COL.REF_NUM]    !== undefined ? row[COL.REF_NUM].toString()    : '',
+    seq      : sheetRowNum.toString(),   // رقم الصف الفعلي للتعديل والحذف
+    refNum   : (row[COL.REF_NUM]    || '').toString(),
     docDate  : _fmtDate(row[COL.DOC_DATE]),
-    subject  : row[COL.SUBJECT]    !== undefined ? row[COL.SUBJECT].toString()    : '',
-    field1   : row[COL.FIELD1]     !== undefined ? row[COL.FIELD1].toString()     : '',
-    field2   : row[COL.FIELD2]     !== undefined ? row[COL.FIELD2].toString()     : '',
-    notes    : row[COL.NOTES]      !== undefined ? row[COL.NOTES].toString()      : '',
-    pdfUrl   : row[COL.PDF_URL]    !== undefined ? row[COL.PDF_URL].toString()    : '',
-    fileId   : row[COL.FILE_ID]    !== undefined ? row[COL.FILE_ID].toString()    : '',
+    subject  : (row[COL.SUBJECT]    || '').toString(),
+    field1   : (row[COL.FIELD1]     || '').toString(),
+    field2   : (row[COL.FIELD2]     || '').toString(),
+    notes    : (row[COL.NOTES]      || '').toString(),
+    pdfUrl   : (row[COL.PDF_URL]    || '').toString(),
+    fileId   : (row[COL.FILE_ID]    || '').toString(),
     entryDate: _fmtDate(row[COL.ENTRY_DATE])
   };
-}
-
-function _getNextSeq(sheet) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 2) return 1;
-  var rows = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  var max  = 0;
-  for (var i = 0; i < rows.length; i++) {
-    var n = parseInt(rows[i][0]);
-    if (!isNaN(n) && n > max) max = n;
-  }
-  return max + 1;
 }

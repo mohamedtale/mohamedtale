@@ -156,7 +156,11 @@
 
         <div class="form-group full">
           <label>ملف PDF / صورة</label>
-          <div class="file-upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+          <div class="file-upload-area" id="upload-area"
+               onclick="document.getElementById('file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="event.preventDefault();this.classList.remove('drag-over');handleFileSelect({files:event.dataTransfer.files})">
             <div>📎 <strong>اضغط لاختيار ملف</strong> أو اسحب وأفلت</div>
             <p>PDF، JPG، PNG — الحد الأقصى 150 ميجابايت</p>
           </div>
