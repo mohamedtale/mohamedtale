@@ -18,7 +18,7 @@ var COL = {
   ENTRY_DATE: 8
 };
 
-var ALLOWED_STATUSES = { 'مستمر': true, 'تقاعد': true, 'استقالة': true, 'إنهاء خدمة': true };
+var ALLOWED_STATUSES = { 'مستمر': true, 'تقاعد': true, 'استقالة': true, 'إنهاء خدمة': true, 'وفاة': true, 'غير محدد': true };
 
 // ─────────────────────────────────────────────
 function doGet() {
@@ -225,7 +225,7 @@ function deleteEmployee(fileNum) {
 function getStats() {
   try {
     var rows  = _getData();
-    var stats = { total: rows.length, مستمر: 0, تقاعد: 0, استقالة: 0, 'إنهاء خدمة': 0, recent: [] };
+    var stats = { total: rows.length, مستمر: 0, تقاعد: 0, استقالة: 0, 'إنهاء خدمة': 0, 'وفاة': 0, 'غير محدد': 0, recent: [] };
 
     for (var i = 0; i < rows.length; i++) {
       var s = rows[i][COL.STATUS].toString().trim();

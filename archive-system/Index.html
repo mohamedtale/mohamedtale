@@ -72,6 +72,14 @@
         <div class="stat-num" id="stat-terminated">—</div>
         <div class="stat-label">إنهاء خدمة</div>
       </div>
+      <div class="stat-card" style="--c:#6a1b9a">
+        <div class="stat-num" id="stat-deceased">—</div>
+        <div class="stat-label">وفاة</div>
+      </div>
+      <div class="stat-card" style="--c:#555">
+        <div class="stat-num" id="stat-unknown">—</div>
+        <div class="stat-label">غير محدد</div>
+      </div>
     </div>
 
     <!-- آخر الإدخالات -->
@@ -152,6 +160,8 @@
               <option value="تقاعد">تقاعد</option>
               <option value="استقالة">استقالة</option>
               <option value="إنهاء خدمة">إنهاء خدمة</option>
+              <option value="وفاة">وفاة</option>
+              <option value="غير محدد">غير محدد</option>
             </select>
           </div>
 
@@ -281,6 +291,12 @@
           <button class="filter-btn" onclick="filterByStatus('إنهاء خدمة', this)">
             إنهاء خدمة <span class="filter-count" id="filter-count-terminated">0</span>
           </button>
+          <button class="filter-btn" onclick="filterByStatus('وفاة', this)">
+            وفاة <span class="filter-count" id="filter-count-deceased">0</span>
+          </button>
+          <button class="filter-btn" onclick="filterByStatus('غير محدد', this)">
+            غير محدد <span class="filter-count" id="filter-count-unknown">0</span>
+          </button>
         </div>
 
         <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
@@ -356,6 +372,8 @@
             <option value="تقاعد">تقاعد</option>
             <option value="استقالة">استقالة</option>
             <option value="إنهاء خدمة">إنهاء خدمة</option>
+            <option value="وفاة">وفاة</option>
+            <option value="غير محدد">غير محدد</option>
           </select>
         </div>
         <div class="form-group">

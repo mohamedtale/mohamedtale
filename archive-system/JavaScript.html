@@ -50,6 +50,8 @@ function renderDashboard(res) {
   setText('stat-retired',    s['تقاعد']);
   setText('stat-resigned',   s['استقالة']);
   setText('stat-terminated', s['إنهاء خدمة']);
+  setText('stat-deceased',   s['وفاة']      || 0);
+  setText('stat-unknown',    s['غير محدد']  || 0);
   setText('header-total-badge', 'الإجمالي: ' + s.total + ' موظف');
 
   var tbody = document.getElementById('recent-tbody');
@@ -390,6 +392,8 @@ function loadFilterTab() {
       setText('filter-count-retired',    s['تقاعد']);
       setText('filter-count-resigned',   s['استقالة']);
       setText('filter-count-terminated', s['إنهاء خدمة']);
+      setText('filter-count-deceased',   s['وفاة']     || 0);
+      setText('filter-count-unknown',    s['غير محدد'] || 0);
     })
     .withFailureHandler(function () {})
     .getStats();
