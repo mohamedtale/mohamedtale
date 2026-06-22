@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام أرشفة الموظفين</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <?!= include('CSS'); ?>
+</head>
+<body>
+
+<!-- مؤشر التحميل -->
+<div id="loader-overlay" class="loader-overlay hidden">
+  <div class="loader-spinner"></div>
+  <div class="loader-text" id="loader-text">جارٍ التحميل…</div>
+</div>
+
+<!-- رأس الصفحة -->
+<header class="app-header">
+  <div class="header-logo">🗂️</div>
+  <div class="header-text">
+    <h1>نظام أرشفة الموظفين</h1>
+    <p>الجهاز التنفيذي لحفر وصيانة أبار المياه — قسم شؤون الموظفين</p>
+  </div>
+  <div class="header-badge" id="header-total-badge">جارٍ التحميل…</div>
+</header>
+
+<!-- التبويبات -->
+<nav class="tabs-nav">
+  <button class="tab-btn active" onclick="switchTab('dashboard', this)">
+    <span>📊</span><span>لوحة التحكم</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('add', this)">
+    <span>➕</span><span>إضافة موظف</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('search', this)">
+    <span>🔍</span><span>البحث والتعديل</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('filter', this)">
+    <span>🗃️</span><span>التصفية والتصدير</span>
+  </button>
+</nav>
+
+<main class="main-container">
+
+  <!-- ══════════════════════════════════════════
+       تبويب 1 — لوحة التحكم
+  ════════════════════════════════════════════ -->
+  <div id="tab-dashboard" class="tab-content active">
+
+    <!-- إحصاءات -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card color-blue">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">إجمالي الموظفين المؤرشفين</div>
+      </div>
+      <div class="stat-card color-green">
+        <div class="stat-num" id="stat-active">—</div>
+        <div class="stat-label">مستمر</div>
+      </div>
+      <div class="stat-card color-blue" style="--c:#1565c0">
+        <div class="stat-num" id="stat-retired">—</div>
+        <div class="stat-label">متقاعد</div>
+      </div>
+      <div class="stat-card color-orange">
+        <div class="stat-num" id="stat-resigned">—</div>
+        <div class="stat-label">مستقيل</div>
+      </div>
+      <div class="stat-card color-red">
+        <div class="stat-num" id="stat-terminated">—</div>
+        <div class="stat-label">إنهاء خدمة</div>
+      </div>
+    </div>
+
+    <!-- آخر الإدخالات -->
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🕐</span>
+        <h2>آخر الإدخالات</h2>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>رقم الملف</th>
+                <th>الاسم الكامل</th>
+                <th>الوظيفة</th>
+                <th>الحالة</th>
+                <th>تاريخ الإدخال</th>
+                <th>الملف</th>
+              </tr>
+            </thead>
+            <tbody id="recent-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">جارٍ التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       تبويب 2 — إضافة موظف
+  ════════════════════════════════════════════ -->
+  <div id="tab-add" class="tab-content">
+
+    <div id="add-alert-container"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">➕</span>
+        <h2>إضافة موظف جديد للأرشيف</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="form-grid">
+
+          <!-- الاسم الكامل -->
+          <div class="form-group">
+            <label>الاسم الكامل <span class="req">*</span></label>
+            <input type="text" id="add-name" class="form-control" placeholder="أدخل الاسم الكامل للموظف" autocomplete="off" />
+          </div>
+
+          <!-- الوظيفة -->
+          <div class="form-group">
+            <label>الوظيفة <span class="req">*</span></label>
+            <input type="text" id="add-job" class="form-control" placeholder="المسمى الوظيفي" autocomplete="off" />
+          </div>
+
+          <!-- تاريخ المباشرة -->
+          <div class="form-group">
+            <label>تاريخ مباشرة العمل</label>
+            <input type="date" id="add-start" class="form-control" />
+          </div>
+
+          <!-- تاريخ نهاية الخدمة -->
+          <div class="form-group">
+            <label>تاريخ نهاية الخدمة</label>
+            <input type="date" id="add-end" class="form-control" />
+          </div>
+
+          <!-- الحالة -->
+          <div class="form-group">
+            <label>الحالة <span class="req">*</span></label>
+            <select id="add-status" class="form-control">
+              <option value="">— اختر الحالة —</option>
+              <option value="مستمر">مستمر</option>
+              <option value="تقاعد">تقاعد</option>
+              <option value="استقالة">استقالة</option>
+              <option value="إنهاء خدمة">إنهاء خدمة</option>
+            </select>
+          </div>
+
+          <!-- رابط PDF يدوي -->
+          <div class="form-group">
+            <label>رابط PDF (اختياري)</label>
+            <input type="url" id="add-pdf-url" class="form-control" placeholder="https://..." />
+          </div>
+
+        </div>
+
+        <!-- رفع ملف PDF -->
+        <div style="margin-top:20px;">
+          <label style="font-size:13px;font-weight:700;color:var(--text-main);display:block;margin-bottom:8px;">
+            رفع ملف PDF / صورة مباشرة
+          </label>
+
+          <div class="file-upload-area" id="upload-area" onclick="document.getElementById('add-file-input').click()">
+            <div class="upload-icon">📎</div>
+            <p><strong>اضغط لاختيار ملف</strong> أو اسحب وأفلت هنا</p>
+            <p style="margin-top:4px;">PDF، JPG، PNG — الحد الأقصى 10 ميجابايت</p>
+          </div>
+          <input type="file" id="add-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="handleFileSelect(this)" />
+
+          <div class="progress-bar-wrap" id="upload-progress-wrap">
+            <div class="progress-bar-fill" id="upload-progress-fill"></div>
+          </div>
+
+          <div id="file-preview" style="display:none;" class="file-preview">
+            <span>📄</span>
+            <span id="file-preview-name"></span>
+            <button onclick="clearFile()" title="إزالة الملف">✕</button>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="submitAddEmployee()">
+            <span>💾</span><span>حفظ الموظف</span>
+          </button>
+          <button class="btn btn-outline" onclick="clearAddForm()">
+            <span>🔄</span><span>مسح الحقول</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       تبويب 3 — البحث والتعديل
+  ════════════════════════════════════════════ -->
+  <div id="tab-search" class="tab-content">
+
+    <div id="search-alert-container"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🔍</span>
+        <h2>البحث عن موظف</h2>
+      </div>
+      <div class="card-body">
+        <div class="search-box">
+          <input type="text" id="search-input" class="form-control" placeholder="ابحث بالاسم أو رقم الملف…" onkeydown="if(event.key==='Enter') doSearch()" />
+          <button class="btn btn-primary" onclick="doSearch()"><span>🔍</span><span>بحث</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- نتائج البحث -->
+    <div id="search-results" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <span class="icon">📋</span>
+          <h2>نتائج البحث</h2>
+          <span id="search-count-badge" style="margin-right:auto;background:#eef3f9;border:1px solid var(--border);color:var(--primary);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;"></span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>رقم الملف</th>
+                  <th>الاسم الكامل</th>
+                  <th>الوظيفة</th>
+                  <th>المباشرة</th>
+                  <th>نهاية الخدمة</th>
+                  <th>الحالة</th>
+                  <th>الملف</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="search-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       تبويب 4 — التصفية والتصدير
+  ════════════════════════════════════════════ -->
+  <div id="tab-filter" class="tab-content">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🗃️</span>
+        <h2>تصفية السجلات</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="status-filters">
+          <button class="filter-btn active" onclick="filterByStatus('الكل', this)">
+            الكل <span class="filter-count" id="filter-count-all">0</span>
+          </button>
+          <button class="filter-btn" onclick="filterByStatus('مستمر', this)">
+            مستمر <span class="filter-count" id="filter-count-active">0</span>
+          </button>
+          <button class="filter-btn" onclick="filterByStatus('تقاعد', this)">
+            متقاعد <span class="filter-count" id="filter-count-retired">0</span>
+          </button>
+          <button class="filter-btn" onclick="filterByStatus('استقالة', this)">
+            مستقيل <span class="filter-count" id="filter-count-resigned">0</span>
+          </button>
+          <button class="filter-btn" onclick="filterByStatus('إنهاء خدمة', this)">
+            إنهاء خدمة <span class="filter-count" id="filter-count-terminated">0</span>
+          </button>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <button class="btn btn-success" onclick="exportToCSV()">
+            <span>📥</span><span>تصدير Excel / CSV</span>
+          </button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>رقم الملف</th>
+                <th>الاسم الكامل</th>
+                <th>الوظيفة</th>
+                <th>تاريخ المباشرة</th>
+                <th>تاريخ نهاية الخدمة</th>
+                <th>الحالة</th>
+                <th>الملف</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="filter-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">جارٍ التحميل…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="app-footer">
+  <p>نظام أرشفة الموظفين &copy; <span id="footer-year"></span> — الجهاز التنفيذي لحفر وصيانة أبار المياه</p>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     مودال التعديل
+════════════════════════════════════════════ -->
+<div id="edit-modal" class="modal-overlay" style="display:none;" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ تعديل بيانات الموظف</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="edit-alert"></div>
+      <input type="hidden" id="edit-file-num" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label>الاسم الكامل <span class="req">*</span></label>
+          <input type="text" id="edit-name" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>الوظيفة <span class="req">*</span></label>
+          <input type="text" id="edit-job" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>تاريخ المباشرة</label>
+          <input type="date" id="edit-start" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>تاريخ نهاية الخدمة</label>
+          <input type="date" id="edit-end" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>الحالة <span class="req">*</span></label>
+          <select id="edit-status" class="form-control">
+            <option value="مستمر">مستمر</option>
+            <option value="تقاعد">تقاعد</option>
+            <option value="استقالة">استقالة</option>
+            <option value="إنهاء خدمة">إنهاء خدمة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>رابط PDF</label>
+          <input type="url" id="edit-pdf-url" class="form-control" />
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="submitEditEmployee()"><span>💾</span><span>حفظ التعديلات</span></button>
+        <button class="btn btn-outline" onclick="closeEditModal()"><span>إلغاء</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     نموذج الطباعة الرسمي
+════════════════════════════════════════════ -->
+<div class="print-view" id="print-view">
+  <div class="print-header-org">
+    <h1>الجهاز التنفيذي لحفر وصيانة أبار المياه</h1>
+    <p>دولة ليبيا — وزارة الموارد المائية — قسم شؤون الموظفين</p>
+  </div>
+  <div class="print-title-row">
+    <div class="print-doc-num">رقم: <span id="prt-docnum"></span></div>
+    <div class="print-title-center">بيان موظف مؤرشف</div>
+    <div class="print-doc-date">التاريخ: <span id="prt-date"></span></div>
+  </div>
+  <div class="print-fields">
+    <div class="print-field"><span class="print-field-label">رقم الملف:</span><span class="print-field-value" id="prt-filenum"></span></div>
+    <div class="print-field"><span class="print-field-label">الاسم الكامل:</span><span class="print-field-value" id="prt-name"></span></div>
+    <div class="print-field"><span class="print-field-label">الوظيفة:</span><span class="print-field-value" id="prt-job"></span></div>
+    <div class="print-field"><span class="print-field-label">الحالة:</span><span class="print-field-value" id="prt-status"></span></div>
+    <div class="print-field"><span class="print-field-label">تاريخ المباشرة:</span><span class="print-field-value" id="prt-start"></span></div>
+    <div class="print-field"><span class="print-field-label">تاريخ نهاية الخدمة:</span><span class="print-field-value" id="prt-end"></span></div>
+  </div>
+  <div class="print-sign-row">
+    <div class="print-sign-box">
+      <div class="print-sign-title">مدير قسم شؤون الموظفين</div>
+      <div style="font-size:8pt;color:#555;">الاسم: ___________________</div>
+      <div style="font-size:8pt;color:#555;margin-top:4pt;">التوقيع: ________________</div>
+    </div>
+    <div class="print-sign-box" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="print-stamp">الختم الرسمي</div>
+    </div>
+    <div class="print-sign-box">
+      <div class="print-sign-title">مدير إدارة الموارد البشرية</div>
+      <div style="font-size:8pt;color:#555;">الاسم: ___________________</div>
+      <div style="font-size:8pt;color:#555;margin-top:4pt;">التوقيع: ________________</div>
+    </div>
+  </div>
+  <div class="print-footer-bar">
+    <span>صادرة من نظام أرشفة الموظفين — للاستخدام الرسمي فقط</span>
+    <span id="prt-footer-date"></span>
+  </div>
+</div>
+
+<?!= include('JavaScript'); ?>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,574 @@
+<script>
+/* ============================================================
+   JavaScript.html — نظام أرشفة الموظفين
+   ============================================================ */
+
+var _allData      = [];
+var _currentFile  = null;  // الملف المرفوع حالياً
+var _pendingFileId  = '';
+var _pendingFileUrl = '';
+
+// ─────────────────────────────────────────────
+// تهيئة عند التحميل
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+  loadDashboard();
+  setupDragDrop();
+});
+
+// ─────────────────────────────────────────────
+// التبويبات
+// ─────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(function (el) { el.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function (el) { el.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'filter')    loadFilterTab();
+}
+
+// ─────────────────────────────────────────────
+// لوحة التحكم — الإحصاءات
+// ─────────────────────────────────────────────
+function loadDashboard() {
+  showLoader('جارٍ تحميل البيانات…');
+  google.script.run
+    .withSuccessHandler(renderDashboard)
+    .withFailureHandler(function (e) { hideLoader(); })
+    .getStats();
+}
+
+function renderDashboard(res) {
+  hideLoader();
+  if (!res || !res.success) return;
+  var s = res.stats;
+
+  setText('stat-total',      s.total);
+  setText('stat-active',     s['مستمر']);
+  setText('stat-retired',    s['تقاعد']);
+  setText('stat-resigned',   s['استقالة']);
+  setText('stat-terminated', s['إنهاء خدمة']);
+  setText('header-total-badge', 'الإجمالي: ' + s.total + ' موظف');
+
+  var tbody = document.getElementById('recent-tbody');
+  if (!s.recent || s.recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#999;">لا توجد سجلات بعد.</td></tr>';
+    return;
+  }
+
+  var html = '';
+  s.recent.forEach(function (r) {
+    html += '<tr>' +
+      '<td><strong>#' + escHtml(r.fileNum) + '</strong></td>' +
+      '<td>' + escHtml(r.name) + '</td>' +
+      '<td>' + escHtml(r.jobTitle) + '</td>' +
+      '<td>' + statusBadge(r.status) + '</td>' +
+      '<td>' + escHtml(r.entryDate) + '</td>' +
+      '<td>' + pdfLink(r.pdfUrl) + '</td>' +
+    '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+// إضافة موظف
+// ─────────────────────────────────────────────
+function submitAddEmployee() {
+  clearAlert('add-alert-container');
+
+  var name   = document.getElementById('add-name').value.trim();
+  var job    = document.getElementById('add-job').value.trim();
+  var start  = document.getElementById('add-start').value;
+  var end    = document.getElementById('add-end').value;
+  var status = document.getElementById('add-status').value;
+  var pdfUrl = _pendingFileUrl || document.getElementById('add-pdf-url').value.trim();
+  var fileId = _pendingFileId;
+
+  if (!name)   { showAlert('add-alert-container', 'الاسم الكامل مطلوب.', 'danger'); return; }
+  if (!job)    { showAlert('add-alert-container', 'الوظيفة مطلوبة.', 'danger'); return; }
+  if (!status) { showAlert('add-alert-container', 'يرجى اختيار الحالة.', 'danger'); return; }
+
+  // إذا يوجد ملف لم يُرفع بعد — ارفعه أولاً
+  if (_currentFile && !_pendingFileId) {
+    uploadFileThenSave(name, job, start, end, status, pdfUrl, fileId);
+    return;
+  }
+
+  showLoader('جارٍ الحفظ…');
+  google.script.run
+    .withSuccessHandler(handleAddResult)
+    .withFailureHandler(function (e) {
+      hideLoader();
+      showAlert('add-alert-container', 'خطأ في الاتصال: ' + (e.message || ''), 'danger');
+    })
+    .addEmployee({ name: name, jobTitle: job, startDate: start, endDate: end, status: status, pdfUrl: pdfUrl, fileId: fileId });
+}
+
+function handleAddResult(res) {
+  hideLoader();
+  if (!res) { showAlert('add-alert-container', 'استجابة غير متوقعة من الخادم.', 'danger'); return; }
+
+  if (res.duplicate) {
+    showAlert('add-alert-container', res.message + ' — هل تريد الاستمرار في الإضافة رغم ذلك؟', 'warning');
+    // إضافة زر "استمرار"
+    var container = document.getElementById('add-alert-container');
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-accent btn-sm';
+    btn.style.marginTop = '10px';
+    btn.textContent = 'نعم، إضافة على أي حال';
+    btn.onclick = function () { forceAddEmployee(); };
+    container.appendChild(btn);
+    return;
+  }
+
+  if (!res.success) { showAlert('add-alert-container', res.message, 'danger'); return; }
+
+  showAlert('add-alert-container', res.message, 'success');
+  clearAddForm();
+  loadDashboard();
+}
+
+function forceAddEmployee() {
+  clearAlert('add-alert-container');
+  var name   = document.getElementById('add-name').value.trim();
+  var job    = document.getElementById('add-job').value.trim();
+  var start  = document.getElementById('add-start').value;
+  var end    = document.getElementById('add-end').value;
+  var status = document.getElementById('add-status').value;
+  var pdfUrl = _pendingFileUrl || document.getElementById('add-pdf-url').value.trim();
+  var fileId = _pendingFileId;
+
+  showLoader('جارٍ الحفظ…');
+  // نحذف فحص التكرار بإرسال نفس البيانات والسرفر سيحفظها
+  // نُضيف علامة تجاوز — نبني دالة منفصلة في GAS أو نستخدم نفس addEmployee مع إضافة خاصية
+  google.script.run
+    .withSuccessHandler(function (res) {
+      hideLoader();
+      if (res && res.success) { showAlert('add-alert-container', res.message, 'success'); clearAddForm(); loadDashboard(); }
+      else showAlert('add-alert-container', (res && res.message) || 'خطأ.', 'danger');
+    })
+    .withFailureHandler(function (e) { hideLoader(); showAlert('add-alert-container', 'خطأ: ' + e.message, 'danger'); })
+    .addEmployee({ name: name, jobTitle: job, startDate: start, endDate: end, status: status, pdfUrl: pdfUrl, fileId: fileId, forceAdd: true });
+}
+
+// ─────────────────────────────────────────────
+// رفع الملف
+// ─────────────────────────────────────────────
+function handleFileSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  _currentFile = input.files[0];
+  document.getElementById('file-preview-name').textContent = _currentFile.name;
+  document.getElementById('file-preview').style.display = 'flex';
+  _pendingFileId  = '';
+  _pendingFileUrl = '';
+}
+
+function clearFile() {
+  _currentFile    = null;
+  _pendingFileId  = '';
+  _pendingFileUrl = '';
+  document.getElementById('add-file-input').value = '';
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('upload-progress-wrap').style.display = 'none';
+  document.getElementById('upload-progress-fill').style.width = '0%';
+}
+
+function setupDragDrop() {
+  var area = document.getElementById('upload-area');
+  if (!area) return;
+  area.addEventListener('dragover', function (e) { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', function ()  { area.classList.remove('drag-over'); });
+  area.addEventListener('drop', function (e) {
+    e.preventDefault();
+    area.classList.remove('drag-over');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      document.getElementById('add-file-input').files = e.dataTransfer.files;
+      handleFileSelect(document.getElementById('add-file-input'));
+    }
+  });
+}
+
+function uploadFileThenSave(name, job, start, end, status, pdfUrl, fileId) {
+  var file = _currentFile;
+  if (!file) return;
+
+  var progressWrap = document.getElementById('upload-progress-wrap');
+  var progressFill = document.getElementById('upload-progress-fill');
+  progressWrap.style.display = 'block';
+  progressFill.style.width = '30%';
+
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    progressFill.style.width = '60%';
+    var base64 = e.target.result.split(',')[1];
+
+    showLoader('جارٍ رفع الملف…');
+    google.script.run
+      .withSuccessHandler(function (res) {
+        progressFill.style.width = '100%';
+        setTimeout(function () { progressWrap.style.display = 'none'; progressFill.style.width = '0%'; }, 800);
+
+        if (!res || !res.success) {
+          hideLoader();
+          showAlert('add-alert-container', res ? res.message : 'فشل رفع الملف.', 'danger');
+          return;
+        }
+
+        _pendingFileId  = res.fileId;
+        _pendingFileUrl = res.fileUrl;
+        hideLoader();
+
+        // الآن احفظ الموظف
+        showLoader('جارٍ الحفظ…');
+        google.script.run
+          .withSuccessHandler(handleAddResult)
+          .withFailureHandler(function (e) { hideLoader(); showAlert('add-alert-container', 'خطأ: ' + e.message, 'danger'); })
+          .addEmployee({ name: name, jobTitle: job, startDate: start, endDate: end, status: status, pdfUrl: _pendingFileUrl, fileId: _pendingFileId });
+      })
+      .withFailureHandler(function (e) {
+        hideLoader();
+        progressWrap.style.display = 'none';
+        showAlert('add-alert-container', 'خطأ في رفع الملف: ' + e.message, 'danger');
+      })
+      .uploadPDF(base64, file.name, file.type);
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearAddForm() {
+  ['add-name','add-job','add-start','add-end','add-pdf-url'].forEach(function (id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('add-status').value = '';
+  clearFile();
+  clearAlert('add-alert-container');
+}
+
+// ─────────────────────────────────────────────
+// البحث
+// ─────────────────────────────────────────────
+function doSearch() {
+  clearAlert('search-alert-container');
+  var query = document.getElementById('search-input').value.trim();
+  if (!query) { showAlert('search-alert-container', 'أدخل اسماً أو رقم ملف.', 'warning'); return; }
+
+  showLoader('جارٍ البحث…');
+  google.script.run
+    .withSuccessHandler(renderSearchResults)
+    .withFailureHandler(function (e) { hideLoader(); showAlert('search-alert-container', 'خطأ: ' + e.message, 'danger'); })
+    .searchEmployee(query);
+}
+
+function renderSearchResults(res) {
+  hideLoader();
+  document.getElementById('search-results').style.display = 'none';
+
+  if (!res || !res.success) { showAlert('search-alert-container', res ? res.message : 'خطأ.', 'danger'); return; }
+
+  document.getElementById('search-count-badge').textContent = res.results.length + ' نتيجة';
+  document.getElementById('search-results').style.display = 'block';
+
+  var html = '';
+  res.results.forEach(function (r) {
+    html += '<tr>' +
+      '<td><strong>#' + escHtml(r.fileNum) + '</strong></td>' +
+      '<td>' + escHtml(r.name) + '</td>' +
+      '<td>' + escHtml(r.jobTitle) + '</td>' +
+      '<td>' + escHtml(r.startDate) + '</td>' +
+      '<td>' + escHtml(r.endDate) + '</td>' +
+      '<td>' + statusBadge(r.status) + '</td>' +
+      '<td>' + pdfLink(r.pdfUrl) + '</td>' +
+      '<td>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button class="btn btn-sm btn-outline" onclick=\'openEditModal(' + JSON.stringify(r) + ')\'>✏️</button>' +
+          '<button class="btn btn-sm btn-outline" style="color:#c0392b;" onclick="confirmDelete(' + escHtml(r.fileNum) + ')">🗑️</button>' +
+          '<button class="btn btn-sm btn-outline" style="color:var(--primary);" onclick=\'printEmployee(' + JSON.stringify(r) + ')\'>🖨️</button>' +
+        '</div>' +
+      '</td>' +
+    '</tr>';
+  });
+  document.getElementById('search-tbody').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+// التعديل
+// ─────────────────────────────────────────────
+function openEditModal(emp) {
+  document.getElementById('edit-file-num').value = emp.fileNum;
+  document.getElementById('edit-name').value     = emp.name;
+  document.getElementById('edit-job').value      = emp.jobTitle;
+  document.getElementById('edit-start').value    = emp.startDate;
+  document.getElementById('edit-end').value      = emp.endDate;
+  document.getElementById('edit-status').value   = emp.status;
+  document.getElementById('edit-pdf-url').value  = emp.pdfUrl;
+  clearAlert('edit-alert');
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEditModal(e) {
+  if (e && e.target !== document.getElementById('edit-modal')) return;
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+function submitEditEmployee() {
+  clearAlert('edit-alert');
+  var fileNum = document.getElementById('edit-file-num').value;
+  var data = {
+    name     : document.getElementById('edit-name').value.trim(),
+    jobTitle : document.getElementById('edit-job').value.trim(),
+    startDate: document.getElementById('edit-start').value,
+    endDate  : document.getElementById('edit-end').value,
+    status   : document.getElementById('edit-status').value,
+    pdfUrl   : document.getElementById('edit-pdf-url').value.trim()
+  };
+
+  if (!data.name)     { showAlertEl('edit-alert', 'الاسم مطلوب.', 'danger'); return; }
+  if (!data.status)   { showAlertEl('edit-alert', 'الحالة مطلوبة.', 'danger'); return; }
+
+  showLoader('جارٍ التعديل…');
+  google.script.run
+    .withSuccessHandler(function (res) {
+      hideLoader();
+      if (res && res.success) {
+        showAlertEl('edit-alert', res.message, 'success');
+        setTimeout(function () { closeEditModal(); doSearch(); loadDashboard(); }, 1200);
+      } else {
+        showAlertEl('edit-alert', (res && res.message) || 'خطأ.', 'danger');
+      }
+    })
+    .withFailureHandler(function (e) { hideLoader(); showAlertEl('edit-alert', 'خطأ: ' + e.message, 'danger'); })
+    .updateEmployee(fileNum, data);
+}
+
+// ─────────────────────────────────────────────
+// الحذف
+// ─────────────────────────────────────────────
+function confirmDelete(fileNum) {
+  if (!confirm('هل أنت متأكد من حذف الموظف رقم ملف ' + fileNum + '؟\nسيتم حذف ملف PDF من Drive أيضاً.')) return;
+
+  showLoader('جارٍ الحذف…');
+  google.script.run
+    .withSuccessHandler(function (res) {
+      hideLoader();
+      if (res && res.success) {
+        showAlert('search-alert-container', res.message, 'success');
+        doSearch();
+        loadDashboard();
+      } else {
+        showAlert('search-alert-container', (res && res.message) || 'خطأ.', 'danger');
+      }
+    })
+    .withFailureHandler(function (e) { hideLoader(); showAlert('search-alert-container', 'خطأ: ' + e.message, 'danger'); })
+    .deleteEmployee(fileNum);
+}
+
+// ─────────────────────────────────────────────
+// التصفية والتصدير
+// ─────────────────────────────────────────────
+function loadFilterTab() {
+  showLoader('جارٍ التحميل…');
+  google.script.run
+    .withSuccessHandler(function (res) {
+      hideLoader();
+      if (!res || !res.success) return;
+      _allData = res.data || [];
+      updateFilterCounts();
+      renderFilterTable(_allData);
+    })
+    .withFailureHandler(function () { hideLoader(); })
+    .exportData();
+
+  // تحديث أعداد الفلاتر
+  google.script.run
+    .withSuccessHandler(function (res) {
+      if (!res || !res.success) return;
+      var s = res.stats;
+      setText('filter-count-all',        s.total);
+      setText('filter-count-active',     s['مستمر']);
+      setText('filter-count-retired',    s['تقاعد']);
+      setText('filter-count-resigned',   s['استقالة']);
+      setText('filter-count-terminated', s['إنهاء خدمة']);
+    })
+    .withFailureHandler(function () {})
+    .getStats();
+}
+
+function filterByStatus(status, btn) {
+  document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+
+  if (status === 'الكل') {
+    renderFilterTable(_allData);
+  } else {
+    var filtered = _allData.filter(function (r) { return r.status === status; });
+    renderFilterTable(filtered);
+  }
+}
+
+function updateFilterCounts() {}
+
+function renderFilterTable(data) {
+  var html = '';
+  if (!data || data.length === 0) {
+    html = '<tr><td colspan="8" style="text-align:center;padding:20px;color:#999;">لا توجد سجلات.</td></tr>';
+  } else {
+    data.forEach(function (r) {
+      html += '<tr>' +
+        '<td><strong>#' + escHtml(r.fileNum) + '</strong></td>' +
+        '<td>' + escHtml(r.name) + '</td>' +
+        '<td>' + escHtml(r.jobTitle) + '</td>' +
+        '<td>' + escHtml(r.startDate) + '</td>' +
+        '<td>' + escHtml(r.endDate) + '</td>' +
+        '<td>' + statusBadge(r.status) + '</td>' +
+        '<td>' + pdfLink(r.pdfUrl) + '</td>' +
+        '<td>' +
+          '<div style="display:flex;gap:6px;">' +
+            '<button class="btn btn-sm btn-outline" onclick=\'openEditModal(' + JSON.stringify(r) + ')\'>✏️</button>' +
+            '<button class="btn btn-sm btn-outline" style="color:#c0392b;" onclick="confirmDelete(' + escHtml(r.fileNum) + ')">🗑️</button>' +
+            '<button class="btn btn-sm btn-outline" style="color:var(--primary);" onclick=\'printEmployee(' + JSON.stringify(r) + ')\'>🖨️</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    });
+  }
+  document.getElementById('filter-tbody').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+// تصدير CSV
+// ─────────────────────────────────────────────
+function exportToCSV() {
+  if (!_allData || _allData.length === 0) {
+    alert('لا توجد بيانات للتصدير. يرجى تحميل البيانات أولاً.');
+    return;
+  }
+
+  var headers = ['رقم الملف','الاسم الكامل','الوظيفة','تاريخ المباشرة','تاريخ نهاية الخدمة','الحالة','رابط PDF','تاريخ الإدخال'];
+  var rows    = [headers];
+
+  _allData.forEach(function (r) {
+    rows.push([r.fileNum, r.name, r.jobTitle, r.startDate, r.endDate, r.status, r.pdfUrl, r.entryDate]);
+  });
+
+  var csv = rows.map(function (row) {
+    return row.map(function (cell) {
+      var s = (cell || '').toString().replace(/"/g, '""');
+      return '"' + s + '"';
+    }).join(',');
+  }).join('\n');
+
+  // إضافة BOM لدعم اللغة العربية في Excel
+  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'أرشيف_الموظفين_' + _formatDateFile() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────
+// الطباعة
+// ─────────────────────────────────────────────
+function printEmployee(emp) {
+  var now    = new Date();
+  var docNum = emp.fileNum + '/' + now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+
+  setText('prt-filenum', emp.fileNum);
+  setText('prt-name',    emp.name);
+  setText('prt-job',     emp.jobTitle);
+  setText('prt-status',  emp.status);
+  setText('prt-start',   emp.startDate || '—');
+  setText('prt-end',     emp.endDate   || '—');
+  setText('prt-docnum',  docNum);
+  setText('prt-date',    now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }));
+  setText('prt-footer-date', 'تاريخ الطباعة: ' + now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }));
+
+  window.print();
+}
+
+// ─────────────────────────────────────────────
+// مساعدات
+// ─────────────────────────────────────────────
+function statusBadge(status) {
+  var cls = {
+    'مستمر'     : 'status-مستمر',
+    'تقاعد'     : 'status-تقاعد',
+    'استقالة'   : 'status-استقالة',
+    'إنهاء خدمة': 'status-إنهاء-خدمة'
+  }[status] || '';
+  return '<span class="status-badge ' + cls + '">' + escHtml(status) + '</span>';
+}
+
+function pdfLink(url) {
+  if (!url) return '<span style="color:#aaa;font-size:12px;">—</span>';
+  return '<a href="' + escHtml(url) + '" target="_blank" style="color:var(--primary);font-weight:700;font-size:12px;">📄 فتح</a>';
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#039;');
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = (val !== null && val !== undefined) ? val : '—';
+}
+
+function showLoader(msg) {
+  var el = document.getElementById('loader-overlay');
+  if (el) el.classList.remove('hidden');
+  setText('loader-text', msg || 'جارٍ التحميل…');
+}
+
+function hideLoader() {
+  var el = document.getElementById('loader-overlay');
+  if (el) el.classList.add('hidden');
+}
+
+function showAlert(containerId, message, type) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var types = { danger: true, success: true, warning: true, info: true };
+  var t     = types[type] ? type : 'info';
+  var icons = { danger: '⚠️', success: '✅', warning: '⚡', info: 'ℹ️' };
+  var div   = document.createElement('div');
+  div.className = 'alert alert-' + t;
+  var iconSpan = document.createElement('span');
+  iconSpan.textContent = icons[t];
+  var msgSpan = document.createElement('span');
+  msgSpan.textContent = message;
+  div.appendChild(iconSpan);
+  div.appendChild(msgSpan);
+  container.innerHTML = '';
+  container.appendChild(div);
+}
+
+function showAlertEl(id, message, type) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var types = { danger: true, success: true, warning: true, info: true };
+  var t     = types[type] ? type : 'info';
+  el.className  = 'alert alert-' + t;
+  el.textContent = message;
+  el.style.display = 'flex';
+}
+
+function clearAlert(containerId) {
+  var el = document.getElementById(containerId);
+  if (el) el.innerHTML = '';
+}
+
+function _formatDateFile() {
+  var d = new Date();
+  return d.getFullYear() + '' + String(d.getMonth()+1).padStart(2,'0') + '' + String(d.getDate()).padStart(2,'0');
+}
+</script>
