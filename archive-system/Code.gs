@@ -282,7 +282,7 @@ function uploadPDF(base64Data, fileName, mimeType) {
     if (!allowed[mimeType]) return { success: false, message: 'نوع الملف غير مدعوم. يُقبل PDF والصور فقط.' };
 
     var bytes = Utilities.base64Decode(base64Data);
-    if (bytes.length > 10 * 1024 * 1024) return { success: false, message: 'حجم الملف يتجاوز 10 ميجابايت.' };
+    if (bytes.length > 150 * 1024 * 1024) return { success: false, message: 'حجم الملف يتجاوز 150 ميجابايت.' };
 
     var safeName = fileName.replace(/[^a-zA-Z0-9؀-ۿ._\- ]/g, '').substring(0, 100);
     var blob     = Utilities.newBlob(bytes, mimeType, safeName);
