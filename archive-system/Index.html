@@ -393,42 +393,101 @@
      نموذج الطباعة الرسمي
 ════════════════════════════════════════════ -->
 <div class="print-view" id="print-view">
-  <div class="print-header-org">
-    <h1>الجهاز التنفيذي لحفر وصيانة أبار المياه</h1>
-    <p>دولة ليبيا — وزارة الموارد المائية — قسم شؤون الموظفين</p>
+
+  <!-- شريط الجمهورية العلوي -->
+  <div class="prt-republic-bar">
+    <span>بسم الله الرحمن الرحيم</span>
+    <span>دولة ليبيا</span>
   </div>
-  <div class="print-title-row">
-    <div class="print-doc-num">رقم: <span id="prt-docnum"></span></div>
-    <div class="print-title-center">بيان موظف مؤرشف</div>
-    <div class="print-doc-date">التاريخ: <span id="prt-date"></span></div>
-  </div>
-  <div class="print-fields">
-    <div class="print-field"><span class="print-field-label">رقم الملف:</span><span class="print-field-value" id="prt-filenum"></span></div>
-    <div class="print-field"><span class="print-field-label">الاسم الكامل:</span><span class="print-field-value" id="prt-name"></span></div>
-    <div class="print-field"><span class="print-field-label">الوظيفة:</span><span class="print-field-value" id="prt-job"></span></div>
-    <div class="print-field"><span class="print-field-label">الحالة:</span><span class="print-field-value" id="prt-status"></span></div>
-    <div class="print-field"><span class="print-field-label">تاريخ المباشرة:</span><span class="print-field-value" id="prt-start"></span></div>
-    <div class="print-field"><span class="print-field-label">تاريخ نهاية الخدمة:</span><span class="print-field-value" id="prt-end"></span></div>
-  </div>
-  <div class="print-sign-row">
-    <div class="print-sign-box">
-      <div class="print-sign-title">مدير قسم شؤون الموظفين</div>
-      <div style="font-size:8pt;color:#555;">الاسم: ___________________</div>
-      <div style="font-size:8pt;color:#555;margin-top:4pt;">التوقيع: ________________</div>
-    </div>
-    <div class="print-sign-box" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-      <div class="print-stamp">الختم الرسمي</div>
-    </div>
-    <div class="print-sign-box">
-      <div class="print-sign-title">مدير إدارة الموارد البشرية</div>
-      <div style="font-size:8pt;color:#555;">الاسم: ___________________</div>
-      <div style="font-size:8pt;color:#555;margin-top:4pt;">التوقيع: ________________</div>
+
+  <!-- رأس الجهة -->
+  <div class="prt-org-header">
+    <div class="prt-org-logo">🏛️</div>
+    <div class="prt-org-info">
+      <div class="prt-org-ministry">وزارة الموارد المائية</div>
+      <div class="prt-org-name">الجهاز التنفيذي لحفر وصيانة أبار المياه</div>
+      <div class="prt-org-dept">إدارة الموارد البشرية — قسم شؤون الموظفين</div>
     </div>
   </div>
-  <div class="print-footer-bar">
-    <span>صادرة من نظام أرشفة الموظفين — للاستخدام الرسمي فقط</span>
+
+  <!-- خط فاصل ذهبي مزدوج -->
+  <div class="prt-divider-double"></div>
+
+  <!-- عنوان الوثيقة -->
+  <div class="prt-doc-title-wrap">
+    <div class="prt-doc-title">بـيـان مـوظـف مـؤرشـف</div>
+    <div class="prt-doc-subtitle">وثيقة رسمية صادرة عن قسم شؤون الموظفين</div>
+  </div>
+
+  <!-- بيانات الرقم والتاريخ -->
+  <div class="prt-meta-row">
+    <div class="prt-meta-box">
+      <span class="prt-meta-label">رقم الوثيقة</span>
+      <span class="prt-meta-value" id="prt-docnum">—</span>
+    </div>
+    <div class="prt-meta-box">
+      <span class="prt-meta-label">تاريخ الإصدار</span>
+      <span class="prt-meta-value" id="prt-date">—</span>
+    </div>
+  </div>
+
+  <!-- جدول البيانات -->
+  <table class="prt-data-table">
+    <tr>
+      <td class="prt-td-label">رقم الملف</td>
+      <td class="prt-td-value" id="prt-filenum"></td>
+      <td class="prt-td-label">الاسم الكامل</td>
+      <td class="prt-td-value" id="prt-name"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label">الوظيفة</td>
+      <td class="prt-td-value" id="prt-job"></td>
+      <td class="prt-td-label">حالة الموظف</td>
+      <td class="prt-td-value" id="prt-status"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label">تاريخ المباشرة</td>
+      <td class="prt-td-value" id="prt-start"></td>
+      <td class="prt-td-label">تاريخ نهاية الخدمة</td>
+      <td class="prt-td-value" id="prt-end"></td>
+    </tr>
+    <tr>
+      <td class="prt-td-label">ملاحظات</td>
+      <td class="prt-td-value" colspan="3" id="prt-notes">—</td>
+    </tr>
+  </table>
+
+  <!-- فاصل -->
+  <div class="prt-divider-single"></div>
+
+  <!-- خانات التوقيع -->
+  <div class="prt-sign-section">
+    <div class="prt-sign-box">
+      <div class="prt-sign-title">مدير قسم شؤون الموظفين</div>
+      <div class="prt-sign-line">الاسم: ________________________</div>
+      <div class="prt-sign-line">التوقيع: _______________________</div>
+      <div class="prt-sign-line">التاريخ: _______________________</div>
+    </div>
+    <div class="prt-stamp-box">
+      <div class="prt-stamp-circle">الختم<br/>الرسمي</div>
+    </div>
+    <div class="prt-sign-box">
+      <div class="prt-sign-title">مدير إدارة الموارد البشرية</div>
+      <div class="prt-sign-line">الاسم: ________________________</div>
+      <div class="prt-sign-line">التوقيع: _______________________</div>
+      <div class="prt-sign-line">التاريخ: _______________________</div>
+    </div>
+  </div>
+
+  <!-- خط فاصل ذهبي مزدوج -->
+  <div class="prt-divider-double"></div>
+
+  <!-- تذييل -->
+  <div class="prt-footer">
+    <span>هذه الوثيقة صادرة من نظام الأرشفة الإلكتروني — للاستخدام الرسمي فقط</span>
     <span id="prt-footer-date"></span>
   </div>
+
 </div>
 
 <?!= include('JavaScript'); ?>

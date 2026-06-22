@@ -480,17 +480,19 @@ function exportToCSV() {
 // ─────────────────────────────────────────────
 function printEmployee(emp) {
   var now    = new Date();
-  var docNum = emp.fileNum + '/' + now.getFullYear() + '/' + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+  var arDate = now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
+  var docNum = emp.fileNum + ' / ' + now.getFullYear();
 
-  setText('prt-filenum', emp.fileNum);
-  setText('prt-name',    emp.name);
-  setText('prt-job',     emp.jobTitle);
-  setText('prt-status',  emp.status);
-  setText('prt-start',   emp.startDate || '—');
-  setText('prt-end',     emp.endDate   || '—');
-  setText('prt-docnum',  docNum);
-  setText('prt-date',    now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }));
-  setText('prt-footer-date', 'تاريخ الطباعة: ' + now.toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' }));
+  setText('prt-filenum',    '#' + emp.fileNum);
+  setText('prt-name',       emp.name);
+  setText('prt-job',        emp.jobTitle  || '—');
+  setText('prt-status',     emp.status    || '—');
+  setText('prt-start',      emp.startDate || '—');
+  setText('prt-end',        emp.endDate   || '—');
+  setText('prt-notes',      '—');
+  setText('prt-docnum',     docNum);
+  setText('prt-date',       arDate);
+  setText('prt-footer-date','تاريخ الطباعة: ' + arDate);
 
   window.print();
 }
