@@ -61,17 +61,23 @@ function _sanitize(val) {
   return val.toString().trim().replace(/[<>"']/g, '');
 }
 
+function _fmtDate(val) {
+  if (!val) return '';
+  if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  return val.toString().trim();
+}
+
 function _rowToObj(row) {
   return {
-    fileNum  : row[COL.FILE_NUM]    !== undefined ? row[COL.FILE_NUM].toString()   : '',
-    name     : row[COL.NAME]        !== undefined ? row[COL.NAME].toString()       : '',
-    jobTitle : row[COL.JOB_TITLE]   !== undefined ? row[COL.JOB_TITLE].toString()  : '',
-    startDate: row[COL.START_DATE]  !== undefined ? row[COL.START_DATE].toString() : '',
-    endDate  : row[COL.END_DATE]    !== undefined ? row[COL.END_DATE].toString()   : '',
-    status   : row[COL.STATUS]      !== undefined ? row[COL.STATUS].toString()     : '',
-    pdfUrl   : row[COL.PDF_URL]     !== undefined ? row[COL.PDF_URL].toString()    : '',
-    fileId   : row[COL.FILE_ID]     !== undefined ? row[COL.FILE_ID].toString()    : '',
-    entryDate: row[COL.ENTRY_DATE]  !== undefined ? row[COL.ENTRY_DATE].toString() : ''
+    fileNum  : row[COL.FILE_NUM]   !== undefined ? row[COL.FILE_NUM].toString()  : '',
+    name     : row[COL.NAME]       !== undefined ? row[COL.NAME].toString()      : '',
+    jobTitle : row[COL.JOB_TITLE]  !== undefined ? row[COL.JOB_TITLE].toString() : '',
+    startDate: _fmtDate(row[COL.START_DATE]),
+    endDate  : _fmtDate(row[COL.END_DATE]),
+    status   : row[COL.STATUS]     !== undefined ? row[COL.STATUS].toString()    : '',
+    pdfUrl   : row[COL.PDF_URL]    !== undefined ? row[COL.PDF_URL].toString()   : '',
+    fileId   : row[COL.FILE_ID]    !== undefined ? row[COL.FILE_ID].toString()   : '',
+    entryDate: _fmtDate(row[COL.ENTRY_DATE])
   };
 }
 
