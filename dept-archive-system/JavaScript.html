@@ -14,71 +14,47 @@ var _pendingFileUrl = '';
 // ══════════════════════════════════════
 // تحميل الصفحة الرئيسية
 // ══════════════════════════════════════
+function _dbg(msg) {
+  var g = document.getElementById('types-grid');
+  if (g) g.innerHTML = '<div style="grid-column:1/-1;padding:20px;font-size:13px;color:#333;background:#fffbe6;border:1px solid #f0c040;border-radius:8px;">🔧 ' + msg + '</div>';
+  showBadge(msg);
+}
+
 function loadHome() {
-  showLoader('جارٍ الاتصال…');
+  _dbg('خطوة 1 — بدأ التحميل');
+  hideLoader();
 
-  // مهلة 12 ثانية — إذا لم يرد الخادم تعني مشكلة صلاحيات
-  var _timer = setTimeout(function() {
-    hideLoader();
-    showBadge('خطأ في الاتصال');
-    document.getElementById('types-grid').innerHTML =
-      '<div style="grid-column:1/-1;text-align:center;padding:40px 20px;">' +
-      '<div style="font-size:36px;margin-bottom:12px;">🔐</div>' +
-      '<div style="font-size:15px;font-weight:800;color:#c0392b;margin-bottom:8px;">الخادم لا يستجيب</div>' +
-      '<div style="font-size:12px;color:#555;line-height:1.8;">' +
-      'يجب منح صلاحيات للسكريبت:<br>' +
-      '1. افتح محرر Apps Script<br>' +
-      '2. اختر دالة <b>getFileTypes</b> واضغط ▶ Run<br>' +
-      '3. اقبل طلب الصلاحيات<br>' +
-      '4. أعد النشر: Deploy → New version' +
-      '</div></div>';
-  }, 12000);
-
-  // اختبار اتصال أولي
-  google.script.run
-    .withSuccessHandler(function() {
-      // الاتصال يعمل، الآن جلب الأنواع
-      showLoader('جارٍ تحميل الأنواع…');
-      google.script.run
-        .withSuccessHandler(function(res) {
-          clearTimeout(_timer);
-          if (!res.success) {
-            hideLoader();
-            showBadge('خطأ');
-            document.getElementById('types-grid').innerHTML =
-              '<div style="grid-column:1/-1;text-align:center;color:#c00;padding:40px;">خطأ: ' + _h(res.message) + '</div>';
-            return;
-          }
-          google.script.run
-            .withSuccessHandler(function(statsRes) {
-              hideLoader();
-              var stats = (statsRes && statsRes.success) ? statsRes.stats : {};
-              renderHomeGrid(res.types, stats);
-              showBadge('المجموع: ' + _sumStats(stats) + ' وثيقة');
-            })
-            .withFailureHandler(function() {
-              hideLoader();
-              renderHomeGrid(res.types, {});
-            })
-            .getStats();
-        })
-        .withFailureHandler(function(e) {
-          clearTimeout(_timer);
+  setTimeout(function() {
+    _dbg('خطوة 2 — جارٍ الاتصال بالخادم…');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        _dbg('خطوة 3 — استُلم رد: ' + JSON.stringify(res).substring(0, 80));
+        if (!res || !res.success) {
           hideLoader();
-          showBadge('خطأ');
           document.getElementById('types-grid').innerHTML =
-            '<div style="grid-column:1/-1;text-align:center;color:#c00;padding:40px;">خطأ: ' + _h(e.message) + '</div>';
-        })
-        .getFileTypes();
-    })
-    .withFailureHandler(function(e) {
-      clearTimeout(_timer);
-      hideLoader();
-      showBadge('خطأ في الاتصال');
-      document.getElementById('types-grid').innerHTML =
-        '<div style="grid-column:1/-1;text-align:center;color:#c00;padding:40px;">فشل الاتصال: ' + _h(e.message) + '</div>';
-    })
-    .ping();
+            '<div style="grid-column:1/-1;text-align:center;color:#c00;padding:40px;">خطأ من الخادم: ' + _h((res && res.message) || 'بدون رسالة') + '</div>';
+          showBadge('خطأ');
+          return;
+        }
+        showBadge('جارٍ تحميل الإحصاءات…');
+        google.script.run
+          .withSuccessHandler(function(statsRes) {
+            var stats = (statsRes && statsRes.success) ? statsRes.stats : {};
+            renderHomeGrid(res.types, stats);
+            showBadge('المجموع: ' + _sumStats(stats) + ' وثيقة');
+          })
+          .withFailureHandler(function() {
+            renderHomeGrid(res.types, {});
+          })
+          .getStats();
+      })
+      .withFailureHandler(function(e) {
+        document.getElementById('types-grid').innerHTML =
+          '<div style="grid-column:1/-1;text-align:center;color:#c00;padding:40px;">❌ فشل الاتصال: ' + _h(e.message || 'خطأ غير معروف') + '</div>';
+        showBadge('فشل الاتصال');
+      })
+      .getFileTypes();
+  }, 300);
 }
 
 function _sumStats(stats) {
