@@ -32,6 +32,11 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
+// اختبار الاتصال الأساسي (لا يحتاج صلاحيات)
+function ping() {
+  return { ok: true };
+}
+
 // ─────────────────────────────────────────────
 // جلب أنواع الملفات من ورقة الإعدادات
 // ─────────────────────────────────────────────
