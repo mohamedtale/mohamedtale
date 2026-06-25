@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 
 export async function GET() {
   try {
-    const projects = await prisma.publicProject.findMany({
-      where: { visible: true },
-      orderBy: { order: "asc" },
-    });
+    const sql = neon(process.env.DATABASE_URL!);
+    const projects = await sql`SELECT * FROM "PublicProject" WHERE visible = true ORDER BY "order" ASC`;
     return NextResponse.json(projects);
   } catch {
     return NextResponse.json([], { status: 200 });
@@ -15,9 +13,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const project = await prisma.publicProject.create({ data: body });
-    return NextResponse.json(project);
+    const sql = neon(process.env.DATABASE_URL!);
+    const b = await req.json();
+    const result = await sql`
+      INSERT INTO "PublicProject" (id, title, description, date, region, count, "imageUrl", "order", visible, "createdAt", "updatedAt")
+      VALUES (gen_random_uuid()::text, ${b.title}, ${b.description ?? null}, ${b.date}, ${b.region}, ${b.count}, ${b.imageUrl ?? null}, ${b.order ?? 0}, ${b.visible ?? true}, now(), now())
+      RETURNING *`;
+    return NextResponse.json(result[0]);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
