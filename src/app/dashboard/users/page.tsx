@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, X, Save, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, X, Save, Pencil, Trash2, Users, FileText } from "lucide-react";
+import Link from "next/link";
 
 const ROLES = ["مدير النظام","مهندس","فني","موظف","ضيف"];
 const DEPTS = ["الإدارة العامة","الهندسة","الصيانة","المالية","الموارد البشرية","تقنية المعلومات"];
@@ -54,11 +55,17 @@ export default function UsersPage() {
           <h1 className="text-2xl font-black text-gray-800">إدارة المستخدمين</h1>
           <p className="text-gray-500 text-sm mt-1">الموظفون وصلاحيات الوصول</p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY })}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
-          style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
-          <Plus className="w-4 h-4" /> مستخدم جديد
-        </button>
+        <div className="flex gap-2">
+          <Link href="/dashboard/users/cv"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors">
+            <FileText className="w-4 h-4" /> نموذج CV
+          </Link>
+          <button onClick={() => setEditing({ ...EMPTY })}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
+            style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+            <Plus className="w-4 h-4" /> مستخدم جديد
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-6">
