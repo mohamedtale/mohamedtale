@@ -1,58 +1,78 @@
 "use client";
-import { CheckCircle, XCircle, FileText, User, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle, XCircle, FileText } from "lucide-react";
 
-const pending = [
-  { id: 1, title: "تقرير فحص جودة المياه - بئر طرابلس الجديد", author: "د. محمد الصقم", well: "بئر طرابلس الجديد", date: "2024-06-05", page: "3 من 5" },
-  { id: 2, title: "تقرير الصيانة الدورية - بئر سرت", author: "م. خالد أحمد", well: "بئر سرت", date: "2024-06-07", page: "2 من 5" },
-  { id: 3, title: "دراسة جيولوجية - منطقة الكفرة الشرقي", author: "د. فاطمة علي", well: "بئر الكفرة الشرقي", date: "2024-06-08", page: "4 من 5" },
-];
+export default function ApprovalPage() {
+  const [reports, setReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
 
-export default function ReportApprovalPage() {
+  const load = () => {
+    setLoading(true);
+    fetch("/api/reports?status=قيد المراجعة").then(r => r.json()).then(d => setReports(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const action = async (id: string, status: string) => {
+    setUpdating(id);
+    await fetch(`/api/reports/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, approvedAt: status === "معتمد" ? new Date() : null }),
+    });
+    setMsg(status === "معتمد" ? "تم اعتماد التقرير ✓" : "تم رفض التقرير");
+    setUpdating(null);
+    load();
+    setTimeout(() => setMsg(""), 3000);
+  };
+
   return (
-    <div className="p-6">
+    <div className="p-6 lg:p-8 max-w-3xl mx-auto" dir="rtl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">اعتماد التقارير</h1>
-        <p className="text-gray-500 text-sm mt-1">متابعة سير العمل واعتماد التقارير الفنية</p>
+        <h1 className="text-2xl font-black text-gray-800">اعتماد التقارير</h1>
+        <p className="text-gray-500 text-sm mt-1">التقارير المنتظرة للمراجعة والاعتماد</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
-        <div className="p-4 border-b border-gray-100">
-          <h2 className="font-bold text-slate-800">التقارير قيد المراجعة</h2>
-          <p className="text-xs text-gray-500 mt-1">متابعة سير العمل واعتماد التقارير الفنية</p>
+      {msg && <div className="mb-4 px-4 py-3 rounded-xl bg-blue-50 text-blue-700 text-sm border border-blue-200">{msg}</div>}
+
+      {loading ? (
+        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="animate-pulse bg-gray-200 rounded-2xl h-24" />)}</div>
+      ) : reports.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
+          <CheckCircle className="w-12 h-12 text-green-200 mx-auto mb-3" />
+          <p className="text-gray-400 font-medium">لا توجد تقارير بانتظار الاعتماد</p>
         </div>
-        <div className="divide-y divide-gray-50">
-          {pending.map((report) => (
-            <div key={report.id} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <FileText size={18} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-orange-600 font-medium bg-orange-50 inline-block px-2 py-0.5 rounded-full mb-1">قيد المراجعة</div>
-                    <h3 className="font-semibold text-slate-800 text-sm">{report.title}</h3>
-                    <div className="flex items-center gap-4 mt-1.5 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><User size={12} /> الكاتب: {report.author}</span>
-                      <span className="flex items-center gap-1"><Calendar size={12} /> {report.date}</span>
-                      <span className="text-blue-600 font-medium">الصفحة {report.page}</span>
-                    </div>
-                  </div>
+      ) : (
+        <div className="space-y-4">
+          {reports.map((r: any) => (
+            <div key={r.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#fef3c7" }}>
+                  <FileText className="w-5 h-5 text-amber-600" />
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-green-700 transition-colors">
-                    <CheckCircle size={14} />
-                    <span>اعتماد</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">
-                    <XCircle size={14} />
-                    <span>رفض</span>
-                  </button>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-800">{r.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{r.type} • الكاتب: {r.author} • {new Date(r.createdAt).toLocaleDateString("ar-LY")}</p>
+                  {r.content && <p className="text-sm text-gray-600 mt-2 line-clamp-2">{r.content}</p>}
                 </div>
+              </div>
+              <div className="flex gap-3 mt-4 justify-end">
+                <button onClick={() => action(r.id, "مرفوض")} disabled={updating === r.id}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-red-600 border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-50">
+                  <XCircle className="w-4 h-4" /> رفض
+                </button>
+                <button onClick={() => action(r.id, "معتمد")} disabled={updating === r.id}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white transition-colors disabled:opacity-50"
+                  style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)" }}>
+                  <CheckCircle className="w-4 h-4" /> اعتماد
+                </button>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

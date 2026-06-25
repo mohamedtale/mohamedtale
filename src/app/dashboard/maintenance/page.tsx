@@ -1,113 +1,185 @@
 "use client";
-import { Plus, Search, Filter, AlertTriangle, CheckCircle, Clock, Pause, User, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, X, Save, Wrench } from "lucide-react";
 
-const tasks = {
-  متأخرة: [
-    { id: 1, well: "بئر بنغازي الجنوبي", num: "W-002", type: "استبدال قطع", priority: "عالية", user: "صالح حسن", date: "2024-06-08", progress: 0 },
-  ],
-  مكتملة: [
-    { id: 2, well: "بئر الزيان الزراعي", num: "W-008", type: "فحص دوري", priority: "متوسطة", user: "محمد علي", date: "2024-06-10", progress: 100 },
-  ],
-  "قيد التنفيذ": [
-    { id: 3, well: "بئر الزاوية الشمالي", num: "W-011", type: "صيانة دورية", priority: "عالية", user: "أحمد محمد", date: "2024-06-15", progress: 60 },
-    { id: 4, well: "بئر سبها الغربي", num: "W-004", type: "تنظيف", priority: "متوسطة", user: "يوسف سالم", date: "2024-06-19", progress: 40 },
-  ],
-  معلقة: [
-    { id: 5, well: "بئر مصراتة المركزي", num: "W-003", type: "إصلاح طارئ", priority: "عالية", user: "خالد أحمد", date: "2024-06-12", progress: 0 },
-  ],
-};
+const COLS = [
+  { key: "قيد التنفيذ", label: "قيد التنفيذ", color: "#2196F3", bg: "#dbeafe" },
+  { key: "منتهية", label: "منتهية", color: "#16a34a", bg: "#dcfce7" },
+  { key: "معلقة", label: "معلقة", color: "#d97706", bg: "#fef3c7" },
+  { key: "متأخرة", label: "متأخرة", color: "#dc2626", bg: "#fee2e2" },
+];
 
-const colConfig: Record<string, { bg: string; text: string; icon: React.ElementType }> = {
-  متأخرة: { bg: "bg-red-500", text: "text-red-600", icon: AlertTriangle },
-  مكتملة: { bg: "bg-green-500", text: "text-green-600", icon: CheckCircle },
-  "قيد التنفيذ": { bg: "bg-blue-500", text: "text-blue-600", icon: Clock },
-  معلقة: { bg: "bg-gray-500", text: "text-gray-600", icon: Pause },
-};
+const EMPTY = { wellId: "", type: "صيانة دورية", status: "قيد التنفيذ", description: "", technician: "", cost: "", priority: "متوسطة", scheduledAt: "" };
+const inp = "w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors";
 
 export default function MaintenancePage() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [wells, setWells] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ ...EMPTY });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const load = () => {
+    setLoading(true);
+    Promise.all([
+      fetch("/api/maintenance").then(r => r.json()),
+      fetch("/api/wells").then(r => r.json()),
+    ]).then(([m, w]) => {
+      setLogs(Array.isArray(m) ? m : []);
+      setWells(Array.isArray(w) ? w : []);
+    }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, cost: form.cost ? parseFloat(form.cost) : null, scheduledAt: form.scheduledAt ? new Date(form.scheduledAt) : null }),
+      });
+      setMsg("تم الحفظ ✓");
+      setShowForm(false);
+      setForm({ ...EMPTY });
+      load();
+    } catch { setMsg("خطأ في الحفظ"); }
+    finally { setSaving(false); setTimeout(() => setMsg(""), 3000); }
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    await fetch(`/api/maintenance/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    load();
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("حذف هذا السجل؟")) return;
+    await fetch(`/api/maintenance/${id}`, { method: "DELETE" });
+    load();
+  };
+
   return (
-    <div className="p-6">
+    <div className="p-6 lg:p-8" dir="rtl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">المتابعة والصيانة</h1>
-          <p className="text-gray-500 text-sm mt-1">إدارة ومتابعة أعمال الصيانة الدورية والطارئة</p>
+          <h1 className="text-2xl font-black text-gray-800">سجل الصيانة</h1>
+          <p className="text-gray-500 text-sm mt-1">إدارة ومتابعة أعمال الصيانة</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-          <Plus size={16} />
-          <span>إضافة مهمة جديدة</span>
+        <button onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
+          style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+          <Plus className="w-4 h-4" /> طلب صيانة جديد
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "متأخرة", value: 1, color: "bg-red-500" },
-          { label: "مكتملة", value: 1, color: "bg-green-500" },
-          { label: "قيد الانتظار", value: 1, color: "bg-gray-400" },
-          { label: "الصواميل النشطة", value: 2, color: "bg-blue-500" },
-        ].map((s, i) => (
-          <div key={i} className={`${s.color} text-white rounded-2xl p-5`}>
-            <div className="text-4xl font-black">{s.value}</div>
-            <div className="text-sm mt-1 opacity-90">{s.label}</div>
+      {msg && <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 text-green-700 text-sm border border-green-200">{msg}</div>}
+
+      {showForm && (
+        <div className="bg-white rounded-3xl p-6 mb-6 shadow-lg border border-blue-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-800">طلب صيانة جديد</h2>
+            <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
           </div>
-        ))}
-      </div>
-
-      {/* Search */}
-      <div className="flex gap-3 mb-6">
-        <div className="flex-1 flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2">
-          <Search size={16} className="text-gray-400" />
-          <input placeholder="البحث عن مهمة..." className="bg-transparent text-sm outline-none flex-1 text-right" />
-        </div>
-        <button className="flex items-center gap-2 border border-gray-200 bg-white rounded-xl px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
-          <Filter size={16} />
-          <span>تصفية</span>
-        </button>
-      </div>
-
-      {/* Kanban Board */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Object.entries(tasks).map(([col, items]) => {
-          const conf = colConfig[col];
-          const Icon = conf.icon;
-          return (
-            <div key={col} className="bg-gray-100 rounded-2xl p-3">
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-2 h-2 rounded-full ${conf.bg}`} />
-                <span className="text-sm font-bold text-slate-700">{col}</span>
-                <span className="text-xs bg-white rounded-full px-2 py-0.5 text-gray-500 mr-auto">{items.length}</span>
-              </div>
-              <div className="space-y-3">
-                {items.map(task => (
-                  <div key={task.id} className="bg-white rounded-xl p-4 shadow-sm">
-                    <div className="font-semibold text-slate-800 text-sm">{task.well}</div>
-                    <div className="text-xs text-gray-400 mb-2">{task.num}</div>
-                    <div className="text-xs text-gray-600 mb-2">{task.type}</div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      task.priority === "عالية" ? "bg-red-100 text-red-600" : "bg-yellow-100 text-yellow-700"
-                    }`}>{task.priority}</span>
-                    {task.progress > 0 && (
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1">
-                          <span>المدم</span>
-                          <span>{task.progress}%</span>
-                        </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full">
-                          <div className="h-1.5 bg-blue-500 rounded-full" style={{ width: `${task.progress}%` }} />
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-                      <span className="flex items-center gap-1"><User size={10} /> {task.user}</span>
-                      <span className="flex items-center gap-1"><Calendar size={10} /> {task.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">البئر</label>
+              <select className={inp} value={form.wellId} onChange={e => set("wellId", e.target.value)}>
+                <option value="">اختر البئر</option>
+                {wells.map((w: any) => <option key={w.id} value={w.id}>{w.name} ({w.wellId})</option>)}
+              </select>
             </div>
-          );
-        })}
-      </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">نوع الصيانة</label>
+              <select className={inp} value={form.type} onChange={e => set("type", e.target.value)}>
+                {["صيانة دورية","إصلاح طارئ","تغيير قطع","فحص دوري","تنظيف"].map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">الحالة</label>
+              <select className={inp} value={form.status} onChange={e => set("status", e.target.value)}>
+                {["قيد التنفيذ","منتهية","معلقة","متأخرة"].map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">الفني المسؤول</label>
+              <input className={inp} value={form.technician} onChange={e => set("technician", e.target.value)} placeholder="اسم الفني" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">الأولوية</label>
+              <select className={inp} value={form.priority} onChange={e => set("priority", e.target.value)}>
+                {["عالية","متوسطة","منخفضة"].map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">التكلفة (د.ل)</label>
+              <input type="number" className={inp} value={form.cost} onChange={e => set("cost", e.target.value)} placeholder="0" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">تاريخ الجدولة</label>
+              <input type="date" className={inp} value={form.scheduledAt} onChange={e => set("scheduledAt", e.target.value)} />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">الوصف</label>
+              <textarea rows={2} className={inp} style={{ resize: "none" }} value={form.description} onChange={e => set("description", e.target.value)} placeholder="وصف المشكلة أو العمل المطلوب..." />
+            </div>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button onClick={save} disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
+              style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)", opacity: saving ? 0.7 : 1 }}>
+              <Save className="w-4 h-4" /> {saving ? "جاري الحفظ..." : "حفظ"}
+            </button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100">إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="animate-pulse bg-gray-200 rounded-3xl h-64" />)}</div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {COLS.map(col => {
+            const items = logs.filter(l => l.status === col.key);
+            return (
+              <div key={col.key} className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: col.color }} />
+                  <span className="font-bold text-gray-700 text-sm">{col.label}</span>
+                  <span className="mr-auto text-xs px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: col.bg, color: col.color }}>{items.length}</span>
+                </div>
+                <div className="space-y-3">
+                  {items.length === 0 ? (
+                    <p className="text-center text-gray-300 text-xs py-6">لا يوجد</p>
+                  ) : items.map((log: any) => (
+                    <div key={log.id} className="rounded-2xl p-3 border" style={{ borderColor: col.color + "30", backgroundColor: col.bg + "40" }}>
+                      <div className="flex items-start justify-between gap-1 mb-1">
+                        <p className="font-bold text-gray-800 text-xs leading-tight">{log.type}</p>
+                        <button onClick={() => del(log.id)} className="text-gray-300 hover:text-red-400 flex-shrink-0"><X className="w-3 h-3" /></button>
+                      </div>
+                      {log.well && <p className="text-xs text-gray-500 mb-1">{log.well.name}</p>}
+                      {log.technician && <p className="text-xs text-gray-400">الفني: {log.technician}</p>}
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {COLS.filter(c => c.key !== col.key).map(c => (
+                          <button key={c.key} onClick={() => updateStatus(log.id, c.key)}
+                            className="text-xs px-2 py-0.5 rounded-full border transition-colors hover:opacity-80"
+                            style={{ borderColor: c.color, color: c.color, fontSize: "10px" }}>
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

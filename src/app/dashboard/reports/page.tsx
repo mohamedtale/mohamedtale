@@ -1,128 +1,143 @@
 "use client";
-import { Search, Upload, Eye, Download, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Plus, X, Save, FileText, Trash2 } from "lucide-react";
 
-const reports = [
-  { title: "تقرير الحفر الجيولوجي - بئر طرابلس", author: "أحمد محمد", reviewer: "م. خالد علي", date: "2024-06-10", status: "معتمد", tags: ["جيولوجيا", "حفر"], size: "2.3 MB" },
-  { title: "تقرير صيانة بئر مصراتة المركزي", author: "فاطمة علي", reviewer: "م. سامي حسن", date: "2024-06-08", status: "قيد المراجعة", tags: ["صيانة"], size: "1.8 MB" },
-  { title: "تحليل جودة المياه - بنغازي", author: "محمد خالد", reviewer: "د. نور الدين", date: "2024-06-05", status: "معتمد", tags: ["جودة المياه"], size: "3.1 MB" },
-  { title: "تقرير الميزانية الفصلي Q2", author: "سامي حسن", reviewer: "أحمد محمد", date: "2024-06-01", status: "مسودة", tags: ["مالي"], size: "0.9 MB" },
-  { title: "تقرير حفر بئر سبها الغربي", author: "نور الدين", reviewer: "م. خالد علي", date: "2024-05-28", status: "قيد المراجعة", tags: ["حفر"], size: "4.2 MB" },
-  { title: "تقرير المسح الجيولوجي الشامل", author: "أحمد محمد", reviewer: "د. محمد", date: "2024-05-20", status: "معتمد", tags: ["جيولوجيا"], size: "5.6 MB" },
-];
-
-const statusColors: Record<string, string> = {
-  "معتمد": "bg-green-100 text-green-700",
-  "قيد المراجعة": "bg-yellow-100 text-yellow-700",
-  "مسودة": "bg-gray-100 text-gray-700",
-};
-
-const filters = ["الكل", "جيولوجيا", "صيانة", "حفر", "جودة المياه", "مالي"];
+const TYPES = ["جيولوجي","صيانة","حفر","جودة مياه","مالي","تفتيش"];
+const STATUSES = ["مسودة","قيد المراجعة","معتمد","مرفوض"];
+const inp = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors";
+const EMPTY = { title: "", type: "جيولوجي", status: "مسودة", author: "", reviewer: "", wellId: "", content: "" };
 
 export default function ReportsPage() {
-  const [activeFilter, setActiveFilter] = useState("الكل");
-  const [statusFilter, setStatusFilter] = useState("الكل");
+  const [reports, setReports] = useState<any[]>([]);
+  const [wells, setWells] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState("");
+  const [form, setForm] = useState({ ...EMPTY });
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
 
-  const filtered = reports.filter(r => {
-    const tagMatch = activeFilter === "الكل" || r.tags.includes(activeFilter);
-    const statusMatch = statusFilter === "الكل" || r.status === statusFilter;
-    return tagMatch && statusMatch;
-  });
+  const load = (status = filter) => {
+    setLoading(true);
+    Promise.all([
+      fetch(`/api/reports${status ? `?status=${status}` : ""}`).then(r => r.json()),
+      fetch("/api/wells").then(r => r.json()),
+    ]).then(([r, w]) => {
+      setReports(Array.isArray(r) ? r : []);
+      setWells(Array.isArray(w) ? w : []);
+    }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const payload = { ...form, wellId: form.wellId || null };
+      const res = await fetch("/api/reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error("فشل الحفظ");
+      setMsg("تم إضافة التقرير ✓");
+      setShowForm(false);
+      setForm({ ...EMPTY });
+      load();
+    } catch { setMsg("خطأ في الحفظ"); }
+    finally { setSaving(false); setTimeout(() => setMsg(""), 3000); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("حذف التقرير؟")) return;
+    await fetch(`/api/reports/${id}`, { method: "DELETE" });
+    load();
+  };
+
+  const statusColor = (s: string) => ({
+    "مسودة": { bg: "#f3f4f6", color: "#6b7280" },
+    "قيد المراجعة": { bg: "#fef3c7", color: "#d97706" },
+    "معتمد": { bg: "#dcfce7", color: "#16a34a" },
+    "مرفوض": { bg: "#fee2e2", color: "#dc2626" },
+  }[s] || { bg: "#f3f4f6", color: "#6b7280" });
 
   return (
-    <div className="p-6">
+    <div className="p-6 lg:p-8" dir="rtl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-[#1e2d4e]">التقارير الفنية</h1>
-        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
-          <Upload size={16} />
-          رفع تقرير فني جديد
+        <div>
+          <h1 className="text-2xl font-black text-gray-800">التقارير الفنية</h1>
+          <p className="text-gray-500 text-sm mt-1">إدارة التقارير الفنية والحقلية</p>
+        </div>
+        <button onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
+          style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+          <Plus className="w-4 h-4" /> تقرير جديد
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "مسودات", value: 1, color: "text-gray-600", bg: "bg-gray-100" },
-          { label: "قيد المراجعة", value: 2, color: "text-yellow-700", bg: "bg-yellow-100" },
-          { label: "معتمد", value: 3, color: "text-green-700", bg: "bg-green-100" },
-          { label: "إجمالي التقارير", value: 6, color: "text-blue-700", bg: "bg-blue-100" },
-        ].map((s, i) => (
-          <div key={i} className={`${s.bg} rounded-2xl p-4`}>
-            <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
-            <div className={`text-sm ${s.color} mt-1`}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Search + Tags */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-4">
-        <div className="flex gap-3 mb-3">
-          <div className="flex-1 relative">
-            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input placeholder="البحث في التقارير..." className="w-full border border-gray-200 rounded-lg px-4 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {filters.map(f => (
-            <button
-              key={f}
-              onClick={() => setActiveFilter(f)}
-              className={`text-xs px-3 py-1 rounded-full transition-colors ${activeFilter === f ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Status Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-gray-200">
-        {["الكل", "مسودة", "قيد المراجعة", "معتمد"].map(s => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s === "قيد المراجعة" ? "قيد المراجعة" : s)}
-            className={`pb-2 text-sm font-medium border-b-2 transition-colors ${statusFilter === s || (s === "قيد المراجعة" && statusFilter === "قيد المراجعة") ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-          >
-            {s}{s === "قيد المراجعة" && <span className="mr-1 text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">2</span>}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+        {["", ...STATUSES].map(s => (
+          <button key={s} onClick={() => { setFilter(s); load(s); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all ${filter === s ? "text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-blue-300"}`}
+            style={filter === s ? { background: "linear-gradient(135deg,#1565C0,#2196F3)" } : {}}>
+            {s || "الكل"} {!s && `(${reports.length})`}
           </button>
         ))}
       </div>
 
-      {/* Report Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((report, i) => (
-          <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-start justify-between mb-3">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[report.status]}`}>
-                {report.status}
-              </span>
-              <span className="text-xs text-gray-400">{report.size}</span>
-            </div>
-            <div className="flex items-start gap-3 mb-3">
-              <FileText size={20} className="text-blue-500 mt-0.5 flex-shrink-0" />
-              <h3 className="font-medium text-gray-800 text-sm leading-relaxed">{report.title}</h3>
-            </div>
-            <div className="text-xs text-gray-500 space-y-1 mb-3">
-              <div>الكاتب: <span className="text-gray-700">{report.author}</span></div>
-              <div>المراجع: <span className="text-gray-700">{report.reviewer}</span></div>
-              <div>التاريخ: <span className="text-gray-700">{report.date}</span></div>
-            </div>
-            <div className="flex flex-wrap gap-1 mb-4">
-              {report.tags.map(tag => (
-                <span key={tag} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{tag}</span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-1 border border-gray-200 rounded-lg py-1.5 text-xs text-gray-600 hover:bg-gray-50 transition-colors">
-                <Eye size={12} /> عرض
-              </button>
-              <button className="flex-1 flex items-center justify-center gap-1 bg-blue-50 text-blue-600 rounded-lg py-1.5 text-xs hover:bg-blue-100 transition-colors">
-                <Download size={12} /> تحميل
-              </button>
-            </div>
+      {msg && <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 text-green-700 text-sm border border-green-200">{msg}</div>}
+
+      {showForm && (
+        <div className="bg-white rounded-3xl p-6 mb-6 shadow-lg border border-blue-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-800">إضافة تقرير جديد</h2>
+            <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
           </div>
-        ))}
-      </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">عنوان التقرير</label><input required className={inp} value={form.title} onChange={e => set("title", e.target.value)} placeholder="تقرير فحص بئر..." /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">النوع</label><select className={inp} value={form.type} onChange={e => set("type", e.target.value)}>{TYPES.map(t => <option key={t}>{t}</option>)}</select></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الحالة</label><select className={inp} value={form.status} onChange={e => set("status", e.target.value)}>{STATUSES.map(s => <option key={s}>{s}</option>)}</select></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الكاتب</label><input className={inp} value={form.author} onChange={e => set("author", e.target.value)} placeholder="اسم الكاتب" /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">المراجع</label><input className={inp} value={form.reviewer} onChange={e => set("reviewer", e.target.value)} placeholder="اسم المراجع" /></div>
+            <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">البئر المرتبط</label><select className={inp} value={form.wellId} onChange={e => set("wellId", e.target.value)}><option value="">— غير مرتبط —</option>{wells.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+            <div className="col-span-2"><label className="block text-xs font-semibold text-gray-600 mb-1">محتوى التقرير</label><textarea rows={4} className={inp} style={{ resize: "none" }} value={form.content} onChange={e => set("content", e.target.value)} placeholder="اكتب محتوى التقرير هنا..." /></div>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button onClick={save} disabled={saving || !form.title}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+              <Save className="w-4 h-4" /> {saving ? "جاري الحفظ..." : "حفظ التقرير"}
+            </button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100">إلغاء</button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="animate-pulse bg-gray-200 rounded-2xl h-20" />)}</div>
+      ) : reports.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
+          <FileText className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400">لا توجد تقارير</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {reports.map((r: any) => {
+            const sc = statusColor(r.status);
+            return (
+              <div key={r.id} className="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#dbeafe" }}>
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-800 text-sm truncate">{r.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{r.type} • {r.author} • {new Date(r.createdAt).toLocaleDateString("ar-LY")}</p>
+                </div>
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0" style={sc}>{r.status}</span>
+                <button onClick={() => del(r.id)} className="p-2 rounded-xl hover:bg-red-50 text-gray-300 hover:text-red-500 flex-shrink-0"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

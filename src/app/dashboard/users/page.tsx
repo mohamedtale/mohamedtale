@@ -1,132 +1,167 @@
 "use client";
-import { Plus, Search, Filter, Eye, Edit, Trash2, Shield, User, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, X, Save, Pencil, Trash2, Users } from "lucide-react";
 
-const users = [
-  { id: "EMP-2024-001", name: "أحمد محمد الصغير", email: "ahmed@water.gov.ly", phone: "0912345678", dept: "الرياضة الدائمة", role: "مدير النظام", status: "نشط", date: "2024-01-15" },
-  { id: "EMP-2024-002", name: "فاطمة علي الفيتوري", email: "fatima@water.gov.ly", phone: "0913456789", dept: "التقنية الفنية", role: "موظف", status: "نشط", date: "2024-02-10" },
-  { id: "EMP-2024-003", name: "محمد خالد المبروك", email: "mohammed@water.gov.ly", phone: "0914567890", dept: "الصيانة", role: "موظف", status: "نشط", date: "2024-03-05" },
-  { id: "EMP-2024-004", name: "سامي حسن الزنتاني", email: "sami@water.gov.ly", phone: "0915678901", dept: "المالية", role: "زائر", status: "نشط", date: "2024-04-20" },
-  { id: "EMP-2024-005", name: "نور الدين عبدالله", email: "nour@water.gov.ly", phone: "0916789012", dept: "المخابرات", role: "موظف", status: "قيد المراجعة", date: "2024-06-01" },
-];
-
-const roleColors: Record<string, string> = {
-  "مدير النظام": "bg-purple-100 text-purple-700",
-  "موظف": "bg-blue-100 text-blue-700",
-  "زائر": "bg-gray-100 text-gray-600",
-};
+const ROLES = ["مدير النظام","مهندس","فني","موظف","ضيف"];
+const DEPTS = ["الإدارة العامة","الهندسة","الصيانة","المالية","الموارد البشرية","تقنية المعلومات"];
+const EMPTY = { name: "", employeeId: "", email: "", phone: "", department: "", role: "موظف", status: "نشط", password: "" };
+const inp = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors";
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [search, setSearch] = useState("");
+
+  const load = () => {
+    setLoading(true);
+    fetch("/api/users").then(r => r.json()).then(d => setUsers(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const set = (k: string, v: string) => setEditing((p: any) => ({ ...p, [k]: v }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const method = editing.id ? "PUT" : "POST";
+      const url = editing.id ? `/api/users/${editing.id}` : "/api/users";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(editing) });
+      if (!res.ok) throw new Error("فشل الحفظ");
+      setMsg("تم الحفظ ✓");
+      setEditing(null);
+      load();
+    } catch { setMsg("خطأ في الحفظ"); }
+    finally { setSaving(false); setTimeout(() => setMsg(""), 3000); }
+  };
+
+  const del = async (id: string) => {
+    if (!confirm("حذف المستخدم؟")) return;
+    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    load();
+  };
+
+  const filtered = users.filter(u => !search || u.name?.includes(search) || u.employeeId?.includes(search) || u.email?.includes(search));
+  const roleColor = (r: string) => r === "مدير النظام" ? { bg: "#fce7f3", color: "#be185d" } : r === "مهندس" ? { bg: "#dbeafe", color: "#1565C0" } : r === "فني" ? { bg: "#fef3c7", color: "#d97706" } : { bg: "#f3f4f6", color: "#6b7280" };
+
   return (
-    <div className="p-6">
+    <div className="p-6 lg:p-8" dir="rtl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">إدارة المستخدمين</h1>
-          <p className="text-gray-500 text-sm mt-1">التحكم في حسابات المستخدمين وصلاحياتهم</p>
+          <h1 className="text-2xl font-black text-gray-800">إدارة المستخدمين</h1>
+          <p className="text-gray-500 text-sm mt-1">الموظفون وصلاحيات الوصول</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-          <Plus size={16} />
-          <span>إضافة مستخدم جديد</span>
+        <button onClick={() => setEditing({ ...EMPTY })}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm"
+          style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+          <Plus className="w-4 h-4" /> مستخدم جديد
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: "إجمالي المستخدمين", value: 5, color: "bg-blue-500", Icon: User },
-          { label: "المديرون", value: 1, color: "bg-purple-500", Icon: Shield },
-          { label: "قيد المراجعة", value: 1, color: "bg-orange-500", Icon: Clock },
-          { label: "المستخدمون النشطون", value: 4, color: "bg-green-500", Icon: User },
-        ].map((s, i) => {
-          const Icon = s.Icon;
-          return (
-            <div key={i} className={`${s.color} text-white rounded-2xl p-5`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-4xl font-black">{s.value}</div>
-                <Icon size={28} className="opacity-60" />
-              </div>
-              <div className="text-sm opacity-90">{s.label}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Role Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { role: "مدير النظام", count: 1, perms: "كل الصلاحيات", Icon: Shield, color: "bg-purple-50 border-purple-200" },
-          { role: "موظف", count: 3, perms: "إضافة / عرض / تعديل", Icon: User, color: "bg-blue-50 border-blue-200" },
-          { role: "زائر", count: 1, perms: "عرض فقط", Icon: Eye, color: "bg-gray-50 border-gray-200" },
-        ].map((r, i) => {
-          const Icon = r.Icon;
-          return (
-            <div key={i} className={`${r.color} border rounded-xl p-4 flex items-center gap-4`}>
-              <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center">
-                <Icon size={20} className="text-slate-600" />
-              </div>
-              <div>
-                <div className="font-bold text-slate-800 text-sm">{r.role}</div>
-                <div className="text-xs text-gray-500">{r.count} مستخدم</div>
-                <div className="text-xs text-gray-400 mt-0.5">الصلاحيات: {r.perms}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
-            <Search size={16} className="text-gray-400" />
-            <input placeholder="البحث عن مستخدم..." className="bg-transparent text-sm outline-none flex-1 text-right" />
+          { label: "إجمالي المستخدمين", value: users.length },
+          { label: "نشط", value: users.filter(u => u.status === "نشط").length },
+          { label: "مدير النظام", value: users.filter(u => u.role === "مدير النظام").length },
+          { label: "مهندس", value: users.filter(u => u.role === "مهندس").length },
+        ].map((s, i) => (
+          <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <p className="text-2xl font-black text-gray-800">{s.value}</p>
+            <p className="text-xs text-gray-500 mt-1">{s.label}</p>
           </div>
-          <button className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-50">
-            <Filter size={16} />
-            <span>تصفية</span>
-          </button>
+        ))}
+      </div>
+
+      <div className="mb-4">
+        <input className={inp} value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالاسم أو الرقم الوظيفي..." />
+      </div>
+
+      {msg && <div className="mb-4 px-4 py-3 rounded-xl bg-green-50 text-green-700 text-sm border border-green-200">{msg}</div>}
+
+      {editing && (
+        <div className="bg-white rounded-3xl p-6 mb-6 shadow-lg border border-blue-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-gray-800">{editing.id ? "تعديل المستخدم" : "مستخدم جديد"}</h2>
+            <button onClick={() => setEditing(null)} className="p-2 rounded-xl hover:bg-gray-100"><X className="w-4 h-4" /></button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الاسم الكامل</label><input className={inp} value={editing.name} onChange={e => set("name", e.target.value)} placeholder="محمد أحمد" /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الرقم الوظيفي</label><input className={inp} value={editing.employeeId} onChange={e => set("employeeId", e.target.value)} placeholder="EMP-001" /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">البريد الإلكتروني</label><input type="email" className={inp} value={editing.email} onChange={e => set("email", e.target.value)} placeholder="user@example.com" /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">رقم الهاتف</label><input className={inp} value={editing.phone || ""} onChange={e => set("phone", e.target.value)} placeholder="+218 91 000 0000" /></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">القسم</label><select className={inp} value={editing.department || ""} onChange={e => set("department", e.target.value)}><option value="">اختر القسم</option>{DEPTS.map(d => <option key={d}>{d}</option>)}</select></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الدور</label><select className={inp} value={editing.role} onChange={e => set("role", e.target.value)}>{ROLES.map(r => <option key={r}>{r}</option>)}</select></div>
+            <div><label className="block text-xs font-semibold text-gray-600 mb-1">الحالة</label><select className={inp} value={editing.status} onChange={e => set("status", e.target.value)}>{["نشط","غير نشط","موقوف"].map(s => <option key={s}>{s}</option>)}</select></div>
+            {!editing.id && <div><label className="block text-xs font-semibold text-gray-600 mb-1">كلمة المرور</label><input type="password" className={inp} value={editing.password} onChange={e => set("password", e.target.value)} placeholder="••••••••" /></div>}
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button onClick={save} disabled={saving || !editing.name || !editing.employeeId || !editing.email}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
+              <Save className="w-4 h-4" /> {saving ? "جاري الحفظ..." : "حفظ"}
+            </button>
+            <button onClick={() => setEditing(null)} className="px-4 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100">إلغاء</button>
+          </div>
         </div>
-        <div className="overflow-x-auto">
+      )}
+
+      {loading ? (
+        <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="animate-pulse bg-gray-200 rounded-2xl h-16" />)}</div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-gray-100">
+          <Users className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-gray-400">لا يوجد مستخدمون</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600 text-right">
-                {["المستخدم", "الرقم الوظيفي", "القسم", "الدور", "الحالة", "تاريخ الانضمام", "الإجراءات"].map(h => (
-                  <th key={h} className="px-4 py-3 font-medium">{h}</th>
+            <thead style={{ backgroundColor: "#f8faff" }}>
+              <tr>
+                {["الاسم","الرقم الوظيفي","القسم","الدور","الحالة","الإجراءات"].map(h => (
+                  <th key={h} className="px-4 py-3 text-right text-xs font-bold text-gray-500">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody>
-              {users.map(u => (
-                <tr key={u.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div>
-                      <div className="font-medium text-slate-800">{u.name}</div>
-                      <div className="text-xs text-gray-400">{u.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{u.id}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.dept}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[u.role] || "bg-gray-100 text-gray-600"}`}>{u.role}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      u.status === "نشط" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
-                    }`}>{u.status}</span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{u.date}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50"><Eye size={14} /></button>
-                      <button className="p-1.5 rounded-lg text-gray-600 hover:bg-gray-100"><Edit size={14} /></button>
-                      <button className="p-1.5 rounded-lg text-red-600 hover:bg-red-50"><Trash2 size={14} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((u: any) => {
+                const rc = roleColor(u.role);
+                return (
+                  <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ backgroundColor: "#1565C0" }}>
+                          {u.name?.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800 text-xs">{u.name}</p>
+                          <p className="text-gray-400 text-xs">{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{u.employeeId}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{u.department || "—"}</td>
+                    <td className="px-4 py-3"><span className="text-xs px-2 py-1 rounded-full font-medium" style={rc}>{u.role}</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ backgroundColor: u.status === "نشط" ? "#dcfce7" : "#fee2e2", color: u.status === "نشط" ? "#16a34a" : "#dc2626" }}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditing(u)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => del(u.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
     </div>
   );
 }
