@@ -1,13 +1,26 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 
 export async function GET() {
-  const reports = await prisma.report.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json(reports);
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const reports = await sql`SELECT * FROM "Report" ORDER BY "createdAt" DESC`;
+    return NextResponse.json(reports);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const data = await req.json();
-  const report = await prisma.report.create({ data });
-  return NextResponse.json(report, { status: 201 });
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const d = await req.json();
+    const result = await sql`
+      INSERT INTO "Report" (id, title, type, status, author, reviewer, "wellId", "fileSize", content, "createdAt", "updatedAt")
+      VALUES (gen_random_uuid()::text, ${d.title}, ${d.type}, ${d.status ?? 'مسودة'}, ${d.author}, ${d.reviewer ?? null}, ${d.wellId ?? null}, ${d.fileSize ?? null}, ${d.content ?? null}, now(), now())
+      RETURNING *`;
+    return NextResponse.json(result[0], { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

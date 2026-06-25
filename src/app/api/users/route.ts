@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { neon } from "@neondatabase/serverless";
 
 export async function GET() {
-  const users = await prisma.user.findMany({
-    select: { id: true, employeeId: true, name: true, email: true, phone: true, department: true, role: true, status: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-  return NextResponse.json(users);
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const users = await sql`SELECT id, "employeeId", name, email, phone, department, role, status, "createdAt" FROM "User" ORDER BY "createdAt" ASC`;
+    return NextResponse.json(users);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
-  const data = await req.json();
-  const user = await prisma.user.create({ data });
-  return NextResponse.json(user, { status: 201 });
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const d = await req.json();
+    const result = await sql`
+      INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt")
+      VALUES (gen_random_uuid()::text, ${d.employeeId}, ${d.name}, ${d.email}, ${d.phone ?? null}, ${d.department ?? null}, ${d.role ?? 'موظف'}, ${d.status ?? 'نشط'}, ${d.password ?? 'hashed'}, now(), now())
+      RETURNING id, "employeeId", name, email, phone, department, role, status, "createdAt"`;
+    return NextResponse.json(result[0], { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
