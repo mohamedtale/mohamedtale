@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير شامل - نظام إدارة آبار المياه</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: #f0f4f8;
+    color: #1a1a2e;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* Cover Page */
+  .cover {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f3460 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: rgba(0,168,255,0.08);
+    border-radius: 50%;
+    top: -100px; left: -100px;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: rgba(0,168,255,0.05);
+    border-radius: 50%;
+    bottom: -80px; right: -80px;
+  }
+  .cover-logo {
+    width: 100px; height: 100px;
+    background: linear-gradient(135deg, #00a8ff, #0052cc);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+    margin-bottom: 30px;
+    box-shadow: 0 20px 60px rgba(0,168,255,0.4);
+    z-index: 1;
+  }
+  .cover h1 {
+    color: #fff;
+    font-size: 36px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 12px;
+    z-index: 1;
+  }
+  .cover h2 {
+    color: #00a8ff;
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 40px;
+    z-index: 1;
+  }
+  .cover-divider {
+    width: 200px; height: 3px;
+    background: linear-gradient(90deg, transparent, #00a8ff, transparent);
+    margin: 20px auto;
+    z-index: 1;
+  }
+  .cover-info {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+    z-index: 1;
+  }
+  .cover-info-item {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(0,168,255,0.3);
+    border-radius: 12px;
+    padding: 16px 24px;
+    text-align: center;
+    color: #fff;
+  }
+  .cover-info-item .label { color: #00a8ff; font-size: 12px; margin-bottom: 4px; }
+  .cover-info-item .value { font-size: 16px; font-weight: 700; }
+  .cover-subtitle {
+    color: rgba(255,255,255,0.7);
+    font-size: 15px;
+    text-align: center;
+    max-width: 600px;
+    z-index: 1;
+    margin-top: 10px;
+  }
+
+  /* Page Layout */
+  .page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+
+  /* Section */
+  .section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border-right: 5px solid #0f3460;
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f3460;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #0f3460, #00a8ff);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .section-subtitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f3460;
+    margin: 20px 0 12px;
+    padding-right: 12px;
+    border-right: 3px solid #00a8ff;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  thead tr {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+  }
+  thead th {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+  }
+  tbody tr { border-bottom: 1px solid #e8edf5; }
+  tbody tr:nth-child(even) { background: #f8faff; }
+  tbody tr:hover { background: #e8f4ff; }
+  tbody td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: #333;
+  }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .badge-blue { background: #e3f0ff; color: #0052cc; }
+  .badge-green { background: #e3fff0; color: #00875a; }
+  .badge-red { background: #ffe3e3; color: #cc0000; }
+  .badge-orange { background: #fff3e0; color: #e65100; }
+  .badge-purple { background: #f3e3ff; color: #6600cc; }
+  .badge-gray { background: #f0f0f0; color: #555; }
+
+  /* Cards Grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .card {
+    background: linear-gradient(135deg, #f8faff, #fff);
+    border: 1px solid #e0e8f5;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .card .card-icon { font-size: 28px; margin-bottom: 8px; }
+  .card .card-title { font-size: 13px; color: #555; margin-bottom: 4px; }
+  .card .card-value { font-size: 18px; font-weight: 800; color: #0f3460; }
+
+  /* Feature List */
+  .feature-list { list-style: none; }
+  .feature-list li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #e0e8f5;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-list li::before {
+    content: '✓';
+    color: #00a8ff;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Comparison Table */
+  .comparison { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .comparison th, .comparison td { padding: 12px 16px; border: 1px solid #e0e8f5; font-size: 13px; }
+  .comparison thead { background: #0f3460; color: #fff; }
+  .comparison .yes { color: #00875a; font-weight: 700; text-align: center; }
+  .comparison .no { color: #cc0000; font-weight: 700; text-align: center; }
+  .comparison .partial { color: #e65100; font-weight: 700; text-align: center; }
+
+  /* Alert Box */
+  .alert {
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin: 16px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .alert-info { background: #e3f0ff; border-right: 4px solid #0052cc; }
+  .alert-warning { background: #fff8e1; border-right: 4px solid #ffa000; }
+  .alert-success { background: #e3fff0; border-right: 4px solid #00875a; }
+  .alert-danger { background: #ffe3e3; border-right: 4px solid #cc0000; }
+  .alert .alert-icon { font-size: 20px; flex-shrink: 0; }
+  .alert .alert-text { font-size: 13px; color: #333; }
+  .alert strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* Page Break */
+  .page-break { page-break-before: always; }
+
+  /* TOC */
+  .toc { background: #f8faff; border-radius: 12px; padding: 24px; margin: 20px 0; }
+  .toc h3 { color: #0f3460; margin-bottom: 16px; font-size: 18px; }
+  .toc ol { padding-right: 20px; }
+  .toc li { padding: 6px 0; color: #333; font-size: 14px; }
+  .toc li span { color: #00a8ff; font-weight: 600; }
+
+  /* Flow Diagram */
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .flow-step {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .flow-arrow { color: #00a8ff; font-size: 20px; font-weight: 700; }
+
+  /* Priority Matrix */
+  .priority { padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; }
+  .p-high { background: #ffe3e3; color: #cc0000; }
+  .p-medium { background: #fff3e0; color: #e65100; }
+  .p-low { background: #e3fff0; color: #00875a; }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat-box {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .stat-num { font-size: 28px; font-weight: 800; color: #00a8ff; }
+  .stat-box .stat-label { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+  /* Footer */
+  .footer {
+    background: #0f3460;
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    padding: 24px;
+    border-radius: 12px;
+    margin-top: 40px;
+    font-size: 12px;
+  }
+
+  @media print {
+    body { background: #fff; }
+    .cover { min-height: 100vh; }
+    .section { box-shadow: none; border: 1px solid #e0e8f5; }
+    .page-break { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-logo">💧</div>
+  <h1>نظام إدارة آبار المياه</h1>
+  <h2>تقرير شامل للمتطلبات والمميزات العالمية</h2>
+  <div class="cover-divider"></div>
+  <p class="cover-subtitle">
+    تقرير متكامل يجمع بين متطلبات النظام المحلي وأفضل الممارسات العالمية في أنظمة إدارة آبار المياه الجوفية، مع توصيات لتحسين التصميم وإضافة مميزات ذات قيمة مضافة.
+  </p>
+  <div class="cover-info">
+    <div class="cover-info-item">
+      <div class="label">تاريخ التقرير</div>
+      <div class="value">يونيو 2026</div>
+    </div>
+    <div class="cover-info-item">
+      <div class="label">عدد الصفحات</div>
+      <div class="value">تقرير شامل</div>
+    </div>
+    <div class="cover-info-item">
+      <div class="label">النوع</div>
+      <div class="value">متطلبات + توصيات</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="page">
+
+  <!-- فهرس المحتويات -->
+  <div class="section">
+    <div class="section-title"><div class="icon">📋</div> فهرس المحتويات</div>
+    <div class="toc">
+      <ol>
+        <li><span>1.</span> ملخص تنفيذي</li>
+        <li><span>2.</span> هيكل النظام الكامل - الشاشات والوظائف</li>
+        <li><span>3.</span> قاعدة البيانات - الجداول والعلاقات</li>
+        <li><span>4.</span> الأدوار والصلاحيات التفصيلية</li>
+        <li><span>5.</span> مقارنة مع أنظمة عالمية</li>
+        <li><span>6.</span> مميزات إضافية موصى بها من الأنظمة العالمية</li>
+        <li><span>7.</span> نظام الإشعارات التفصيلي</li>
+        <li><span>8.</span> التقارير الشاملة</li>
+        <li><span>9.</span> خارطة طريق التطوير</li>
+        <li><span>10.</span> توصيات أمنية</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1. ملخص تنفيذي -->
+  <div class="section">
+    <div class="section-title"><div class="icon">🎯</div> 1. الملخص التنفيذي</div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num">10</div>
+        <div class="stat-label">شاشات رئيسية</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">4</div>
+        <div class="stat-label">أدوار مستخدمين</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">7</div>
+        <div class="stat-label">أنواع تقارير</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num">5</div>
+        <div class="stat-label">صيغ تصدير</div>
+      </div>
+    </div>
+
+    <p style="margin-top:16px; color:#444;">
+      هذا النظام مصمم لإدارة آبار المياه الجوفية بشكل متكامل، يغطي دورة حياة البئر الكاملة من لحظة الحفر حتى الصيانة الدورية. النظام يخدم 3 مستخدمين رئيسيين (مدير، مشرف، مدخل بيانات) مع إمكانية التوسع مستقبلاً.
+    </p>
+
+    <div class="alert alert-success" style="margin-top:16px;">
+      <div class="alert-icon">✅</div>
+      <div class="alert-text">
+        <strong>نقطة قوة رئيسية</strong>
+        النظام يدعم نوعين من الآبار: آبار جديدة (بيانات تدخل على مراحل) وآبار مكتملة سابقة (تدخل دفعة واحدة)، وهذا يجعله مرناً وعملياً.
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. هيكل النظام -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">🏗️</div> 2. هيكل النظام الكامل</div>
+
+    <div class="section-subtitle">2.1 الشاشات الرئيسية</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم الشاشة</th>
+          <th>الوظيفة الرئيسية</th>
+          <th>من يستخدمها</th>
+          <th>الأولوية</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>لوحة التحكم (Dashboard)</strong></td>
+          <td>إحصائيات شاملة، خريطة، مخططات بيانية، جدول الآبار</td>
+          <td>الجميع</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>إدخال بيانات البئر</strong></td>
+          <td>تسجيل بئر جديد أو مكتمل مع كل البيانات التفصيلية</td>
+          <td>مدخل البيانات</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>شاشة المتابعة</strong></td>
+          <td>متابعة سير الحفر الأسبوعي + الوضع الحالي + الأعمال القادمة</td>
+          <td>مدخل + مشرف</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>قاعدة البيانات</strong></td>
+          <td>عرض الآبار حسب الحالة + تحليل المياه + طبقات التربة + الخزان المائي</td>
+          <td>الجميع</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>الخريطة الواقعية</strong></td>
+          <td>خريطة تفاعلية بنقاط ملونة حسب الحالة + popup ملخص + رابط للبئر</td>
+          <td>الجميع</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>تصميم البئر</strong></td>
+          <td>رسم مقطع عرضي تلقائي من بيانات المواصفات الفنية (SVG)</td>
+          <td>الجميع (عرض)</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>الصيانة</strong></td>
+          <td>سجل صيانة لكل بئر (متعدد) + تاريخ + نوع + تكلفة + مقاول + ملاحظات</td>
+          <td>مدخل البيانات</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>المكتبة الإلكترونية</strong></td>
+          <td>رفع وتحميل تقارير وتحيلات المياه والآبار</td>
+          <td>الجميع</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>اعتماد التقرير</strong></td>
+          <td>مراجعة البيانات من المشرف والمدير + اعتماد يغير الحالة تلقائياً</td>
+          <td>مشرف + مدير</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>البريد الداخلي</strong></td>
+          <td>استقبال ملفات ورسائل من المقاولين (داخل النظام فقط)</td>
+          <td>مدير + مشرف</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><strong>الإشعارات</strong></td>
+          <td>كل أحداث النظام + تنبيه تلقائي عند تجاوز 3 أشهر</td>
+          <td>الجميع</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><strong>التقارير</strong></td>
+          <td>7 تقارير شاملة مفلترة + تصدير بـ 5 صيغ</td>
+          <td>الجميع</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><strong>الميزانية</strong></td>
+          <td>إجمالي العقود + مصروف فعلي + متبقي + مخطط بياني</td>
+          <td>مدير + مشرف</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><strong>العقود</strong></td>
+          <td>رقم، تاريخ، قيمة، مقاول، ملفات PDF مرفقة</td>
+          <td>مدير + مشرف</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><strong>إدارة المستخدمين</strong></td>
+          <td>إضافة/حذف/تعديل المستخدمين وصلاحياتهم</td>
+          <td>المدير فقط</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-subtitle">2.2 دورة حياة البئر</div>
+    <div class="flow">
+      <div class="flow-step">🆕 جديد<br><small>تسجيل البئر</small></div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-step">⚙️ قيد التنفيذ<br><small>الحفر جاري</small></div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-step">✅ مكتمل<br><small>تم الانتهاء</small></div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-step">🔧 صيانة<br><small>تحت الصيانة</small></div>
+      <div class="flow-arrow">←</div>
+      <div class="flow-step">🟢 نشط<br><small>يعمل بكفاءة</small></div>
+    </div>
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>تنبيه تلقائي مهم</strong>
+        إذا تجاوز البئر 3 أشهر في مرحلة "قيد التنفيذ" بدون إنجاز، يرسل النظام تلقائياً إشعار "مرحلة التعطيل" للمشرف والمدير.
+      </div>
+    </div>
+
+    <div class="section-subtitle">2.3 حالات البئر وألوانها</div>
+    <table>
+      <thead><tr><th>الحالة</th><th>اللون</th><th>المعنى</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">تحت الإنشاء</span></td><td>🔵 أزرق</td><td>بئر جديد قيد الحفر</td></tr>
+        <tr><td><span class="badge badge-green">نشط</span></td><td>🟢 أخضر</td><td>يعمل بكفاءة كاملة</td></tr>
+        <tr><td><span class="badge badge-orange">تحت الصيانة</span></td><td>🟡 برتقالي</td><td>إيقاف مؤقت للصيانة</td></tr>
+        <tr><td><span class="badge badge-red">متوقف</span></td><td>🔴 أحمر</td><td>متوقف لأسباب فنية أو تعطيل</td></tr>
+        <tr><td><span class="badge badge-gray">غير محدد</span></td><td>⚫ رمادي</td><td>لم تُحدد حالته بعد</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. قاعدة البيانات -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">🗄️</div> 3. قاعدة البيانات - الجداول الرئيسية</div>
+
+    <div class="section-subtitle">3.1 جدول الآبار (wells)</div>
+    <table>
+      <thead><tr><th>الحقل</th><th>النوع</th><th>إجباري؟</th><th>الوصف</th></tr></thead>
+      <tbody>
+        <tr><td>id</td><td>UUID</td><td><span class="badge badge-red">نعم</span></td><td>المعرف الفريد التلقائي</td></tr>
+        <tr><td>well_number</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>رقم البئر (يدوي)</td></tr>
+        <tr><td>contract_number</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>رقم العقد</td></tr>
+        <tr><td>contract_name</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>اسم العقد</td></tr>
+        <tr><td>contractor</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>اسم الجهة المنفذة (المقاول)</td></tr>
+        <tr><td>location_name</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>اسم الموقع / المنطقة</td></tr>
+        <tr><td>municipality</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>البلدية</td></tr>
+        <tr><td>latitude</td><td>DECIMAL(10,8)</td><td><span class="badge badge-red">نعم</span></td><td>خط العرض (GPS)</td></tr>
+        <tr><td>longitude</td><td>DECIMAL(11,8)</td><td><span class="badge badge-red">نعم</span></td><td>خط الطول (GPS)</td></tr>
+        <tr><td>drilling_method</td><td>TEXT</td><td><span class="badge badge-red">نعم</span></td><td>طريقة الحفر (نص حر)</td></tr>
+        <tr><td>total_depth</td><td>DECIMAL(8,2)</td><td><span class="badge badge-red">نعم</span></td><td>العمق الكلي (م)</td></tr>
+        <tr><td>protection_pipe</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>انبوب الوقاية</td></tr>
+        <tr><td>casing_pipe</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>انبوب الغلاف</td></tr>
+        <tr><td>screens</td><td>VARCHAR</td><td><span class="badge badge-red">نعم</span></td><td>المصافي</td></tr>
+        <tr><td>tds</td><td>DECIMAL(8,2)</td><td><span class="badge badge-gray">لا</span></td><td>مجموع الأملاح المذابة (mg/L)</td></tr>
+        <tr><td>total_hardness</td><td>DECIMAL(8,2)</td><td><span class="badge badge-gray">لا</span></td><td>العسر الكلي (mg/L)</td></tr>
+        <tr><td>water_type</td><td>VARCHAR</td><td><span class="badge badge-gray">لا</span></td><td>نوع الماء (نص)</td></tr>
+        <tr><td>water_quality</td><td>ENUM</td><td><span class="badge badge-gray">لا</span></td><td>ممتازة/جيدة/متوسطة/ضعيفة</td></tr>
+        <tr><td>static_water_level</td><td>DECIMAL(8,2)</td><td><span class="badge badge-gray">لا</span></td><td>مستوى الماء الساكن (م)</td></tr>
+        <tr><td>dynamic_water_level</td><td>DECIMAL(8,2)</td><td><span class="badge badge-gray">لا</span></td><td>مستوى الماء المتحرك (م)</td></tr>
+        <tr><td>productivity_m3h</td><td>DECIMAL(8,2)</td><td><span class="badge badge-gray">لا</span></td><td>الإنتاجية (م³/ساعة)</td></tr>
+        <tr><td>contract_value</td><td>DECIMAL(15,2)</td><td><span class="badge badge-gray">لا</span></td><td>تكلفة العقد الإجمالية (اختياري)</td></tr>
+        <tr><td>status</td><td>ENUM</td><td><span class="badge badge-red">نعم</span></td><td>جديد/قيد_التنفيذ/مكتمل/نشط/صيانة/متوقف</td></tr>
+        <tr><td>well_type</td><td>ENUM</td><td><span class="badge badge-red">نعم</span></td><td>جديد / مكتمل_سابق</td></tr>
+        <tr><td>drilling_start_date</td><td>DATE</td><td><span class="badge badge-gray">لا</span></td><td>تاريخ بداية الحفر</td></tr>
+        <tr><td>completion_date</td><td>DATE</td><td><span class="badge badge-gray">لا</span></td><td>تاريخ الإنجاز</td></tr>
+        <tr><td>created_by</td><td>UUID (FK)</td><td><span class="badge badge-red">نعم</span></td><td>من أنشأ السجل</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMP</td><td><span class="badge badge-red">نعم</span></td><td>تاريخ الإنشاء</td></tr>
+      </tbody>
+    </table>
+
+    <div class="section-subtitle">3.2 الجداول المرتبطة</div>
+    <table>
+      <thead><tr><th>الجدول</th><th>الغرض</th><th>العلاقة مع البئر</th></tr></thead>
+      <tbody>
+        <tr><td><strong>well_design_layers</strong></td><td>طبقات تصميم البئر (لتوليد الرسمة التلقائية)</td><td>One-to-Many</td></tr>
+        <tr><td><strong>well_weekly_updates</strong></td><td>التحديثات الأسبوعية للعمق والحالة</td><td>One-to-Many</td></tr>
+        <tr><td><strong>well_maintenance</strong></td><td>سجلات الصيانة (تاريخ، نوع، تكلفة، مقاول، ملاحظات)</td><td>One-to-Many</td></tr>
+        <tr><td><strong>contracts</strong></td><td>تفاصيل العقود + ملفات PDF</td><td>One-to-Many</td></tr>
+        <tr><td><strong>users</strong></td><td>المستخدمون وأدوارهم وصلاحياتهم</td><td>مستقل</td></tr>
+        <tr><td><strong>notifications</strong></td><td>كل إشعارات النظام</td><td>مرتبط بالمستخدم والبئر</td></tr>
+        <tr><td><strong>inbox_messages</strong></td><td>رسائل البريد الداخلي</td><td>مستقل</td></tr>
+        <tr><td><strong>library_files</strong></td><td>ملفات المكتبة الإلكترونية</td><td>اختياري مع البئر</td></tr>
+        <tr><td><strong>report_approvals</strong></td><td>سجل اعتماد التقارير</td><td>مرتبط بالبئر والمستخدم</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 4. الأدوار والصلاحيات -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">👥</div> 4. الأدوار والصلاحيات التفصيلية</div>
+
+    <table class="comparison">
+      <thead>
+        <tr>
+          <th>الصلاحية</th>
+          <th>مدخل البيانات</th>
+          <th>المشرف</th>
+          <th>المدير</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>إضافة بئر جديد</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>تعديل بيانات البئر</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>حذف بئر</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td>تغيير حالة البئر</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>إدخال التحديث الأسبوعي</td><td class="yes">✓</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>كتابة الأعمال القادمة</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>اعتماد التقارير</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>إدخال بيانات الصيانة</td><td class="yes">✓</td><td class="no">✗</td><td class="no">✗</td></tr>
+        <tr><td>رفع ملفات المكتبة</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>عرض التقارير</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>تصدير التقارير</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>إدارة المستخدمين</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+        <tr><td>إدارة العقود</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>عرض الميزانية</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>البريد الداخلي</td><td class="no">✗</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>عرض الخريطة</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>إعدادات النظام</td><td class="no">✗</td><td class="no">✗</td><td class="yes">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. مقارنة مع أنظمة عالمية -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">🌍</div> 5. مقارنة مع أنظمة إدارة الآبار العالمية</div>
+
+    <p style="margin-bottom:16px; color:#444;">
+      بعد البحث في أبرز الأنظمة العالمية المستخدمة لإدارة آبار المياه والنفط والغاز، إليك المقارنة:
+    </p>
+
+    <table class="comparison">
+      <thead>
+        <tr>
+          <th>الميزة</th>
+          <th>نظامك</th>
+          <th>USGS NGWMN<br><small>(أمريكا)</small></th>
+          <th>WellView<br><small>(كندا)</small></th>
+          <th>California WDL<br><small>(كاليفورنيا)</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>خريطة تفاعلية GIS</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>تتبع دورة حياة البئر</td><td class="yes">✓</td><td class="partial">جزئي</td><td class="yes">✓</td><td class="partial">جزئي</td></tr>
+        <tr><td>تحليل جودة المياه</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+        <tr><td>إدارة الصيانة</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>رسم تصميم البئر تلقائياً</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>نظام إشعارات تلقائية</td><td class="yes">✓</td><td class="partial">جزئي</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>إدارة العقود والمقاولين</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>تقارير قابلة للتصدير</td><td class="yes">✓</td><td class="partial">جزئي</td><td class="yes">✓</td><td class="partial">جزئي</td></tr>
+        <tr><td>تحديثات دورية للعمق</td><td class="yes">✓ أسبوعي</td><td class="yes">✓ يومي</td><td class="yes">✓ يومي</td><td class="partial">شهري</td></tr>
+        <tr><td>نظام صلاحيات متعدد</td><td class="yes">✓</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>مكتبة إلكترونية</td><td class="yes">✓</td><td class="partial">جزئي</td><td class="yes">✓</td><td class="partial">جزئي</td></tr>
+        <tr><td>تنبيه تعطيل تلقائي</td><td class="yes">✓ 3 أشهر</td><td class="no">✗</td><td class="yes">✓</td><td class="no">✗</td></tr>
+        <tr><td>اللغة العربية</td><td class="yes">✓ كامل</td><td class="no">✗</td><td class="no">✗</td><td class="no">✗</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-success" style="margin-top:20px;">
+      <div class="alert-icon">🏆</div>
+      <div class="alert-text">
+        <strong>نظامك متقدم جداً مقارنة بالأنظمة العالمية</strong>
+        يجمع نظامك مميزات عدة أنظمة في منصة واحدة، مع إضافة مميز فريد وهو دعم اللغة العربية الكامل وتصميم البئر التلقائي.
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. مميزات إضافية -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">💡</div> 6. مميزات إضافية موصى بها من الأنظمة العالمية</div>
+
+    <div class="alert alert-info">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-text">
+        <strong>هذه المميزات غير موجودة في متطلباتك الحالية</strong>
+        مستوحاة من أفضل الأنظمة العالمية. يمكنك اختيار ما يناسبك منها.
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>الميزة</th><th>الفائدة</th><th>الأولوية المقترحة</th><th>التعقيد</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>📊 مؤشر صحة البئر (Health Score)</strong></td>
+          <td>رقم من 0-100 يحسب تلقائياً بناءً على جودة المياه والإنتاجية وعمر البئر</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>متوسط</td>
+        </tr>
+        <tr>
+          <td><strong>📅 جدول صيانة استباقية</strong></td>
+          <td>النظام يقترح موعد الصيانة القادمة بناءً على تاريخ آخر صيانة</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>📈 مخطط منسوب المياه الزمني</strong></td>
+          <td>رسم بياني يظهر تغير مستوى الماء بمرور الوقت لكل بئر</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>🔄 مقارنة بين الآبار</strong></td>
+          <td>مقارنة 2-4 آبار جنباً لجنب في الجودة والإنتاجية والعمق</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+          <td>متوسط</td>
+        </tr>
+        <tr>
+          <td><strong>📱 QR Code لكل بئر</strong></td>
+          <td>كود QR يطبع ويوضع على البئر، المشرف يمسحه فيوصله لصفحة البئر مباشرة</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>📷 صور البئر</strong></td>
+          <td>رفع صور للبئر في مراحل مختلفة (قبل/أثناء/بعد الحفر)</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>🌡️ طبقات التربة (Lithology Log)</strong></td>
+          <td>تسجيل نوع التربة في كل عمق، يساعد في الدراسات الجيولوجية</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+          <td>متوسط</td>
+        </tr>
+        <tr>
+          <td><strong>📊 لوحة مقارنة المناطق</strong></td>
+          <td>مقارنة بين مناطق مختلفة في عدد الآبار وجودة المياه</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+          <td>متوسط</td>
+        </tr>
+        <tr>
+          <td><strong>🔍 بحث متقدم</strong></td>
+          <td>بحث في كل النظام بفلاتر متعددة (منطقة + حالة + تاريخ + عمق...)</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>📋 سجل التعديلات (Audit Log)</strong></td>
+          <td>تسجيل من عدّل ماذا ومتى في كل سجل بئر</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>🌙 الوضع الليلي (Dark Mode)</strong></td>
+          <td>واجهة داكنة لراحة العين عند العمل الليلي</td>
+          <td><span class="priority p-low">منخفضة</span></td>
+          <td>بسيط</td>
+        </tr>
+        <tr>
+          <td><strong>🔔 تنبيه جودة المياه</strong></td>
+          <td>تنبيه تلقائي إذا تجاوزت نسبة الأملاح حداً معيناً</td>
+          <td><span class="priority p-high">عالية</span></td>
+          <td>بسيط</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 7. نظام الإشعارات -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">🔔</div> 7. نظام الإشعارات التفصيلي</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>الحدث</th>
+          <th>المحفّز</th>
+          <th>من يستقبل</th>
+          <th>نوع الإشعار</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>إضافة بئر جديد</td><td>يدوي (مدخل البيانات)</td><td>المشرف + المدير</td><td>🔔 داخلي</td></tr>
+        <tr><td>تغيير حالة البئر</td><td>يدوي</td><td>المشرف + المدير</td><td>🔔 داخلي</td></tr>
+        <tr><td>تحديث عمق أسبوعي</td><td>يدوي (مدخل / مشرف)</td><td>المشرف + المدير</td><td>🔔 داخلي</td></tr>
+        <tr><td>اعتماد تقرير</td><td>يدوي (مشرف / مدير)</td><td>مدخل البيانات</td><td>🔔 داخلي</td></tr>
+        <tr><td>رفض تقرير</td><td>يدوي (مشرف / مدير)</td><td>مدخل البيانات</td><td>🔔 داخلي + سبب</td></tr>
+        <tr><td>إضافة سجل صيانة</td><td>يدوي (مدخل)</td><td>المشرف + المدير</td><td>🔔 داخلي</td></tr>
+        <tr><td>رفع ملف في المكتبة</td><td>يدوي (أي مستخدم)</td><td>الجميع</td><td>🔔 داخلي</td></tr>
+        <tr><td>رسالة جديدة في البريد</td><td>يدوي</td><td>المدير + المشرف</td><td>🔔 داخلي</td></tr>
+        <tr><td><strong>تجاوز 3 أشهر بلا إنجاز</strong></td><td><strong>تلقائي (CRON Job)</strong></td><td><strong>المشرف + المدير</strong></td><td><strong>🚨 تنبيه عاجل</strong></td></tr>
+        <tr><td>اعتماد التقرير → تغيير الحالة</td><td>تلقائي بعد الاعتماد</td><td>مدخل البيانات</td><td>🔔 داخلي</td></tr>
+        <tr><td>تجاوز الأملاح الحد المسموح</td><td>تلقائي عند الإدخال</td><td>المشرف + المدير</td><td>⚠️ تحذير</td></tr>
+        <tr><td>موعد صيانة مقترح</td><td>تلقائي (6 أشهر من آخر صيانة)</td><td>المشرف + المدير</td><td>📅 تذكير</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 8. التقارير -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">📊</div> 8. التقارير الشاملة</div>
+
+    <div class="section-subtitle">8.1 أنواع التقارير</div>
+    <table>
+      <thead><tr><th>#</th><th>اسم التقرير</th><th>الفلاتر المتاحة</th><th>المحتوى</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>تقرير الآبار الشامل</strong></td>
+          <td>المنطقة، البلدية، الحالة، التاريخ، العمق، المقاول</td>
+          <td>كل بيانات البئر الفنية + الموقع + العقد + المقاول</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>تقرير جودة المياه</strong></td>
+          <td>المنطقة، مستوى الجودة، نسبة الأملاح، العسر</td>
+          <td>مقارنة جودة المياه + مخطط دائري</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>تقرير الصيانة</strong></td>
+          <td>المنطقة، نوع الصيانة، التاريخ، المقاول، التكلفة</td>
+          <td>سجل كل عمليات الصيانة + إجمالي التكاليف</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>تقرير الإنتاجية</strong></td>
+          <td>المنطقة، معدل الضخ، منسوب المياه</td>
+          <td>مقارنة الإنتاجية + الأعلى والأدنى + مخطط بياني</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>التقرير المالي</strong></td>
+          <td>رقم العقد، المقاول، التاريخ، المنطقة، قيمة العقد</td>
+          <td>إجمالي العقود + المصروف + المتبقي</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>تقرير الآبار المتوقفة</strong></td>
+          <td>المنطقة، مدة التوقف</td>
+          <td>قائمة المتوقفة + مدة التوقف + آخر إجراء</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>تقرير الإنجاز الشهري</strong></td>
+          <td>الشهر، السنة، المنطقة، المقاول</td>
+          <td>عدد المنجزة شهرياً + مقارنة بالأشهر السابقة</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-subtitle">8.2 صيغ التصدير</div>
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <div class="card-title">PDF</div>
+        <div class="card-value">طباعة رسمية</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Excel (xlsx)</div>
+        <div class="card-value">تحليل البيانات</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📋</div>
+        <div class="card-title">CSV</div>
+        <div class="card-value">استيراد خارجي</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📝</div>
+        <div class="card-title">Word (docx)</div>
+        <div class="card-value">تعديل التقرير</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🖼️</div>
+        <div class="card-title">PNG / JPG</div>
+        <div class="card-value">المخططات البيانية</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. خارطة الطريق -->
+  <div class="section page-break">
+    <div class="section-title"><div class="icon">🗺️</div> 9. خارطة طريق التطوير المقترحة</div>
+
+    <div class="section-subtitle">المرحلة الأولى — النواة الأساسية (أولوية عالية)</div>
+    <ul class="feature-list">
+      <li>قاعدة البيانات الكاملة وتصميم الجداول</li>
+      <li>نظام المستخدمين والصلاحيات (تسجيل دخول آمن)</li>
+      <li>شاشة إدخال بيانات البئر الكاملة</li>
+      <li>شاشة المتابعة الأسبوعية</li>
+      <li>لوحة التحكم (Dashboard) مع الإحصائيات</li>
+      <li>الخريطة التفاعلية</li>
+    </ul>
+
+    <div class="section-subtitle">المرحلة الثانية — الوظائف التشغيلية</div>
+    <ul class="feature-list">
+      <li>نظام الإشعارات الكامل</li>
+      <li>اعتماد التقارير</li>
+      <li>إدارة الصيانة</li>
+      <li>العقود والمكتبة الإلكترونية</li>
+      <li>البريد الداخلي</li>
+      <li>تصميم البئر التلقائي (SVG)</li>
+    </ul>
+
+    <div class="section-subtitle">المرحلة الثالثة — التقارير والتحليلات</div>
+    <ul class="feature-list">
+      <li>كل التقارير الشاملة المفلترة</li>
+      <li>التصدير بـ 5 صيغ</li>
+      <li>الميزانية والتحليل المالي</li>
+      <li>المخططات البيانية المتقدمة</li>
+    </ul>
+
+    <div class="section-subtitle">المرحلة الرابعة — مميزات متقدمة (توصيات)</div>
+    <ul class="feature-list">
+      <li>مؤشر صحة البئر التلقائي</li>
+      <li>QR Code لكل بئر</li>
+      <li>صور البئر في مراحل مختلفة</li>
+      <li>سجل التعديلات الكامل (Audit Log)</li>
+      <li>جدول الصيانة الاستباقية</li>
+      <li>مقارنة بين الآبار</li>
+    </ul>
+  </div>
+
+  <!-- 10. التوصيات الأمنية -->
+  <div class="section">
+    <div class="section-title"><div class="icon">🔒</div> 10. التوصيات الأمنية</div>
+
+    <table>
+      <thead><tr><th>المتطلب الأمني</th><th>التفصيل</th><th>الأولوية</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>تشفير كلمات المرور</strong></td>
+          <td>bcrypt أو Argon2 — لا تخزين كلمة المرور كنص عادي أبداً</td>
+          <td><span class="priority p-high">إجبارية</span></td>
+        </tr>
+        <tr>
+          <td><strong>JWT Tokens</strong></td>
+          <td>توثيق الجلسات بـ JWT مع انتهاء صلاحية تلقائي</td>
+          <td><span class="priority p-high">إجبارية</span></td>
+        </tr>
+        <tr>
+          <td><strong>HTTPS فقط</strong></td>
+          <td>كل الاتصالات عبر بروتوكول مشفر SSL/TLS</td>
+          <td><span class="priority p-high">إجبارية</span></td>
+        </tr>
+        <tr>
+          <td><strong>Role-Based Access Control</strong></td>
+          <td>التحقق من الصلاحية في كل API Endpoint</td>
+          <td><span class="priority p-high">إجبارية</span></td>
+        </tr>
+        <tr>
+          <td><strong>نسخ احتياطي تلقائي</strong></td>
+          <td>Backup يومي لقاعدة البيانات</td>
+          <td><span class="priority p-high">عالية</span></td>
+        </tr>
+        <tr>
+          <td><strong>سجل الدخول (Login Log)</strong></td>
+          <td>تسجيل كل محاولات الدخول الناجحة والفاشلة</td>
+          <td><span class="priority p-medium">متوسطة</span></td>
+        </tr>
+        <tr>
+          <td><strong>Validation شاملة</strong></td>
+          <td>التحقق من كل البيانات المدخلة في السيرفر</td>
+          <td><span class="priority p-high">إجبارية</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert alert-warning" style="margin-top:16px;">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong>ملاحظة مهمة</strong>
+        بيانات آبار المياه تعتبر بيانات حساسة تمس الأمن الوطني. يُنصح بتخزين قاعدة البيانات على خادم محلي أو خادم سحابي موثوق مع تشفير البيانات الحساسة.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>تقرير شامل لنظام إدارة آبار المياه | يونيو 2026</p>
+    <p style="margin-top:8px;">جميع المعلومات مبنية على متطلبات النظام المحلية + أفضل الممارسات العالمية</p>
+  </div>
+
+</div>
+</body>
+</html>
