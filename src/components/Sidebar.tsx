@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   LayoutDashboard,
@@ -15,6 +15,7 @@ import {
   DollarSign,
   Users,
   Globe,
+  LogOut,
 } from "lucide-react";
 
 const menuItems: any[] = [
@@ -55,6 +56,13 @@ const menuItems: any[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth", { method: "DELETE" });
+    router.push("/login");
+    router.refresh();
+  };
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -122,15 +130,22 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-white/10">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center bg-white/20">
             <Users className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <p className="text-white text-sm font-medium">أحمد محمد</p>
-            <p className="text-white/50 text-xs">مدير النظام</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-medium truncate">المستخدم</p>
+            <p className="text-white/50 text-xs">نظام إدارة الآبار</p>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 text-sm transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>تسجيل الخروج</span>
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import bcrypt from "bcryptjs";
 
 export async function POST() {
   try {
@@ -31,12 +32,14 @@ export async function POST() {
     await sql`INSERT INTO "MaintenanceLog" (id, "wellId", type, status, description, technician, cost, duration, priority, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, ${w3[0].id}, 'صيانة دورية', 'قيد التنفيذ', 'فحص دوري وتنظيف الفلاتر', 'يوسف سالم', 450, '3 ساعات', 'متوسطة', now(), now())`;
     await sql`INSERT INTO "MaintenanceLog" (id, "wellId", type, status, description, technician, cost, priority, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, ${w5[0].id}, 'إصلاح طارئ', 'متأخرة', 'استبدال قطع تالفة', 'صالح حسن', 1200, 'عالية', now(), now())`;
 
-    // Users
-    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-001', 'أحمد محمد الصغير', 'ahmed@water.gov.ly', '0912345678', 'الإدارة العامة', 'مدير النظام', 'نشط', 'hashed', now(), now())`;
-    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-002', 'فاطمة علي الفيتوري', 'fatima@water.gov.ly', '0913456789', 'التقنية الفنية', 'موظف', 'نشط', 'hashed', now(), now())`;
-    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-003', 'محمد خالد المبروك', 'mohammed@water.gov.ly', '0914567890', 'الصيانة', 'موظف', 'نشط', 'hashed', now(), now())`;
-    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-004', 'سامي حسن الزنتاني', 'sami@water.gov.ly', '0915678901', 'المالية', 'زائر', 'نشط', 'hashed', now(), now())`;
-    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-005', 'نور الدين عبدالله', 'nour@water.gov.ly', '0916789012', 'المخابرات', 'موظف', 'قيد المراجعة', 'hashed', now(), now())`;
+    // Users with real hashed passwords
+    const adminHash = await bcrypt.hash("admin123", 10);
+    const userHash = await bcrypt.hash("user123", 10);
+    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-001', 'أحمد محمد الصغير', 'admin@water.gov.ly', '0912345678', 'الإدارة العامة', 'مدير النظام', 'نشط', ${adminHash}, now(), now())`;
+    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-002', 'فاطمة علي الفيتوري', 'fatima@water.gov.ly', '0913456789', 'التقنية الفنية', 'موظف', 'نشط', ${userHash}, now(), now())`;
+    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-003', 'محمد خالد المبروك', 'mohammed@water.gov.ly', '0914567890', 'الصيانة', 'موظف', 'نشط', ${userHash}, now(), now())`;
+    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-004', 'سامي حسن الزنتاني', 'sami@water.gov.ly', '0915678901', 'المالية', 'زائر', 'نشط', ${userHash}, now(), now())`;
+    await sql`INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'EMP-2024-005', 'نور الدين عبدالله', 'nour@water.gov.ly', '0916789012', 'المخابرات', 'موظف', 'قيد المراجعة', ${userHash}, now(), now())`;
 
     // Contracts
     await sql`INSERT INTO "Contract" (id, title, vendor, value, wells, "startDate", "endDate", status, "createdAt", "updatedAt") VALUES (gen_random_uuid()::text, 'عقد حفر آبار طرابلس', 'شركة المياه الوطنية', 450000, 15, '2024-01-01', '2024-12-31', 'نشط', now(), now())`;

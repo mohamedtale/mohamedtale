@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const sql = neon(process.env.DATABASE_URL!);
-    const wells = await sql`SELECT * FROM "Well" ORDER BY "createdAt" DESC`;
+    const url = new URL(req.url);
+    const search = url.searchParams.get("search") || "";
+    const status = url.searchParams.get("status") || "";
+    let wells;
+    if (search && status) {
+      wells = await sql`SELECT * FROM "Well" WHERE (name ILIKE ${"%" + search + "%"} OR "wellId" ILIKE ${"%" + search + "%"} OR region ILIKE ${"%" + search + "%"}) AND status = ${status} ORDER BY "createdAt" DESC`;
+    } else if (search) {
+      wells = await sql`SELECT * FROM "Well" WHERE name ILIKE ${"%" + search + "%"} OR "wellId" ILIKE ${"%" + search + "%"} OR region ILIKE ${"%" + search + "%"} ORDER BY "createdAt" DESC`;
+    } else if (status) {
+      wells = await sql`SELECT * FROM "Well" WHERE status = ${status} ORDER BY "createdAt" DESC`;
+    } else {
+      wells = await sql`SELECT * FROM "Well" ORDER BY "createdAt" DESC`;
+    }
     return NextResponse.json(wells);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

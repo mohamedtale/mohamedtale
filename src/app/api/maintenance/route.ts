@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const sql = neon(process.env.DATABASE_URL!);
-    const logs = await sql`
-      SELECT m.*, w.name as "wellName", w."wellId" as "wellCode"
-      FROM "MaintenanceLog" m
-      LEFT JOIN "Well" w ON m."wellId" = w.id
-      ORDER BY m."createdAt" DESC`;
+    const url = new URL(req.url);
+    const wellId = url.searchParams.get("wellId");
+    const logs = wellId
+      ? await sql`SELECT m.*, w.name as "wellName", w."wellId" as "wellCode" FROM "MaintenanceLog" m LEFT JOIN "Well" w ON m."wellId" = w.id WHERE m."wellId" = ${wellId} ORDER BY m."createdAt" DESC`
+      : await sql`SELECT m.*, w.name as "wellName", w."wellId" as "wellCode" FROM "MaintenanceLog" m LEFT JOIN "Well" w ON m."wellId" = w.id ORDER BY m."createdAt" DESC`;
     return NextResponse.json(logs);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

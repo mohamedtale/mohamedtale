@@ -146,8 +146,8 @@ export default function WellsPage() {
                       <td className="px-4 py-3 text-gray-400 text-xs">{new Date(well.createdAt).toLocaleDateString("ar-LY")}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <button className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"><Eye size={14} /></button>
-                          <button className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"><Edit size={14} /></button>
+                          <a href={`/dashboard/wells/${well.id}`} className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors inline-flex"><Eye size={14} /></a>
+                          <a href={`/dashboard/wells/${well.id}/edit`} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors inline-flex"><Edit size={14} /></a>
                           <button onClick={() => deleteWell(well.id, well.name)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"><Trash2 size={14} /></button>
                         </div>
                       </td>
