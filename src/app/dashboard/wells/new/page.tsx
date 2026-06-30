@@ -1,161 +1,362 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, ChevronRight, ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft, Save, X, FileText, Droplets, Settings, DollarSign, CheckCircle, MapPin } from "lucide-react";
+import Link from "next/link";
 
-const STEPS = ["المعلومات الأساسية", "الموقع الجغرافي", "المواصفات الفنية", "المعدات", "نتائج الحفر", "المراجعة والحفظ"];
-const REGIONS = ["طرابلس","بنغازي","مصراتة","الزاوية","سبها","الكفرة","غريان","الزنتان","زليتن","الخمس","ترهونة","الجفرة","مرزق","غدامس","درنة","البيضاء","الجبل الأخضر","أوباري"];
-const inp = "w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all bg-white";
-const sel = inp + " appearance-none";
-const label = (t: string) => <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t}</label>;
+const TABS = [
+  { id: 1, label: "المعلومات الأساسية", icon: FileText },
+  { id: 2, label: "المواصفات الفنية", icon: Settings },
+  { id: 3, label: "مواصفات المياه", icon: Droplets },
+  { id: 4, label: "خصائص الخزان المائي", icon: MapPin },
+  { id: 5, label: "المعلومات المالية", icon: DollarSign },
+  { id: 6, label: "المراجعة والاعتماد", icon: CheckCircle },
+];
+
+const REGIONS = ["طرابلس", "مصراتة", "بنغازي", "الزاوية", "سرت", "ترهونة", "البيضاء", "درنة", "سبها", "غدامس", "الكفرة", "مورزق"];
+const MUNICIPALITIES = ["طرابلس المركز", "سوق الجمعة", "تاجوراء", "عين زارة", "مصراتة المركز", "أخرى"];
+const DRILL_METHODS = ["حفر دوراني", "حفر بالضربة", "حفر هوائي", "حفر بالماء"];
+const PUMP_TYPES = ["غاطسة كهربائية", "سطحية", "يدوية", "شمسية"];
+const WATER_TYPES = ["جوفي عميق", "جوفي ضحل", "ارتوازي", "شبه ارتوازي"];
 
 export default function NewWellPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
   const [form, setForm] = useState({
-    name: "", wellId: "", type: "مياه جوفية", status: "فعال", drillingDate: "",
-    region: "", location: "", latitude: "", longitude: "",
-    depth: "", casingType: "", waterQuality: "", notes: "",
-    pumpType: "", cost: "",
+    // Step 1 - Basic
+    wellId: "", contractNumber: "", contractName: "", implementingEntity: "",
+    location: "", region: "", municipality: "", coordinates: "", drillingDate: "",
+    // Step 2 - Technical
+    drillMethod: "", totalDepth: "", casingDiameter: "", protectionDiameter: "",
+    filterSize: "", pumpType: "", pumpDepth: "", boreDiameter: "",
+    // Step 3 - Water
+    tds: "", hardness: "", ph: "", ec: "", salinity: "", waterType: "", waterQuality: "",
+    // Step 4 - Aquifer
+    staticLevel: "", dynamicLevel: "", flowRate: "", aquiferType: "", aquiferDepth: "",
+    // Step 5 - Financial
+    cost: "", contractValue: "", notes: "",
+    // Step 6
+    status: "فعال",
   });
 
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  const steps = [
-    <div key={0} className="grid grid-cols-2 gap-4">
-      <div className="col-span-2">{label("اسم البئر *")}<input className={inp} required value={form.name} onChange={e => set("name", e.target.value)} placeholder="بئر الزاوية الشمالي" /></div>
-      <div>{label("رقم البئر *")}<input className={inp} required value={form.wellId} onChange={e => set("wellId", e.target.value)} placeholder="WL-2024-001" /></div>
-      <div>{label("تاريخ الحفر")}<input type="date" className={inp} value={form.drillingDate} onChange={e => set("drillingDate", e.target.value)} /></div>
-      <div>{label("نوع البئر")}<select className={sel} value={form.type} onChange={e => set("type", e.target.value)}><option>مياه جوفية</option><option>ارتوازي</option><option>سطحي</option><option>تجميع مطر</option></select></div>
-      <div>{label("الحالة")}<select className={sel} value={form.status} onChange={e => set("status", e.target.value)}><option>فعال</option><option>صيانة</option><option>متعطل</option><option>قيد الإنشاء</option></select></div>
-    </div>,
+  const Input = ({ label, field, placeholder, required, type = "text" }: any) => (
+    <div>
+      <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+        {label}{required && <span className="text-red-500 mr-1">*</span>}
+      </label>
+      <input
+        type={type}
+        value={(form as any)[field]}
+        onChange={e => set(field, e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white transition-all"
+      />
+    </div>
+  );
 
-    <div key={1} className="grid grid-cols-2 gap-4">
-      <div>{label("المنطقة *")}<select className={sel} value={form.region} onChange={e => set("region", e.target.value)}><option value="">اختر المنطقة</option>{REGIONS.map(r => <option key={r}>{r}</option>)}</select></div>
-      <div className="col-span-2">{label("العنوان التفصيلي")}<input className={inp} value={form.location} onChange={e => set("location", e.target.value)} placeholder="حي الأندلس، بالقرب من المدرسة..." /></div>
-      <div>{label("خط العرض (Latitude)")}<input type="number" step="0.0001" className={inp} value={form.latitude} onChange={e => set("latitude", e.target.value)} placeholder="32.8872" /></div>
-      <div>{label("خط الطول (Longitude)")}<input type="number" step="0.0001" className={inp} value={form.longitude} onChange={e => set("longitude", e.target.value)} placeholder="13.1913" /></div>
-    </div>,
+  const Select = ({ label, field, options, required }: any) => (
+    <div>
+      <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+        {label}{required && <span className="text-red-500 mr-1">*</span>}
+      </label>
+      <select
+        value={(form as any)[field]}
+        onChange={e => set(field, e.target.value)}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white transition-all text-gray-700"
+      >
+        <option value="">اختر...</option>
+        {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
 
-    <div key={2} className="grid grid-cols-2 gap-4">
-      <div>{label("العمق (متر)")}<input type="number" className={inp} value={form.depth} onChange={e => set("depth", e.target.value)} placeholder="200" /></div>
-      <div>{label("نوع الغلاف (Casing)")}<select className={sel} value={form.casingType} onChange={e => set("casingType", e.target.value)}><option value="">اختر النوع</option><option>PVC</option><option>HDPE</option><option>فولاذي</option><option>خرساني</option></select></div>
-      <div>{label("جودة المياه")}<select className={sel} value={form.waterQuality} onChange={e => set("waterQuality", e.target.value)}><option value="">اختر الجودة</option><option>ممتازة</option><option>جيدة</option><option>متوسطة</option><option>تحتاج معالجة</option></select></div>
-      <div className="col-span-2">{label("ملاحظات فنية")}<textarea rows={3} className={inp} style={{ resize: "none" }} value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="أي ملاحظات فنية إضافية..." /></div>
-    </div>,
-
-    <div key={3} className="grid grid-cols-2 gap-4">
-      <div>{label("نوع المضخة")}<select className={sel} value={form.pumpType} onChange={e => set("pumpType", e.target.value)}><option value="">اختر نوع المضخة</option><option>كهربائية غاطسة</option><option>ديزل</option><option>شمسية</option><option>يدوية</option></select></div>
-      <div>{label("التكلفة الإجمالية (دينار)")}<input type="number" className={inp} value={form.cost} onChange={e => set("cost", e.target.value)} placeholder="50000" /></div>
-    </div>,
-
-    <div key={4} className="space-y-3">
-      <p className="text-sm text-gray-600 bg-blue-50 p-4 rounded-xl border border-blue-100">
-        يمكنك إضافة تقارير الحفر التفصيلية من صفحة التقارير الفنية بعد حفظ البئر.
-      </p>
-      <div>{label("ملاحظات نتائج الحفر")}<textarea rows={4} className={inp} style={{ resize: "none" }} onChange={e => set("notes", form.notes + "\n" + e.target.value)} placeholder="منسوب المياه، معدل الضخ، الطبقات الجيولوجية..." /></div>
-    </div>,
-
-    <div key={5} className="space-y-3">
-      <h3 className="font-bold text-gray-800 mb-4">مراجعة البيانات قبل الحفظ</h3>
-      {[
-        ["اسم البئر", form.name], ["رقم البئر", form.wellId], ["النوع", form.type],
-        ["الحالة", form.status], ["المنطقة", form.region], ["العمق", form.depth ? form.depth + " م" : "-"],
-        ["نوع الغلاف", form.casingType], ["نوع المضخة", form.pumpType], ["جودة المياه", form.waterQuality],
-        ["التكلفة", form.cost ? form.cost + " د.ل" : "-"],
-      ].map(([k, v]) => (
-        <div key={k} className="flex items-center gap-3 py-2.5 px-4 rounded-xl" style={{ background: "#f8faff", border: "1px solid #e8f0fe" }}>
-          <span className="text-xs text-gray-500 w-32 flex-shrink-0">{k}</span>
-          <span className="text-sm font-semibold text-gray-800">{v || "—"}</span>
-        </div>
-      ))}
-    </div>,
-  ];
-
-  const canNext = () => {
-    if (step === 0) return form.name.trim() && form.wellId.trim();
-    if (step === 1) return form.region.trim();
-    return true;
-  };
-
-  const save = async () => {
+  const handleSubmit = async () => {
     setSaving(true);
     setError("");
     try {
-      const payload: any = {
-        name: form.name,
-        wellId: form.wellId,
-        type: form.type,
-        status: form.status,
-        region: form.region,
-        location: form.location || null,
-        latitude: form.latitude ? parseFloat(form.latitude) : null,
-        longitude: form.longitude ? parseFloat(form.longitude) : null,
-        depth: form.depth ? parseInt(form.depth) : null,
-        casingType: form.casingType || null,
-        pumpType: form.pumpType || null,
-        waterQuality: form.waterQuality || null,
-        cost: form.cost ? parseFloat(form.cost) : null,
-        notes: form.notes || null,
-        drillingDate: form.drillingDate ? new Date(form.drillingDate) : null,
-      };
-      const res = await fetch("/api/wells", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const [lat, lng] = form.coordinates.split(",").map(s => parseFloat(s.trim()));
+      const res = await fetch("/api/wells", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wellId: form.wellId,
+          name: form.contractName || form.wellId,
+          region: form.region,
+          location: form.location,
+          latitude: lat || null,
+          longitude: lng || null,
+          depth: form.totalDepth ? parseInt(form.totalDepth) : null,
+          type: form.waterType || "مياه جوفية",
+          status: form.status,
+          casingType: form.casingDiameter || null,
+          pumpType: form.pumpType || null,
+          waterQuality: form.waterQuality || null,
+          cost: form.cost ? parseFloat(form.cost) : null,
+          notes: form.notes || null,
+          drillingDate: form.drillingDate || null,
+        }),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الحفظ");
+      if (!res.ok) { setError(data.error || "حدث خطأ"); setSaving(false); return; }
       router.push("/dashboard/wells");
-    } catch (e: any) {
-      setError(e.message);
+    } catch {
+      setError("حدث خطأ في الاتصال");
       setSaving(false);
     }
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-3xl mx-auto" dir="rtl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-black text-gray-800">إضافة بئر جديد</h1>
-        <p className="text-gray-500 text-sm mt-1">أدخل بيانات البئر خطوة بخطوة</p>
-      </div>
-
-      <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
-        {STEPS.map((s, i) => (
-          <div key={i} className="flex items-center gap-1 flex-shrink-0">
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${i === step ? "text-white" : i < step ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}
-              style={i === step ? { background: "linear-gradient(135deg,#1565C0,#2196F3)" } : {}}>
-              {i < step ? <CheckCircle className="w-3 h-3" /> : <span>{i + 1}</span>}
-              <span className="hidden md:inline">{s}</span>
-            </div>
-            {i < STEPS.length - 1 && <div className={`w-4 h-0.5 ${i < step ? "bg-green-400" : "bg-gray-200"}`} />}
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/wells" className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-gray-500 rotate-180" />
+          </Link>
+          <div>
+            <p className="text-xs text-gray-400">الرئيسية / إدارة الآبار / <span className="text-blue-500">إضافة بئر جديد</span></p>
+            <h1 className="text-lg font-bold text-gray-800">إضافة بئر جديد</h1>
+            <p className="text-xs text-gray-400">تسجيل بيانات بئر مياه جديد داخل المنظومة</p>
           </div>
-        ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/wells" className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+            <X size={14} /> إلغاء
+          </Link>
+        </div>
       </div>
 
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-        <h2 className="font-bold text-gray-800 mb-5">{STEPS[step]}</h2>
-        {steps[step]}
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-100 px-6">
+        <div className="flex gap-0 overflow-x-auto">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => step > t.id ? setStep(t.id) : undefined}
+              className={`flex items-center gap-2 px-4 py-3.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all ${
+                step === t.id
+                  ? "border-blue-500 text-blue-600 bg-blue-50/50"
+                  : step > t.id
+                  ? "border-transparent text-green-600 cursor-pointer hover:bg-gray-50"
+                  : "border-transparent text-gray-400 cursor-default"
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                step > t.id ? "bg-green-100 text-green-600" :
+                step === t.id ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-400"
+              }`}>
+                {step > t.id ? "✓" : t.id}
+              </span>
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {error && <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm border border-red-200">{error}</div>}
+      {/* Content */}
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
-      <div className="flex items-center justify-between">
-        <button onClick={() => setStep(s => s - 1)} disabled={step === 0}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors">
-          <ChevronRight className="w-4 h-4" /> السابق
-        </button>
-        {step < STEPS.length - 1 ? (
-          <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-40 transition-all"
-            style={{ background: "linear-gradient(135deg,#1565C0,#2196F3)" }}>
-            التالي <ChevronLeft className="w-4 h-4" />
+          {/* Step 1 */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center"><FileText size={16} className="text-blue-600" /></div>
+                <h2 className="font-bold text-gray-800">المعلومات الأساسية <span className="text-blue-500">ⓘ</span></h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <Input label="رقم العقد" field="contractNumber" placeholder="أدخل رقم العقد" required />
+                <Input label="اسم العقد" field="contractName" placeholder="أدخل اسم العقد" required />
+                <Select label="الجهة المنفذة" field="implementingEntity" options={["شركة المياه الوطنية", "مؤسسة الحفر الليبية", "شركة خاصة", "أخرى"]} required />
+                <Input label="الموقع" field="location" placeholder="أدخل الموقع" required />
+                <Input label="رقم البئر" field="wellId" placeholder="أدخل رقم البئر" required />
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <Select label="البادية" field="municipality" options={MUNICIPALITIES} />
+                <Select label="المنطقة" field="region" options={REGIONS} required />
+                <Input label="الإحداثيات" field="coordinates" placeholder="خط الطول ، خط العرض" />
+                <Input label="تاريخ التنفيذ (اختياري)" field="drillingDate" type="date" />
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center"><Settings size={16} className="text-orange-600" /></div>
+                <h2 className="font-bold text-gray-800">المواصفات الفنية <span className="text-orange-500">⚙</span></h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <Select label="طريقة الحفر" field="drillMethod" options={DRILL_METHODS} required />
+                <Input label="العمق الكلي" field="totalDepth" placeholder="أدخل العمق (متر)" type="number" required />
+                <Input label="أنبوب الوقاية" field="protectionDiameter" placeholder="أدخل مقاس أنبوب الوقاية" required />
+                <Input label="أنبوب الغلاف" field="casingDiameter" placeholder="أدخل مقاس أنبوب الغلاف" required />
+                <Input label="المصافي" field="filterSize" placeholder="أدخل مقاس المصافي" required />
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <Input label="قطر الحفر (بوصة) (اختياري)" field="boreDiameter" placeholder="أدخل القطر (بوصة)" />
+                <Select label="نوع المضخة (اختياري)" field="pumpType" options={PUMP_TYPES} />
+                <Input label="عمق المضخة (اختياري)" field="pumpDepth" placeholder="أدخل العمق (متر)" type="number" />
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 */}
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center"><Droplets size={16} className="text-blue-600" /></div>
+                <h2 className="font-bold text-gray-800">مواصفات المياه 💧</h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <Input label="مجموع الأملاح المذابة (TDS)" field="tds" placeholder="أدخل القيمة (mg/L)" type="number" />
+                <Input label="العسر الكلي" field="hardness" placeholder="أدخل القيمة (mg/L)" type="number" />
+                <Select label="نوع الماء" field="waterType" options={WATER_TYPES} />
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <Input label="PH (اختياري)" field="ph" placeholder="PH القيمة" type="number" />
+                <Input label="EC (اختياري)" field="ec" placeholder="أدخل القيمة (μS/cm)" type="number" />
+                <Input label="الملوحة (اختياري)" field="salinity" placeholder="أدخل القيمة (ppt)" type="number" />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Select label="جودة المياه" field="waterQuality" options={["ممتازة", "جيدة", "متوسطة", "ضعيفة"]} />
+              </div>
+            </div>
+          )}
+
+          {/* Step 4 */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center"><MapPin size={16} className="text-green-600" /></div>
+                <h2 className="font-bold text-gray-800">خصائص الخزان المائي</h2>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <Input label="المنسوب الساكن (م)" field="staticLevel" placeholder="أدخل العمق (متر)" type="number" />
+                <Input label="المنسوب الديناميكي (م)" field="dynamicLevel" placeholder="أدخل العمق (متر)" type="number" />
+                <Input label="معدل التدفق (م³/ساعة)" field="flowRate" placeholder="أدخل المعدل" type="number" />
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+                <Select label="نوع الخزان" field="aquiferType" options={["محصور", "غير محصور", "ارتوازي", "شبه ارتوازي"]} />
+                <Input label="عمق الخزان (م)" field="aquiferDepth" placeholder="أدخل العمق" type="number" />
+              </div>
+            </div>
+          )}
+
+          {/* Step 5 */}
+          {step === 5 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center"><DollarSign size={16} className="text-purple-600" /></div>
+                <h2 className="font-bold text-gray-800">المعلومات المالية</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="تكلفة الحفر (د.ل)" field="cost" placeholder="أدخل التكلفة" type="number" />
+                <Input label="قيمة العقد (د.ل)" field="contractValue" placeholder="أدخل قيمة العقد" type="number" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">ملاحظات</label>
+                <textarea
+                  value={form.notes}
+                  onChange={e => set("notes", e.target.value)}
+                  rows={4}
+                  placeholder="أدخل أي ملاحظات إضافية..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Step 6 */}
+          {step === 6 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center"><CheckCircle size={16} className="text-green-600" /></div>
+                <h2 className="font-bold text-gray-800">المراجعة والاعتماد</h2>
+              </div>
+
+              {error && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+              )}
+
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  ["رقم البئر", form.wellId],
+                  ["اسم العقد", form.contractName],
+                  ["المنطقة", form.region],
+                  ["الموقع", form.location],
+                  ["العمق الكلي", form.totalDepth ? `${form.totalDepth} م` : "—"],
+                  ["نوع المضخة", form.pumpType || "—"],
+                  ["جودة المياه", form.waterQuality || "—"],
+                  ["تكلفة الحفر", form.cost ? `${parseFloat(form.cost).toLocaleString()} د.ل` : "—"],
+                  ["الإحداثيات", form.coordinates || "—"],
+                ].map(([k, v]) => (
+                  <div key={k} className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">{k}</p>
+                    <p className="text-sm font-semibold text-gray-800">{v || "—"}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-2">حالة البئر</label>
+                <div className="flex gap-3 flex-wrap">
+                  {["فعال", "قيد الإنشاء", "صيانة", "متعطل"].map(s => (
+                    <button key={s} onClick={() => set("status", s)}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
+                        form.status === s ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-4">
+          <button
+            onClick={() => setStep(s => Math.max(1, s - 1))}
+            disabled={step === 1}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft size={16} className="rotate-180" /> السابق
           </button>
-        ) : (
-          <button onClick={save} disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-bold text-sm disabled:opacity-70 transition-all"
-            style={{ background: "linear-gradient(135deg,#16a34a,#22c55e)" }}>
-            <Save className="w-4 h-4" /> {saving ? "جاري الحفظ..." : "حفظ البئر"}
-          </button>
-        )}
+
+          <div className="flex items-center gap-1">
+            {TABS.map(t => (
+              <div key={t.id} className={`w-2 h-2 rounded-full transition-all ${step === t.id ? "w-6 bg-blue-500" : step > t.id ? "bg-green-400" : "bg-gray-200"}`} />
+            ))}
+          </div>
+
+          {step < 6 ? (
+            <button
+              onClick={() => setStep(s => Math.min(6, s + 1))}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-semibold"
+              style={{ background: "linear-gradient(135deg,#1d4ed8,#3b82f6)" }}
+            >
+              التالي <ChevronLeft size={16} />
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={saving || !form.wellId || !form.region}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg,#15803d,#22c55e)" }}
+            >
+              <Save size={14} />
+              {saving ? "جاري الحفظ..." : "حفظ البئر"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
