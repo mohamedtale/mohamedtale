@@ -146,6 +146,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true, message: "تم إدخال البيانات التجريبية بنجاح" });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("SEED ERROR:", error);
+    return NextResponse.json({ error: error.message, detail: error.detail || "", code: error.code || "" }, { status: 500 });
   }
 }
