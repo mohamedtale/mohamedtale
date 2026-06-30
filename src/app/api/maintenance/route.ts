@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const url = new URL(req.url);
     const wellId = url.searchParams.get("wellId");
     const logs = wellId
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const d = await req.json();
     const result = await sql`
       INSERT INTO "MaintenanceLog" (id, "wellId", type, status, description, technician, cost, duration, parts, priority, "createdAt", "updatedAt")

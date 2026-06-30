@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const [total, active, maintenance, broken, reports, contracts] = await Promise.all([
       sql`SELECT COUNT(*) as count FROM "Well"`,
       sql`SELECT COUNT(*) as count FROM "Well" WHERE status = 'فعال'`,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "البريد وكلمة المرور مطلوبان" }, { status: 400 });
     }
 
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const users = await sql`SELECT * FROM "User" WHERE email = ${email} AND status = 'نشط' LIMIT 1`;
     const user = users[0];
 

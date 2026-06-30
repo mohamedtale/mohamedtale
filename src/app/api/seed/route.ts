@@ -1,10 +1,108 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 export async function POST() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    // Create tables if not exist
+    await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`;
+    await sql`CREATE TABLE IF NOT EXISTS "User" (
+      id TEXT PRIMARY KEY,
+      "employeeId" TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT,
+      whatsapp TEXT,
+      department TEXT,
+      role TEXT NOT NULL DEFAULT 'موظف',
+      status TEXT NOT NULL DEFAULT 'نشط',
+      password TEXT NOT NULL,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "Well" (
+      id TEXT PRIMARY KEY,
+      "wellId" TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      region TEXT NOT NULL,
+      location TEXT,
+      latitude FLOAT,
+      longitude FLOAT,
+      depth INT,
+      type TEXT NOT NULL DEFAULT 'مياه جوفية',
+      status TEXT NOT NULL DEFAULT 'فعال',
+      "drillingDate" TIMESTAMP,
+      "casingType" TEXT,
+      "pumpType" TEXT,
+      "waterQuality" TEXT,
+      cost FLOAT,
+      notes TEXT,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "Report" (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'مسودة',
+      author TEXT NOT NULL,
+      reviewer TEXT,
+      "wellId" TEXT REFERENCES "Well"(id) ON DELETE SET NULL,
+      "fileSize" TEXT,
+      content TEXT,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "approvedAt" TIMESTAMP
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "MaintenanceLog" (
+      id TEXT PRIMARY KEY,
+      "wellId" TEXT NOT NULL REFERENCES "Well"(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'قيد التنفيذ',
+      description TEXT,
+      technician TEXT NOT NULL,
+      cost FLOAT,
+      duration TEXT,
+      parts TEXT,
+      priority TEXT NOT NULL DEFAULT 'متوسطة',
+      "scheduledAt" TIMESTAMP,
+      "completedAt" TIMESTAMP,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "Contract" (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      vendor TEXT NOT NULL,
+      value FLOAT NOT NULL,
+      wells INT NOT NULL DEFAULT 0,
+      "startDate" TIMESTAMP NOT NULL,
+      "endDate" TIMESTAMP NOT NULL,
+      status TEXT NOT NULL DEFAULT 'نشط',
+      notes TEXT,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "PublicProject" (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      date TEXT NOT NULL,
+      region TEXT NOT NULL,
+      count TEXT NOT NULL,
+      "imageUrl" TEXT,
+      "order" INT NOT NULL DEFAULT 0,
+      visible BOOLEAN NOT NULL DEFAULT TRUE,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
+    await sql`CREATE TABLE IF NOT EXISTS "SiteConfig" (
+      id TEXT PRIMARY KEY,
+      key TEXT UNIQUE NOT NULL,
+      value TEXT NOT NULL,
+      label TEXT,
+      "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
+    )`;
 
     // Clear existing data
     await sql`DELETE FROM "MaintenanceLog"`;

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const users = await sql`SELECT id, "employeeId", name, email, phone, department, role, status, "createdAt" FROM "User" ORDER BY "createdAt" ASC`;
     return NextResponse.json(users);
   } catch (error: any) {
@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const d = await req.json();
     const result = await sql`
       INSERT INTO "User" (id, "employeeId", name, email, phone, department, role, status, password, "createdAt", "updatedAt")

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const { id } = await params;
     const b = await req.json();
     const result = await sql`
@@ -20,7 +20,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const { id } = await params;
     await sql`DELETE FROM "MaintenanceLog" WHERE id = ${id}`;
     return NextResponse.json({ ok: true });

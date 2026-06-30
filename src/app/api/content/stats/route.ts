@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const configs = await sql`SELECT key, value FROM "SiteConfig"`;
     const map: Record<string, string> = {};
     for (const c of configs) map[c.key] = c.value;
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const body: Record<string, string> = await req.json();
     for (const [key, value] of Object.entries(body)) {
       await sql`

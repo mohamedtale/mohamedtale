@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const url = new URL(req.url);
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const d = await req.json();
     const result = await sql`
       INSERT INTO "Well" (id, "wellId", name, region, location, latitude, longitude, depth, type, status, "casingType", "pumpType", "waterQuality", cost, notes, "createdAt", "updatedAt")

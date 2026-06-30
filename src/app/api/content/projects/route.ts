@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { neon } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 
 export async function GET() {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const projects = await sql`SELECT * FROM "PublicProject" WHERE visible = true ORDER BY "order" ASC`;
     return NextResponse.json(projects);
   } catch {
@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const sql = neon(process.env.DATABASE_URL!);
+    
     const b = await req.json();
     const result = await sql`
       INSERT INTO "PublicProject" (id, title, description, date, region, count, "imageUrl", "order", visible, "createdAt", "updatedAt")
