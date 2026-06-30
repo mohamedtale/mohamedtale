@@ -4,8 +4,15 @@ import bcrypt from "bcryptjs";
 
 export async function POST() {
   try {
-    // Create tables if not exist
+    // Drop old tables and recreate with correct schema
     await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto`;
+    await sql`DROP TABLE IF EXISTS "MaintenanceLog" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "Report" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "Well" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "User" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "Contract" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "PublicProject" CASCADE`;
+    await sql`DROP TABLE IF EXISTS "SiteConfig" CASCADE`;
     await sql`CREATE TABLE IF NOT EXISTS "User" (
       id TEXT PRIMARY KEY,
       "employeeId" TEXT UNIQUE NOT NULL,
